@@ -24,7 +24,7 @@ main {
 .d-flex {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
 }
 
 .align-items-center { align-items: center; }
