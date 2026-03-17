@@ -16,12 +16,12 @@
         }
 
         <div class="auth-field">
-            <label class="auth-label">Email</label>
-            <input type="email" @bind="email" class="auth-input" placeholder="your@email.com" autocomplete="email" />
+            <label class="auth-label" for="login-email">Email</label>
+            <input id="login-email" type="email" @bind="email" class="auth-input" placeholder="your@email.com" autocomplete="email" />
         </div>
         <div class="auth-field">
-            <label class="auth-label">Пароль</label>
-            <input type="password" @bind="password" class="auth-input" autocomplete="current-password" />
+            <label class="auth-label" for="login-password">Пароль</label>
+            <input id="login-password" type="password" @bind="password" class="auth-input" autocomplete="current-password" />
         </div>
         <button class="auth-submit" @onclick="HandleLogin" disabled="@loading">
             @(loading ? "Вход..." : "Войти")

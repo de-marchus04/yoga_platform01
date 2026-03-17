@@ -9,8 +9,8 @@
     --cab-surface:   #FFFFFF;
     --cab-border:    #E8E5DE;
     --cab-text:      #1C1C1C;
-    --cab-muted:     #8A8680;
-    --cab-accent:    #BFA07A;
+    --cab-muted:     #6B6B6B;
+    --cab-accent:    #8C6B3A;
     --cab-accent-bg: #F5EFE6;
     --cab-danger:    #C0392B;
     --cab-success:   #2E7D60;
@@ -955,7 +955,7 @@
     transition: background 0.15s;
     margin-top: 0.5rem;
 }
-.auth-submit:hover:not(:disabled) { background: #A8895F; }
+.auth-submit:hover:not(:disabled) { background: #6F5128; }
 .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 @media (max-width: 480px) {
     .auth-card { padding: 2rem 1.5rem; }
