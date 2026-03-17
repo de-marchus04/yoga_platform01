@@ -3,7 +3,7 @@
 
 <div class="retreat-card reveal">
     <div class="card-img-wrapper">
-        <img src="@(!string.IsNullOrEmpty(Retreat.ImageUrl) ? Retreat.ImageUrl : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=600&q=80")" alt="@Retreat.Title" class="card-img" />
+        <img src="@(!string.IsNullOrEmpty(Retreat.ImageUrl) ? Retreat.ImageUrl : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=600&q=80")" alt="@Retreat.Title" class="card-img" loading="lazy" decoding="async" />
     </div>
     <div class="card-content" style="@(IsPast ? "opacity:0.8;" : "")">
         <h3>@Retreat.Title</h3>

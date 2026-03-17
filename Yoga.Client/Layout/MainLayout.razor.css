@@ -73,7 +73,8 @@ main {
     align-items: center;
 }
 
-.nav-menu > li > a {
+.nav-menu > li > a,
+.dropdown-link {
     font-family: var(--font-sans);
     font-size: 0.77rem;
     font-weight: 400;
@@ -87,7 +88,8 @@ main {
     transition: color var(--transition-speed);
 }
 
-.nav-menu > li > a::after {
+.nav-menu > li > a::after,
+.dropdown-link::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -100,14 +102,52 @@ main {
     transition: transform 0.4s ease;
 }
 
+.dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.dropdown-toggle {
+    min-width: 2rem;
+    min-height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--charcoal);
+    cursor: pointer;
+    transition: color var(--transition-speed);
+}
+
+.dropdown-toggle span {
+    font-size: 0.7rem;
+    line-height: 1;
+    transition: transform 0.25s ease;
+}
+
 .nav-menu > li > a:hover,
-.nav-menu > li.dropdown:hover > a {
+.dropdown-link:hover,
+.dropdown-toggle:hover,
+.nav-menu > li.dropdown:hover .dropdown-link,
+.nav-menu > li.dropdown.open .dropdown-link,
+.nav-menu > li.dropdown:hover .dropdown-toggle,
+.nav-menu > li.dropdown.open .dropdown-toggle {
     color: var(--accent);
 }
 
 .nav-menu > li > a:hover::after,
-.nav-menu > li.dropdown:hover > a::after {
+.dropdown-link:hover::after,
+.nav-menu > li.dropdown:hover .dropdown-link::after,
+.nav-menu > li.dropdown.open .dropdown-link::after {
     transform: scaleX(1);
+}
+
+.nav-menu > li.dropdown:hover .dropdown-toggle span,
+.nav-menu > li.dropdown.open .dropdown-toggle span {
+    transform: rotate(180deg);
 }
 
 /* Dropdown */
@@ -183,7 +223,8 @@ main {
     text-transform: uppercase;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 0.2rem 0;
+    min-height: 2.75rem;
+    padding: 0.2rem 0.15rem;
     transition: color var(--transition-speed);
     line-height: 1;
 }
@@ -244,8 +285,8 @@ main {
 .theme-toggle {
     background: none;
     border: 1px solid var(--divider);
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -285,8 +326,8 @@ main {
     display: none;
     background: none;
     border: 1px solid var(--divider);
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     align-items: center;
     justify-content: center;
     font-size: 1.1rem;
@@ -334,19 +375,6 @@ main {
     z-index: 400;
 }
 
-.mobile-nav-header {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--divider);
-    background: var(--white);
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
 .mobile-nav-close,
 .mobile-theme-toggle {
     background: none;
@@ -376,7 +404,7 @@ main {
 .mobile-nav-menu {
     list-style: none;
     margin: 0;
-    padding: 0 0 1rem;
+    padding: 0.45rem 0 1rem;
     flex: 1;
 }
 
@@ -388,6 +416,7 @@ main {
     text-transform: uppercase;
     color: var(--charcoal);
     text-decoration: none;
+    min-height: 44px;
     padding: 0.85rem 1.5rem;
     transition: color var(--transition-speed), background var(--transition-speed);
 }
@@ -424,7 +453,7 @@ main {
 
 .mobile-theme-toggle {
     width: 100%;
-    min-height: 40px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -463,10 +492,25 @@ main {
         padding-left: 0;
     }
 
+    .lang-btn {
+        min-height: 2.5rem;
+    }
+
     .header-account,
     .header-languages,
     .header-theme {
         display: none;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .dropdown-menu {
+        min-width: 220px;
+    }
+
+    .dropdown-toggle {
+        min-width: 2.5rem;
+        min-height: 2.5rem;
     }
 }
 
@@ -493,7 +537,6 @@ main {
         box-shadow: none;
     }
 
-    .mobile-nav-header,
     .mobile-nav-footer {
         padding-left: 1rem;
         padding-right: 1rem;
@@ -521,12 +564,11 @@ main {
     }
 
     .menu-toggle {
-        width: 34px;
-        height: 34px;
+        width: 40px;
+        height: 40px;
         font-size: 1rem;
     }
 
-    .mobile-nav-header,
     .mobile-nav-footer {
         padding-left: 0.85rem;
         padding-right: 0.85rem;

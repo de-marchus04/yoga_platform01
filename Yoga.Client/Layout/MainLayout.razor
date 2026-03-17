@@ -15,8 +15,18 @@
                     <li><a href="/">@Loc["nav.home"]</a></li>
                     
                     <li class="dropdown @(openDropdown == "courses" ? "open" : "")" @onmouseenter='() => OpenDropdown("courses")' @onmouseleave="CloseDropdown">
-                        <a href="/courses">@Loc["nav.courses"] ▾</a>
-                        <ul class="dropdown-menu">
+                        <div class="dropdown-trigger">
+                            <a href="/courses" class="dropdown-link">@Loc["nav.courses"]</a>
+                            <button type="button"
+                                    class="dropdown-toggle"
+                                    aria-label="Подменю курсов"
+                                    aria-expanded="@(openDropdown == "courses")"
+                                    aria-controls="desktop-submenu-courses"
+                                    @onclick='() => ToggleDropdown("courses")'>
+                                <span aria-hidden="true">▾</span>
+                            </button>
+                        </div>
+                        <ul id="desktop-submenu-courses" class="dropdown-menu">
                             <li><a href="/courses/pranayama">@Loc["nav.courses.pranayama"]</a></li>
                             <li><a href="/courses/meditation">@Loc["nav.courses.meditation"]</a></li>
                             <li><a href="/courses/yoga">@Loc["nav.courses.yoga"]</a></li>
@@ -24,8 +34,18 @@
                     </li>
 
                     <li class="dropdown @(openDropdown == "consultations" ? "open" : "")" @onmouseenter='() => OpenDropdown("consultations")' @onmouseleave="CloseDropdown">
-                        <a href="/consultations">@Loc["nav.consultations"] ▾</a>
-                        <ul class="dropdown-menu">
+                        <div class="dropdown-trigger">
+                            <a href="/consultations" class="dropdown-link">@Loc["nav.consultations"]</a>
+                            <button type="button"
+                                    class="dropdown-toggle"
+                                    aria-label="Подменю консультаций"
+                                    aria-expanded="@(openDropdown == "consultations")"
+                                    aria-controls="desktop-submenu-consultations"
+                                    @onclick='() => ToggleDropdown("consultations")'>
+                                <span aria-hidden="true">▾</span>
+                            </button>
+                        </div>
+                        <ul id="desktop-submenu-consultations" class="dropdown-menu">
                             <li><a href="/consultations/energy">@Loc["nav.consultations.energy"]</a></li>
                             <li><a href="/consultations/ayurveda">@Loc["nav.consultations.ayurveda"]</a></li>
                             <li><a href="/consultations/spirituality">@Loc["nav.consultations.spirituality"]</a></li>
@@ -33,8 +53,18 @@
                     </li>
 
                     <li class="dropdown @(openDropdown == "retreats" ? "open" : "")" @onmouseenter='() => OpenDropdown("retreats")' @onmouseleave="CloseDropdown">
-                        <a href="/retreats">@Loc["nav.retreats"] ▾</a>
-                        <ul class="dropdown-menu">
+                        <div class="dropdown-trigger">
+                            <a href="/retreats" class="dropdown-link">@Loc["nav.retreats"]</a>
+                            <button type="button"
+                                    class="dropdown-toggle"
+                                    aria-label="Подменю ретритов"
+                                    aria-expanded="@(openDropdown == "retreats")"
+                                    aria-controls="desktop-submenu-retreats"
+                                    @onclick='() => ToggleDropdown("retreats")'>
+                                <span aria-hidden="true">▾</span>
+                            </button>
+                        </div>
+                        <ul id="desktop-submenu-retreats" class="dropdown-menu">
                             <li><a href="/retreats/actual">@Loc["nav.retreats.actual"]</a></li>
                             <li><a href="/retreats/upcoming">@Loc["nav.retreats.upcoming"]</a></li>
                             <li><a href="/retreats/past">@Loc["nav.retreats.past"]</a></li>
@@ -42,8 +72,18 @@
                     </li>
 
                     <li class="dropdown @(openDropdown == "blog" ? "open" : "")" @onmouseenter='() => OpenDropdown("blog")' @onmouseleave="CloseDropdown">
-                        <a href="/blog">@Loc["nav.blog"] ▾</a>
-                        <ul class="dropdown-menu">
+                        <div class="dropdown-trigger">
+                            <a href="/blog" class="dropdown-link">@Loc["nav.blog"]</a>
+                            <button type="button"
+                                    class="dropdown-toggle"
+                                    aria-label="Подменю блога"
+                                    aria-expanded="@(openDropdown == "blog")"
+                                    aria-controls="desktop-submenu-blog"
+                                    @onclick='() => ToggleDropdown("blog")'>
+                                <span aria-hidden="true">▾</span>
+                            </button>
+                        </div>
+                        <ul id="desktop-submenu-blog" class="dropdown-menu">
                             <li><a href="/blog/articles">@Loc["nav.blog.articles"]</a></li>
                             <li><a href="/blog/videos">@Loc["nav.blog.videos"]</a></li>
                             <li><a href="/blog/photos">@Loc["nav.blog.photos"]</a></li>
@@ -81,9 +121,6 @@
         <div class="mobile-backdrop" @onclick="CloseMenu"></div>
     }
     <nav id="mobile-menu" class="mobile-nav @(menuOpen ? "open" : "")" aria-hidden="@(!menuOpen)" aria-label="Mobile menu">
-        <div class="mobile-nav-header">
-            <button class="mobile-nav-close" @onclick="CloseMenu" aria-label="Close menu">✕</button>
-        </div>
         <ul class="mobile-nav-menu">
             <li><a href="/" @onclick="CloseMenu">@Loc["nav.home"]</a></li>
             <li class="mobile-section-label">@Loc["nav.courses"]</li>
@@ -152,6 +189,7 @@
     private string openDropdown = "";
     private void OpenDropdown(string name) => openDropdown = name;
     private void CloseDropdown() => openDropdown = "";
+    private void ToggleDropdown(string name) => openDropdown = openDropdown == name ? "" : name;
 
     private async Task ToggleMenu()
     {

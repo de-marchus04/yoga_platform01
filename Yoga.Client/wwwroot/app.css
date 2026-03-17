@@ -74,6 +74,15 @@ a:hover {
   color: var(--accent);
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .container {
   max-width: var(--container-width);
   margin: 0 auto;
@@ -81,7 +90,11 @@ a:hover {
 }
 
 @media (max-width: 480px) {
-  .container { padding: 0 1.2rem; }
+  .container { padding: 0 1.35rem; }
+}
+
+@media (max-width: 360px) {
+  .container { padding: 0 1.1rem; }
 }
 
 /* --- BUTTONS — sharp, uppercase, letter-spaced --- */
@@ -136,8 +149,21 @@ a:hover {
 /* ===================================================
    SMOOTH SCROLL
    =================================================== */
-html {
-  scroll-behavior: smooth;
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ===================================================
@@ -419,7 +445,7 @@ html {
 }
 @media (max-width: 480px) {
   .page-hero { height: 50vh; min-height: 240px; }
-  .page-hero-content { padding: 2.35rem 0 2rem; }
+  .page-hero-content { padding: 2.35rem 0.2rem 2rem 0.35rem; }
   .page-hero-content .section-eyebrow { letter-spacing: 3px; }
   .page-hero-content h1 { font-size: 2rem; }
   .page-hero-content p { font-size: 0.88rem; }
@@ -428,6 +454,7 @@ html {
 }
 
 @media (max-width: 360px) {
+  .page-hero-content { padding: 2rem 0.1rem 1.8rem 0.2rem; }
   .page-hero-content h1 { font-size: 1.8rem; }
   .page-hero-content p { font-size: 0.84rem; }
   .format-badges { justify-content: flex-start; }
@@ -777,6 +804,29 @@ html {
   .course-card:last-child { border-bottom: none; }
 }
 
+@media (max-width: 480px) {
+  .course-cards-grid {
+    margin-top: 2.75rem;
+  }
+
+  .course-card-body {
+    padding: 1.8rem 1.35rem 2rem;
+  }
+
+  .course-card h3 {
+    font-size: 1.45rem;
+  }
+
+  .course-card p {
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+
+  .course-card-cta {
+    letter-spacing: 1.8px;
+  }
+}
+
 /* ===================================================
    STORY SPLIT — About page: bio left, photo right
    =================================================== */
@@ -791,6 +841,14 @@ html {
   gap: 6rem;
   align-items: center;
   margin-top: 4rem;
+}
+
+.story-grid.story-grid-reverse .story-text {
+  order: 2;
+}
+
+.story-grid.story-grid-reverse .story-photo {
+  order: 1;
 }
 
 .story-text .story-role {
@@ -840,7 +898,27 @@ html {
 
 @media (max-width: 900px) {
   .story-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .story-grid.story-grid-reverse .story-text,
+  .story-grid.story-grid-reverse .story-photo {
+    order: 0;
+  }
   .story-photo::after { display: none; }
+}
+
+.public-loading-state {
+  padding: 4rem 0;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.public-loading-state-on-dark {
+  color: rgba(224,220,212,0.72);
 }
 
 /* ===================================================
@@ -1299,6 +1377,40 @@ html {
   .category-link-card { border-right: none; border-bottom: 1px solid var(--divider); }
 }
 
+@media (max-width: 480px) {
+  .categories-section {
+    padding: 5rem 0;
+  }
+
+  .category-links-grid {
+    margin-top: 2.5rem;
+  }
+
+  .category-link-card {
+    aspect-ratio: auto;
+    min-height: 280px;
+  }
+
+  .category-link-body {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .category-link-card h3 {
+    font-size: 1.55rem;
+  }
+
+  .category-link-card p {
+    font-size: 0.82rem;
+    line-height: 1.65;
+    max-width: 20rem;
+  }
+
+  .category-link-cta,
+  .category-link-eyebrow {
+    letter-spacing: 2px;
+  }
+}
+
 /* ===================================================
    VIDEO CARD — blog/videos grid
    =================================================== */
@@ -1400,6 +1512,24 @@ html {
 
 @media (max-width: 768px) {
   .video-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .video-grid {
+    margin-top: 2rem;
+  }
+
+  .video-card-body {
+    padding: 1.15rem 1rem 1.35rem;
+  }
+
+  .video-card h3 {
+    font-size: 1.15rem;
+  }
+
+  .video-duration {
+    font-size: 0.72rem;
+  }
 }
 
 /* ===================================================
@@ -1624,6 +1754,41 @@ html {
   border-bottom-color: var(--accent);
 }
 
+@media (max-width: 480px) {
+  .section-filter-bar {
+    margin-top: 2rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .section-filter-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-tab {
+    min-height: 44px;
+    flex: 0 0 auto;
+    padding: 0.85rem 1rem;
+    letter-spacing: 2px;
+  }
+
+  .pagination {
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-top: 3.5rem;
+  }
+
+  .pagination-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .pagination-btn.wide {
+    min-width: 56px;
+  }
+}
+
 /* ===================================================
    PAGINATION
    =================================================== */
@@ -1720,6 +1885,30 @@ html {
 .section-tag-link:hover {
   background: var(--accent);
   color: var(--white);
+}
+
+@media (max-width: 480px) {
+  .section-group {
+    margin-top: 3.5rem;
+  }
+
+  .section-group-header {
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding-bottom: 1rem;
+  }
+
+  .section-group-title,
+  .section-tag-link {
+    letter-spacing: 1.8px;
+  }
+
+  .section-tag-link {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.8rem;
+  }
 }
 
 /* ===================================================
@@ -1882,6 +2071,44 @@ html {
   .photo-mosaic { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 480px) {
+  .photo-section-block {
+    padding: 4.5rem 0;
+  }
+
+  .photo-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .photo-section-header h2 {
+    font-size: 2rem;
+  }
+
+  .photo-mosaic {
+    margin-top: 2rem;
+  }
+
+  .photo-mosaic-item img,
+  .photo-mosaic-item.featured img {
+    min-height: 240px;
+  }
+
+  .photo-mosaic-label {
+    opacity: 1;
+    padding: 1rem;
+  }
+
+  .photo-mosaic-label span {
+    letter-spacing: 2px;
+  }
+
+  .photo-mosaic-label strong {
+    font-size: 1rem;
+  }
+}
+
 /* ===================================================
    RETREAT CARDS — global styles for listing pages
    =================================================== */
@@ -1897,6 +2124,13 @@ html {
   border-top: 1px solid var(--divider);
   border-left: 1px solid var(--divider);
   margin-top: 4rem;
+}
+
+@media (max-width: 480px) {
+  .retreats-grid {
+    grid-template-columns: 1fr;
+    margin-top: 2.75rem;
+  }
 }
 
 .retreat-card {
@@ -2349,6 +2583,21 @@ html {
     gap: 3.25rem;
   }
 
+  .retreat-detail-hero-content h1 {
+    font-size: 1.9rem;
+    line-height: 1.08;
+  }
+
+  .retreat-content-block h2 {
+    font-size: 1.5rem;
+  }
+
+  .retreat-booking-card .btn,
+  .retreat-other-body .btn {
+    width: 100%;
+    text-align: center;
+  }
+
   .retreat-gallery-grid {
     columns: 1;
   }
@@ -2636,6 +2885,35 @@ html {
   .related-blog-photo-overlay {
     opacity: 1;
     font-size: 0.68rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .page-hero:hover .page-hero-bg,
+  .course-card:hover .course-card-photo img,
+  .blog-card:hover,
+  .blog-card:hover .blog-card-img img,
+  .video-card:hover .video-card-thumb img,
+  .photo-grid-item:hover img,
+  .photo-mosaic-item:hover img,
+  .related-blog-card:hover,
+  .related-blog-photo-item:hover img,
+  .retreat-card:hover .card-img,
+  .retreat-card:hover::before {
+    transform: none;
+    box-shadow: none;
+    filter: initial;
+    opacity: initial;
+  }
+
+  .video-card:hover .video-card-play,
+  .related-blog-card--video:hover .related-blog-play-icon,
+  .related-blog-card--video:hover .related-blog-video-thumb img,
+  .related-blog-photo-item:hover .related-blog-photo-overlay,
+  .photo-mosaic-item:hover .photo-mosaic-label {
+    background: inherit;
+    transform: none;
+    opacity: inherit;
   }
 }
 
