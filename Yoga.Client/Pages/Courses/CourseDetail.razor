@@ -1,0 +1,242 @@
+@page "/courses/{Slug}"
+@inject ApiService Api
+@inject LocalizationService Loc
+@implements IDisposable
+
+<PageTitle>@(course?.Title ?? Loc["nav.courses"])</PageTitle>
+
+@if (loading)
+{
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <div class="skeleton" style="height: 1.5rem; width: 20%; margin-bottom: 2rem;"></div>
+            <div class="skeleton" style="height: 4rem; width: 60%; margin-bottom: 2rem;"></div>
+            <div class="skeleton" style="height: 1.5rem; width: 80%;"></div>
+            <div class="skeleton" style="height: 1.5rem; width: 40%; margin-top: 0.5rem"></div>
+        </div>
+    </section>
+}
+else if (course == null)
+{
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <h1>Курс не найден</h1>
+        </div>
+    </section>
+}
+else
+{
+    <section class="page-hero">
+        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrEmpty(course.ImageUrl) ? "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=1600&q=80" : course.ImageUrl)');"></div>
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
+            @if (!string.IsNullOrEmpty(course.Eyebrow))
+            {
+                <p class="section-eyebrow" style="color:var(--accent);">@course.Eyebrow</p>
+            }
+            <div class="format-badges" style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+                @if (course.IsOnline)
+                {
+                    <span class="format-badge" style="background: rgba(46,204,113,0.2); color: #2ecc71; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Онлайн</span>
+                }
+                @if (course.IsOffline)
+                {
+                    <span class="format-badge" style="background: rgba(52,152,219,0.2); color: #3498db; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Офлайн</span>
+                }
+            </div>
+            <h1>@course.Title</h1>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            @if (!string.IsNullOrEmpty(course.Subtitle))
+            {
+                <p>@course.Subtitle</p>
+            }
+        </div>
+    </section>
+
+    @if (!string.IsNullOrEmpty(course.Duration) || !string.IsNullOrEmpty(course.Format) || !string.IsNullOrEmpty(course.Level) || !string.IsNullOrEmpty(course.Schedule))
+    {
+        <section class="format-strip">
+            <div class="format-strip-grid">
+                @if (!string.IsNullOrEmpty(course.Schedule))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Занятий</span>
+                        <span class="format-strip-value">@course.Schedule</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(course.Duration))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Длительность</span>
+                        <span class="format-strip-value">@course.Duration</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(course.Format))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Формат</span>
+                        <span class="format-strip-value">@course.Format</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(course.Level))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Уровень</span>
+                        <span class="format-strip-value">@course.Level</span>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="overview-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-eyebrow">@Loc["section.overview.eyebrow"]</p>
+                <h2>@Loc["section.overview.h2"]</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="overview-grid">
+                @if (!string.IsNullOrEmpty(course.Description))
+                {
+                    <div class="overview-desc reveal">
+                        @foreach (var para in course.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            <p>@para</p>
+                        }
+                    </div>
+                }
+                @if (course.Benefits.Length > 0)
+                {
+                    <div class="overview-benefits reveal reveal-d1">
+                        <h4>@Loc["section.benefits.h4"]</h4>
+                        @foreach (var benefit in course.Benefits)
+                        {
+                            <div class="benefit-item"><span class="benefit-check"></span><span>@benefit</span></div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    @if (course.Modules.Count > 0)
+    {
+        <section class="program-section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <p class="section-eyebrow">@Loc["section.program.eyebrow"]</p>
+                    <h2>@Loc["section.program.h2"]</h2>
+                    <div class="section-divider"></div>
+                </div>
+                <div class="program-list">
+                    @{ int moduleNum = 0; }
+                    @foreach (var mod in course.Modules.OrderBy(m => m.SortOrder))
+                    {
+                        moduleNum++;
+                        <div class="program-module reveal">
+                            <span class="program-module-num">@moduleNum.ToString("D2")</span>
+                            <div>
+                                <h3>@mod.Title</h3>
+                                <p>@mod.Description</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    @if (course.ForWhom.Length > 0)
+    {
+        <section class="for-whom-section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <p class="section-eyebrow">@Loc["section.forwhom.eyebrow"]</p>
+                    <h2>@Loc["section.forwhom.h2"]</h2>
+                    <div class="section-divider"></div>
+                </div>
+                <div class="for-whom-grid">
+                    @{ int fwIdx = 0; }
+                    @foreach (var fw in course.ForWhom)
+                    {
+                        var delayClass = fwIdx switch { 1 => "reveal-d1", 2 => "reveal-d2", _ => "" };
+                        <div class="for-whom-card reveal @delayClass">
+                            <h3>@fw.Title</h3>
+                            <p>@fw.Text</p>
+                        </div>
+                        fwIdx++;
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    <RelatedBlog EntityId="course?.Id" Section="courses" />
+
+    <section class="page-cta">
+        <div class="container" style="text-align:center;">
+            @if (!string.IsNullOrEmpty(course.CtaHeading))
+            {
+                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
+                <h2>@course.CtaHeading</h2>
+                <p>@course.CtaText</p>
+            }
+            else
+            {
+                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
+                <h2>@Loc["section.cta.h2"]</h2>
+                <p>@Loc["section.cta.text"]</p>
+            }
+            <button class="btn btn-primary" @onclick="OpenModal">@Loc["section.cta.btn"]</button>
+        </div>
+    </section>
+}
+
+
+
+@code {
+    [Parameter] public string Slug { get; set; } = "";
+
+    private CourseDto? course;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await LoadCourse();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadCourse();
+    }
+
+    private async Task LoadCourse()
+    {
+        loading = true;
+        try
+        {
+            course = await Api.GetCourseAsync(Slug, Loc.CurrentLang);
+        }
+        catch { course = null; }
+        loading = false;
+    }
+
+    private void OpenModal()
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters["ContextTitle"] = course?.Title ?? "Курс";
+        if (course != null)
+        {
+            parameters["TargetCourseId"] = course.Id;
+        }
+        ModalService.Show<LeadModal>(parameters);
+    }
+    private async void Refresh()
+    {
+        await LoadCourse();
+        await InvokeAsync(StateHasChanged);
+    }
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+}

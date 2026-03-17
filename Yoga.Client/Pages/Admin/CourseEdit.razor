@@ -1,0 +1,194 @@
+@page "/admin/courses/new"
+@page "/admin/courses/{Id:guid}/edit"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>@(IsNew ? "Новый курс" : "Редактирование курса") — Админ</PageTitle>
+
+<div class="edit-page">
+    <div class="page-header">
+        <h1>@(IsNew ? "Новый курс" : "Редактирование курса")</h1>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else
+    {
+        <div class="form-card">
+            <h3 class="section-title">Метаданные</h3>
+            <div class="form-row">
+                <div class="admin-form-group">
+                    <label>Slug</label>
+                    <input class="admin-input" @bind="model.Slug" placeholder="yoga" />
+                </div>
+                <div class="admin-form-group">
+                    <label>Порядок сортировки</label>
+                    <input class="admin-input" type="number" @bind="model.SortOrder" />
+                </div>
+            </div>
+
+            <div class="admin-form-group checkbox-group">
+                <label>
+                    <input type="checkbox" @bind="model.IsActive" />
+                    Активен (виден на сайте)
+                </label>
+                <label>
+                    <input type="checkbox" @bind="model.IsOnline" />
+                    Онлайн формат
+                </label>
+                <label>
+                    <input type="checkbox" @bind="model.IsOffline" />
+                    Офлайн формат
+                </label>
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="form-error">@error</div>
+            }
+
+            <div class="form-actions">
+                <button class="btn-admin btn-admin-outline" @onclick="Cancel">Отмена</button>
+                <button class="btn-admin btn-admin-primary" disabled="@saving" @onclick="Save">
+                    @(saving ? "Сохранение..." : "Сохранить метаданные")
+                </button>
+            </div>
+        </div>
+
+        @if (!IsNew)
+        {
+            <Yoga.Client.Components.Admin.TranslationEditor
+                EntityType="Course"
+                EntityId="model.Id"
+                Fields="courseFields" />
+
+            @* Модули курса *@
+            <div class="form-card" style="margin-top:1.5rem;">
+                <h3 class="section-title">Модули курса</h3>
+                @if (model.Modules.Any())
+                {
+                    @foreach (var mod in model.Modules.OrderBy(m => m.SortOrder))
+                    {
+                        <div class="module-card">
+                            <div class="form-row">
+                                <div class="admin-form-group" style="flex:0 0 100px;">
+                                    <label>Порядок</label>
+                                    <input class="admin-input" type="number" @bind="mod.SortOrder" />
+                                </div>
+                                <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
+                                    <button class="btn-admin btn-admin-danger" @onclick="() => RemoveModule(mod)">✕</button>
+                                </div>
+                            </div>
+                            <Yoga.Client.Components.Admin.TranslationEditor
+                                EntityType="CourseModule"
+                                EntityId="mod.Id"
+                                Fields="moduleFields" />
+                        </div>
+                    }
+                }
+                <button class="btn-admin btn-admin-outline" @onclick="AddModule">+ Добавить модуль</button>
+                <div class="form-actions" style="margin-top:1rem;">
+                    <button class="btn-admin btn-admin-primary" disabled="@savingModules" @onclick="SaveModules">
+                        @(savingModules ? "Сохранение..." : "Сохранить модули")
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="form-card" style="margin-top:1.5rem;">
+                <p class="admin-text-muted">Сначала сохраните курс, чтобы редактировать контент и модули.</p>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+    private bool IsNew => Id == null;
+
+    private static readonly string[] courseFields = { "Title", "Subtitle", "Eyebrow", "Description", "Benefits", "ImageUrl", "Duration", "Level", "Format", "Schedule", "ForWhom", "CtaHeading", "CtaText" };
+    private static readonly string[] moduleFields = { "Title", "Description" };
+
+    private Course model = new();
+    private bool loading;
+    private bool saving;
+    private bool savingModules;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew)
+        {
+            loading = true;
+            try
+            {
+                var all = await Api.GetAllCoursesAsync();
+                var found = all.FirstOrDefault(c => c.Id == Id);
+                if (found != null) model = found;
+                else error = "Курс не найден";
+            }
+            catch { error = "Ошибка загрузки"; }
+            loading = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(model.Slug)) { error = "Slug обязателен"; return; }
+        saving = true;
+        error = null;
+        try
+        {
+            HttpResponseMessage response;
+            if (IsNew) response = await Api.CreateCourseAsync(model);
+            else response = await Api.UpdateCourseAsync(model.Id, model);
+
+            if (response.IsSuccessStatusCode)
+            {
+                if (IsNew)
+                {
+                    var created = await response.Content.ReadFromJsonAsync<Course>();
+                    if (created != null)
+                        Nav.NavigateTo($"/admin/courses/{created.Id}/edit");
+                    else
+                        Nav.NavigateTo("/admin/courses");
+                }
+            }
+            else error = $"Ошибка сервера: {response.StatusCode}";
+        }
+        catch (Exception ex) { error = $"Ошибка: {ex.Message}"; }
+        saving = false;
+    }
+
+    private void AddModule()
+    {
+        var mod = new CourseModule
+        {
+            CourseId = model.Id,
+            SortOrder = model.Modules.Count + 1
+        };
+        model.Modules.Add(mod);
+    }
+
+    private void RemoveModule(CourseModule mod) => model.Modules.Remove(mod);
+
+    private async Task SaveModules()
+    {
+        savingModules = true;
+        error = null;
+        try
+        {
+            var response = await Api.UpdateCourseAsync(model.Id, model);
+            if (!response.IsSuccessStatusCode)
+                error = $"Ошибка сохранения модулей: {response.StatusCode}";
+        }
+        catch (Exception ex) { error = $"Ошибка: {ex.Message}"; }
+        savingModules = false;
+    }
+
+    private void Cancel() => Nav.NavigateTo("/admin/courses");
+}

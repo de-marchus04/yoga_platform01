@@ -1,0 +1,220 @@
+@page "/consultations/{Slug}"
+@inject ApiService Api
+@inject LocalizationService Loc
+@implements IDisposable
+
+<PageTitle>@(item?.Title ?? Loc["nav.consultations"])</PageTitle>
+
+@if (loading)
+{
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <div class="admin-loading" style="color:var(--white);">Загрузка...</div>
+        </div>
+    </section>
+}
+else if (item == null)
+{
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <h1>Консультация не найдена</h1>
+        </div>
+    </section>
+}
+else
+{
+    <section class="page-hero">
+        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrEmpty(item.ImageUrl) ? "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1600&q=80" : item.ImageUrl)');"></div>
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
+            @if (!string.IsNullOrEmpty(item.Eyebrow))
+            {
+                <p class="section-eyebrow" style="color:var(--accent);">@item.Eyebrow</p>
+            }
+
+            <div class="format-badges" style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+                @if (item.IsOnline)
+                {
+                    <span class="format-badge" style="background: rgba(46,204,113,0.2); color: #2ecc71; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Онлайн</span>
+                }
+                @if (item.IsOffline)
+                {
+                    <span class="format-badge" style="background: rgba(52,152,219,0.2); color: #3498db; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Офлайн</span>
+                }
+            </div>
+
+            <h1>@item.Title</h1>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            @if (!string.IsNullOrEmpty(item.Subtitle))
+            {
+                <p>@item.Subtitle</p>
+            }
+        </div>
+    </section>
+
+    @if (!string.IsNullOrEmpty(item.Duration) || !string.IsNullOrEmpty(item.Format) || !string.IsNullOrEmpty(item.LanguageOffered) || !string.IsNullOrEmpty(item.PriceLabel))
+    {
+        <section class="format-strip">
+            <div class="format-strip-grid">
+                @if (!string.IsNullOrEmpty(item.Duration))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Длительность</span>
+                        <span class="format-strip-value">@item.Duration</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(item.Format))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Формат</span>
+                        <span class="format-strip-value">@item.Format</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(item.LanguageOffered))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Язык</span>
+                        <span class="format-strip-value">@item.LanguageOffered</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(item.PriceLabel))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Стоимость</span>
+                        <span class="format-strip-value">@item.PriceLabel</span>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="overview-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-eyebrow">@Loc["section.overview.eyebrow"]</p>
+                <h2>@Loc["section.overview.h2"]</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="overview-grid">
+                <div class="overview-desc reveal">
+                    @if (!string.IsNullOrEmpty(item.Quote))
+                    {
+                        <blockquote class="consultation-quote">
+                            <p>@item.Quote</p>
+                        </blockquote>
+                    }
+                    @if (!string.IsNullOrEmpty(item.Description))
+                    {
+                        @foreach (var para in item.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            <p>@para</p>
+                        }
+                    }
+                </div>
+                @if (item.Benefits.Length > 0)
+                {
+                    <div class="overview-benefits reveal reveal-d1">
+                        <h4>@Loc["section.benefits.h4"]</h4>
+                        @foreach (var benefit in item.Benefits)
+                        {
+                            <div class="benefit-item"><span class="benefit-check"></span><span>@benefit</span></div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    @if (item.ForWhom.Length > 0)
+    {
+        <section class="for-whom-section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <p class="section-eyebrow">@Loc["section.forwhom.eyebrow"]</p>
+                    <h2>@Loc["section.forwhom.h2"]</h2>
+                    <div class="section-divider"></div>
+                </div>
+                <div class="for-whom-grid">
+                    @{ int fwIdx = 0; }
+                    @foreach (var fw in item.ForWhom)
+                    {
+                        var delayClass = fwIdx switch { 1 => "reveal-d1", 2 => "reveal-d2", _ => "" };
+                        <div class="for-whom-card reveal @delayClass">
+                            <h3>@fw.Title</h3>
+                            <p>@fw.Text</p>
+                        </div>
+                        fwIdx++;
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    <RelatedBlog EntityId="item?.Id" Section="consultations" />
+
+    <section class="page-cta">
+        <div class="container" style="text-align:center;">
+            @if (!string.IsNullOrEmpty(item.CtaHeading))
+            {
+                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
+                <h2>@item.CtaHeading</h2>
+                <p>@item.CtaText</p>
+            }
+            else
+            {
+                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
+                <h2>@Loc["section.cta.h2"]</h2>
+                <p>@Loc["section.cta.text"]</p>
+            }
+            <button class="btn btn-primary" @onclick="OpenModal">@Loc["section.cta.btn"]</button>
+        </div>
+    </section>
+}
+
+
+
+@code {
+    [Parameter] public string Slug { get; set; } = "";
+
+    private ConsultationDto? item;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        try
+        {
+            item = await Api.GetConsultationAsync(Slug, Loc.CurrentLang);
+        }
+        catch { item = null; }
+        loading = false;
+    }
+
+    private void OpenModal()
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters["ContextTitle"] = item?.Title ?? "Консультация";
+        if (item != null)
+        {
+            parameters["TargetConsultationId"] = item.Id;
+        }
+        ModalService.Show<LeadModal>(parameters);
+    }
+    private async void Refresh()
+    {
+        await LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+}

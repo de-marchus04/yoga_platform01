@@ -1,0 +1,233 @@
+@page "/admin/blog/new"
+@page "/admin/blog/{Id:guid}/edit"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>@(IsNew ? "Новая запись" : "Редактирование записи") — Админ</PageTitle>
+
+<div class="edit-page">
+    <div class="page-header">
+        <h1>@(IsNew ? "Новая запись блога" : "Редактирование записи")</h1>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else
+    {
+        <div class="form-card">
+            <h3 class="section-title">Метаданные</h3>
+            <div class="form-row">
+                <div class="admin-form-group">
+                    <label>Slug</label>
+                    <input class="admin-input" @bind="model.Slug" placeholder="my-article-slug" />
+                </div>
+                <div class="admin-form-group">
+                    <label>Категория</label>
+                    <select class="admin-input" @bind="model.Category">
+                        <option value="articles">Статья</option>
+                        <option value="videos">Видео</option>
+                        <option value="photos">Фото</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin-form-group">
+                <label>URL медиа (изображение/видео)</label>
+                <div style="display:flex; gap:0.5rem;">
+                    <input class="admin-input" style="flex:1" @bind="model.MediaUrl" placeholder="https://..." />
+                    <button type="button" class="btn-admin btn-admin-outline" @onclick="() => showMediaPicker = true">📁</button>
+                </div>
+            </div>
+
+            <div class="admin-form-group">
+                <label>Дата публикации</label>
+                <input class="admin-input" type="date" @bind="model.PublishedAt" />
+            </div>
+
+            <div class="admin-form-group">
+                <label>Секции сайта (устаревшее)</label>
+                <div class="checkbox-row">
+                    <label><input type="checkbox" checked="@HasSection("retreats")" @onchange='e => ToggleSection("retreats", (bool)(e.Value ?? false))' /> Ретриты</label>
+                    <label><input type="checkbox" checked="@HasSection("courses")" @onchange='e => ToggleSection("courses", (bool)(e.Value ?? false))' /> Курсы</label>
+                    <label><input type="checkbox" checked="@HasSection("consultations")" @onchange='e => ToggleSection("consultations", (bool)(e.Value ?? false))' /> Консультации</label>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="admin-form-group">
+                    <label>Связанный курс (для перенаправления)</label>
+                    <select class="admin-input" @bind="model.RelatedCourseId">
+                        <option value="">-- Не выбрано --</option>
+                        @foreach (var c in allCourses)
+                        {
+                            <option value="@c.Id">@c.Slug</option>
+                        }
+                    </select>
+                </div>
+                <div class="admin-form-group">
+                    <label>Связанная консультация</label>
+                    <select class="admin-input" @bind="model.RelatedConsultationId">
+                        <option value="">-- Не выбрано --</option>
+                        @foreach (var c in allConsultations)
+                        {
+                            <option value="@c.Id">@c.Slug</option>
+                        }
+                    </select>
+                </div>
+                <div class="admin-form-group">
+                    <label>Связанный ретрит</label>
+                    <select class="admin-input" @bind="model.RelatedRetreatId">
+                        <option value="">-- Не выбрано --</option>
+                        @foreach (var r in allRetreats)
+                        {
+                            <option value="@r.Id">@r.Title (ID: @r.Id.ToString().Substring(0, 8))</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="admin-form-group checkbox-group">
+                <label>
+                    <input type="checkbox" @bind="model.IsActive" />
+                    Активна (видна на сайте)
+                </label>
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="form-error">@error</div>
+            }
+
+            <div class="form-actions">
+                <button class="btn-admin btn-admin-outline" @onclick="Cancel">Отмена</button>
+                <button class="btn-admin btn-admin-primary" disabled="@saving" @onclick="Save">
+                    @(saving ? "Сохранение..." : "Сохранить метаданные")
+                </button>
+            </div>
+        </div>
+
+        @if (!IsNew)
+        {
+            <Yoga.Client.Components.Admin.TranslationEditor
+                EntityType="BlogPost"
+                EntityId="model.Id"
+                Fields="blogFields" />
+        }
+        else
+        {
+            <div class="form-card" style="margin-top:1.5rem;">
+                <p class="admin-text-muted">Сначала сохраните запись, чтобы редактировать контент.</p>
+            </div>
+        }
+    }
+</div>
+
+@if (showMediaPicker)
+{
+    <Yoga.Client.Components.Admin.MediaPicker
+        EntityType="BlogPost"
+        OnSelected="OnMediaSelected"
+        OnClose="() => showMediaPicker = false" />
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+    private bool IsNew => Id == null;
+    private bool showMediaPicker;
+
+    private static readonly string[] blogFields = { "Title", "Excerpt", "Tag" };
+
+    private BlogPost model = new() { Category = "articles", PublishedAt = DateTime.UtcNow };
+    private List<Course> allCourses = new();
+    private List<Consultation> allConsultations = new();
+    private List<Retreat> allRetreats = new();
+    
+    private bool loading;
+    private bool saving;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+        try
+        {
+            var coursesTask = Api.GetAllCoursesAsync();
+            var consTask = Api.GetAllConsultationsAsync();
+            var retreatsTask = Api.GetAllRetreatsAsync();
+
+            await Task.WhenAll(coursesTask, consTask, retreatsTask);
+
+            allCourses = await coursesTask;
+            allConsultations = await consTask;
+            allRetreats = await retreatsTask;
+
+            if (!IsNew)
+            {
+                var all = await Api.GetAllBlogPostsAsync();
+                var found = all.FirstOrDefault(p => p.Id == Id);
+                if (found != null) model = found;
+                else error = "Запись не найдена";
+            }
+        }
+        catch { error = "Ошибка загрузки"; }
+        loading = false;
+    }
+
+    private bool HasSection(string s) => model.Sections.Contains(s);
+
+    private void ToggleSection(string s, bool add)
+    {
+        var list = model.Sections.ToList();
+        if (add && !list.Contains(s)) list.Add(s);
+        else if (!add) list.Remove(s);
+        model.Sections = list.ToArray();
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(model.Slug))
+        {
+            error = "Slug обязателен";
+            return;
+        }
+
+        saving = true;
+        error = null;
+
+        try
+        {
+            HttpResponseMessage response;
+            if (IsNew)
+                response = await Api.CreateBlogPostAsync(model);
+            else
+                response = await Api.UpdateBlogPostAsync(model.Id, model);
+
+            if (response.IsSuccessStatusCode)
+            {
+                if (IsNew)
+                {
+                    var created = await response.Content.ReadFromJsonAsync<BlogPost>();
+                    if (created != null)
+                        Nav.NavigateTo($"/admin/blog/{created.Id}/edit");
+                    else
+                        Nav.NavigateTo("/admin/blog");
+                }
+            }
+            else
+                error = $"Ошибка сервера: {response.StatusCode}";
+        }
+        catch (Exception ex) { error = $"Ошибка: {ex.Message}"; }
+        saving = false;
+    }
+
+    private void Cancel() => Nav.NavigateTo("/admin/blog");
+
+    private void OnMediaSelected(string url)
+    {
+        model.MediaUrl = url;
+        showMediaPicker = false;
+    }
+}

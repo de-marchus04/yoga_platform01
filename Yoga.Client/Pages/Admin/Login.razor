@@ -1,0 +1,64 @@
+@page "/admin/login"
+@layout MainLayout
+@inject AdminAuthService Auth
+@inject NavigationManager Nav
+
+<PageTitle>Вход — Yoga.Life Admin</PageTitle>
+
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-brand">YOGA · LIFE</div>
+        <h2>Панель управления</h2>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="login-error">@errorMessage</div>
+        }
+
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <div class="admin-form-group">
+                <label>Имя пользователя</label>
+                <input type="text" class="admin-input" @bind="loginModel.Username" required autocomplete="username" />
+            </div>
+
+            <div class="admin-form-group">
+                <label>Пароль</label>
+                <input type="password" class="admin-input" @bind="loginModel.Password" required autocomplete="current-password" />
+            </div>
+
+            <button type="submit" class="btn-admin login-submit" disabled="@isLoading">
+                @(isLoading ? "ВХОД..." : "ВОЙТИ")
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? errorMessage;
+    private bool isLoading;
+
+    private class LoginModel
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        var (success, error) = await Auth.LoginAsync(loginModel.Username, loginModel.Password);
+        if (success)
+        {
+            Nav.NavigateTo("/admin");
+        }
+        else
+        {
+            errorMessage = error ?? "Ошибка входа";
+        }
+
+        isLoading = false;
+    }
+}

@@ -1,0 +1,156 @@
+@page "/account/streams"
+@layout CabinetLayout
+@inject UserApiService Api
+@inject IJSRuntime JS
+
+<PageTitle>Трансляции</PageTitle>
+
+<div class="cab-page-header">
+    <h1 class="cab-page-title">Трансляции</h1>
+    <p class="cab-page-subtitle">Онлайн-практики и записи эфиров</p>
+</div>
+
+@if (loading)
+{
+    <div class="cab-streams-list">
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="cab-stream-card cab-skeleton" style="min-height:100px"></div>
+        }
+    </div>
+}
+else if (events.Count == 0)
+{
+    <div class="cab-empty">
+        <div class="cab-empty-icon">🎬</div>
+        <p>Нет доступных трансляций</p>
+        <p class="cab-empty-sub">Запланированные и прошедшие эфиры появятся здесь</p>
+    </div>
+}
+else
+{
+    <div class="cab-filter-tabs">
+        <button class="cab-filter-tab @(streamTab == "upcoming" ? "is-active" : "")" @onclick='() => streamTab = "upcoming"'>Предстоящие</button>
+        <button class="cab-filter-tab @(streamTab == "past" ? "is-active" : "")" @onclick='() => streamTab = "past"'>Прошедшие</button>
+        <button class="cab-filter-tab @(streamTab == "all" ? "is-active" : "")" @onclick='() => streamTab = "all"'>Все</button>
+    </div>
+    <div class="cab-streams-list">
+        @foreach (var ev in FilteredEvents())
+        {
+            <div class="cab-stream-card @ev.Status.ToLower()">
+                <div class="cab-stream-date-col">
+                    <div class="cab-stream-day">@ev.StartsAt.ToString("dd")</div>
+                    <div class="cab-stream-month">@ev.StartsAt.ToString("MMM")</div>
+                    <div class="cab-stream-time">@ev.StartsAt.ToString("HH:mm")</div>
+                </div>
+                <div class="cab-stream-body">
+                    <div style="display:flex;align-items:flex-start;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.4rem;">
+                        <h3 class="cab-stream-title" style="margin:0;">@ev.Title</h3>
+                        <span class="cab-stream-badge @ev.Status.ToLower()">@StatusLabel(ev.Status)</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(ev.Description))
+                    {
+                        <p class="cab-stream-desc">@ev.Description</p>
+                    }
+                    @if (ev.EndsAt.HasValue)
+                    {
+                        <div class="cab-stream-time">до @ev.EndsAt.Value.ToString("HH:mm")</div>
+                    }
+                    @if (ev.Status == "Scheduled")
+                    {
+                        <button class="cab-ics-btn" @onclick="() => DownloadIcs(ev)">📅 В календарь</button>
+                    }
+                    @if (ev.Status is "Live" or "Scheduled" or "Ended")
+                    {
+                        <button class="cab-link-accent" style="background:none;border:none;cursor:pointer;font-family:inherit;padding:0;margin-top:0.5rem;" @onclick="() => WatchEvent(ev.Id)">
+                            @(ev.Status == "Ended" ? "Смотреть запись" : "Присоединиться") →
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (watchDetail != null)
+{
+    <div class="cab-watch-overlay" @onclick="CloseWatch">
+        <div class="cab-watch-modal" @onclick:stopPropagation>
+            <h2 class="cab-watch-title">@watchDetail.Title</h2>
+            @if (!string.IsNullOrEmpty(watchDetail.JoinUrl))
+            {
+                <p class="cab-watch-label">Ссылка для входа:</p>
+                <a href="@watchDetail.JoinUrl" target="_blank" class="cab-watch-btn">Перейти в Zoom</a>
+            }
+            @if (!string.IsNullOrEmpty(watchDetail.RecordingUrl))
+            {
+                <p class="cab-watch-label">Запись трансляции:</p>
+                <a href="@watchDetail.RecordingUrl" target="_blank" class="cab-watch-btn">Смотреть запись</a>
+            }
+            @if (string.IsNullOrEmpty(watchDetail.JoinUrl) && string.IsNullOrEmpty(watchDetail.RecordingUrl))
+            {
+                <p style="color:var(--cab-muted);font-size:0.88rem;">Ссылка ещё не доступна</p>
+            }
+            <button class="cab-watch-close" @onclick="CloseWatch">Закрыть</button>
+        </div>
+    </div>
+}
+
+@code {
+    private List<LiveEventDto> events = new();
+    private LiveEventDetailDto? watchDetail;
+    private bool loading = true;
+    private string streamTab = "upcoming";
+
+    private IEnumerable<LiveEventDto> FilteredEvents() => streamTab switch
+    {
+        "upcoming" => events.Where(e => e.Status is "Scheduled" or "Live"),
+        "past" => events.Where(e => e.Status == "Ended"),
+        _ => events
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await Api.GetMyEventsAsync();
+        loading = false;
+    }
+
+    private async Task WatchEvent(Guid id)
+    {
+        watchDetail = await Api.WatchEventAsync(id);
+    }
+
+    private void CloseWatch() => watchDetail = null;
+
+    private string StatusLabel(string status) => status switch
+    {
+        "Scheduled" => "📅 Запланировано",
+        "Live" => "🔴 Прямой эфир",
+        "Ended" => "📹 Запись доступна",
+        _ => status
+    };
+
+    private async Task DownloadIcs(LiveEventDto ev)
+    {
+        var dtStart = ev.StartsAt.ToUniversalTime().ToString("yyyyMMddTHHmmssZ");
+        var dtEnd = (ev.EndsAt?.ToUniversalTime() ?? ev.StartsAt.AddHours(1).ToUniversalTime()).ToString("yyyyMMddTHHmmssZ");
+        var uid = ev.Id.ToString("N") + "@yoga.life";
+        var desc = (ev.Description ?? "").Replace("\r\n", "\\n").Replace("\n", "\\n").Replace(",", "\\,").Replace(";", "\\;");
+        var title = ev.Title.Replace(",", "\\,").Replace(";", "\\;");
+        var content = string.Join("\r\n",
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//Yoga.Life//Cabinet//RU",
+            "CALSCALE:GREGORIAN",
+            "METHOD:PUBLISH",
+            "BEGIN:VEVENT",
+            $"UID:{uid}",
+            $"DTSTART:{dtStart}",
+            $"DTEND:{dtEnd}",
+            $"SUMMARY:{title}",
+            $"DESCRIPTION:{desc}",
+            "END:VEVENT",
+            "END:VCALENDAR");
+        await JS.InvokeVoidAsync("downloadTextFile", $"yoga-{ev.Id:N}.ics", content);
+    }
+}

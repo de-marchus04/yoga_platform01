@@ -1,0 +1,125 @@
+@page "/admin/access"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@implements IDisposable
+
+<PageTitle>Доступы — Админ</PageTitle>
+
+<div class="access-page">
+    <div class="page-header">
+        <h1>Управление доступами</h1>
+    </div>
+
+    <div class="form-row" style="margin-bottom:1rem;gap:1rem;">
+        <div class="admin-form-group" style="max-width:300px;">
+            <input class="admin-input" placeholder="Фильтр по CustomerId" @bind="filterCustomerId" />
+        </div>
+        <button class="btn-admin btn-admin-primary" @onclick="LoadData">Поиск</button>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else if (grants.Count == 0)
+    {
+        <div class="admin-empty">Доступы не найдены</div>
+    }
+    else
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Клиент</th>
+                        <th>Тип</th>
+                        <th>Начало</th>
+                        <th>Окончание</th>
+                        <th>Статус</th>
+                        <th>Заметки</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var g in grants)
+                    {
+                        <tr>
+                            <td>@g.CustomerName</td>
+                            <td>@g.AccessType</td>
+                            <td>@g.StartsAt.ToString("dd.MM.yyyy")</td>
+                            <td>@(g.EndsAt?.ToString("dd.MM.yyyy") ?? "∞")</td>
+                            <td>
+                                <span class="badge @(g.Status == "Active" ? "badge-success" : "badge-muted")">@g.Status</span>
+                            </td>
+                            <td>@(g.Notes ?? "—")</td>
+                            <td class="actions-cell">
+                                @if (g.Status == "Active")
+                                {
+                                    <button class="btn-admin btn-admin-sm btn-admin-danger" @onclick="() => Revoke(g.Id)">Отозвать</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="admin-pagination">
+            @if (currentPage > 1)
+            {
+                <button class="btn-admin btn-admin-outline" @onclick="PrevPage">← Назад</button>
+            }
+            <span>Страница @currentPage</span>
+            @if (grants.Count == pageSize)
+            {
+                <button class="btn-admin btn-admin-outline" @onclick="NextPage">Далее →</button>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(toast))
+    {
+        <div class="admin-toast @toastType">@toast</div>
+    }
+</div>
+
+@code {
+    private List<AccessGrantDto> grants = new();
+    private bool loading = true;
+    private string filterCustomerId = "";
+    private int currentPage = 1;
+    private const int pageSize = 20;
+    private string? toast;
+    private string toastType = "";
+    private System.Threading.Timer? toastTimer;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        loading = true;
+        Guid? custId = Guid.TryParse(filterCustomerId, out var gid) ? gid : null;
+        try { grants = await Api.GetAccessGrantsAsync(currentPage, pageSize, custId); }
+        catch { grants = new(); }
+        loading = false;
+    }
+
+    private async Task Revoke(Guid id)
+    {
+        var ok = await Api.RevokeAccessGrantAsync(id);
+        if (ok) { ShowToast("Доступ отозван", "success"); await LoadData(); }
+        else ShowToast("Ошибка", "error");
+    }
+
+    private async Task PrevPage() { currentPage--; await LoadData(); }
+    private async Task NextPage() { currentPage++; await LoadData(); }
+
+    private void ShowToast(string message, string type)
+    {
+        toast = message; toastType = type; StateHasChanged();
+        toastTimer?.Dispose();
+        toastTimer = new System.Threading.Timer(_ => { toast = null; InvokeAsync(StateHasChanged); }, null, 3000, System.Threading.Timeout.Infinite);
+    }
+
+    public void Dispose() => toastTimer?.Dispose();
+}

@@ -1,0 +1,120 @@
+.lead-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(26, 26, 26, 0.55);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.lead-modal-content {
+    background: var(--white);
+    padding: 3.5rem;
+    border-top: 2px solid var(--accent);
+    max-width: 520px;
+    width: 100%;
+    margin: 1rem;
+    position: relative;
+}
+
+.lead-modal-content h2 {
+    font-family: var(--font-serif);
+    font-size: 2.2rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--charcoal);
+    margin-bottom: 0.5rem;
+}
+
+.lead-modal-content > p {
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+}
+
+.close-btn {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.8rem;
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    line-height: 1;
+    transition: color var(--transition-speed);
+}
+.close-btn:hover {
+    color: var(--charcoal);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.form-control {
+    width: 100%;
+    padding: 0.9rem 0;
+    border: none;
+    border-bottom: 1px solid var(--divider);
+    border-radius: 0;
+    font-size: 1rem;
+    font-family: var(--font-sans);
+    font-weight: 300;
+    color: var(--charcoal);
+    background: transparent;
+    transition: border-color var(--transition-speed);
+}
+.form-control:focus {
+    outline: none;
+    border-bottom-color: var(--accent);
+}
+select.form-control {
+    appearance: none;
+    cursor: pointer;
+}
+
+::deep .validation-message {
+    color: #ef4444;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.w-100 {
+    width: 100%;
+}
+.success-message {
+    padding: 2rem;
+    text-align: center;
+    color: var(--accent);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 1.4rem;
+    font-weight: 400;
+    border: 1px solid var(--divider);
+    border-top: 2px solid var(--accent);
+}
+
+.modal-context-label {
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}

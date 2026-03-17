@@ -1,0 +1,124 @@
+@page "/account/products"
+@layout CabinetLayout
+@inject UserApiService Api
+
+<PageTitle>Мои продукты</PageTitle>
+
+<div class="cab-page-header">
+    <h1 class="cab-page-title">Мои продукты</h1>
+    <p class="cab-page-subtitle">Курсы, ретриты и консультации с активным доступом</p>
+</div>
+
+@if (loading)
+{
+    <div class="cab-products-grid">
+        @for (int i = 0; i < 4; i++)
+        {
+            <div class="cab-product-card cab-skeleton" style="min-height:180px"></div>
+        }
+    </div>
+}
+else if (grants.Count == 0)
+{
+    <div class="cab-empty">
+        <div class="cab-empty-icon">🎓</div>
+        <p>У вас пока нет активных доступов</p>
+        <p class="cab-empty-sub">Обратитесь к администратору для подключения</p>
+    </div>
+}
+else
+{
+    <div class="cab-filter-tabs">
+        <button class="cab-filter-tab @(activeTab == "all" ? "is-active" : "")" @onclick='() => activeTab = "all"'>Все (@grants.Count)</button>
+        <button class="cab-filter-tab @(activeTab == "active" ? "is-active" : "")" @onclick='() => activeTab = "active"'>Активные (@grants.Count(g => g.Status == "Active"))</button>
+        <button class="cab-filter-tab @(activeTab == "expired" ? "is-active" : "")" @onclick='() => activeTab = "expired"'>Неактивные (@grants.Count(g => g.Status != "Active"))</button>
+    </div>
+    <div class="cab-products-grid">
+        @foreach (var g in FilteredGrants())
+        {
+            <div class="cab-product-card">
+                <div class="cab-product-type-icon @g.AccessType.ToLower()">@TypeIcon(g.AccessType)</div>
+                <div class="cab-product-info">
+                    <div class="cab-product-type-label">@FormatType(g.AccessType)</div>
+                    <h3 class="cab-product-name">@ProductName(g)</h3>
+                    <div class="cab-product-meta">
+                        @g.StartsAt.ToString("dd.MM.yyyy") — @(g.EndsAt?.ToString("dd.MM.yyyy") ?? "∞")
+                    </div>
+                    <div class="cab-product-actions">
+                        <span class="cab-status @g.Status.ToLower()">@StatusLabel(g.Status)</span>
+                        @if (ProductLink(g) is string link)
+                        {
+                            <a href="@link" class="cab-link-accent">Открыть →</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<AccessGrantDto> grants = new();
+    private bool loading = true;
+    private string activeTab = "all";
+
+    private IEnumerable<AccessGrantDto> FilteredGrants() => activeTab switch
+    {
+        "active" => grants.Where(g => g.Status == "Active"),
+        "expired" => grants.Where(g => g.Status != "Active"),
+        _ => grants
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        grants = await Api.GetMyGrantsAsync();
+        loading = false;
+    }
+
+    private string TypeIcon(string type) => type switch
+    {
+        "Course" => "🎓",
+        "Consultation" => "💬",
+        "Retreat" => "🏔",
+        "LiveEvent" => "🎬",
+        "LiveEventSeries" => "📡",
+        _ => "📦"
+    };
+
+    private string FormatType(string type) => type switch
+    {
+        "Course" => "Курс",
+        "Consultation" => "Консультация",
+        "Retreat" => "Ретрит",
+        "LiveEvent" => "Трансляция",
+        "LiveEventSeries" => "Цикл трансляций",
+        _ => type
+    };
+
+    private string ProductName(AccessGrantDto g) => g.AccessType switch
+    {
+        "Course" => g.CourseName ?? "Курс",
+        "Consultation" => g.ConsultationName ?? "Консультация",
+        "Retreat" => g.RetreatTitle ?? "Ретрит",
+        "LiveEvent" => g.LiveEventTitle ?? "Трансляция",
+        "LiveEventSeries" => g.LiveEventTitle ?? "Цикл трансляций",
+        _ => "Продукт"
+    };
+
+    private string? ProductLink(AccessGrantDto g) => g.AccessType switch
+    {
+        "Course" when g.CourseSlug != null => $"/courses/{g.CourseSlug}",
+        "Consultation" when g.ConsultationSlug != null => $"/consultations/{g.ConsultationSlug}",
+        "Retreat" when g.RetreatId.HasValue => $"/retreats/{g.RetreatId}",
+        _ => null
+    };
+
+    private string StatusLabel(string status) => status switch
+    {
+        "Active" => "Активен",
+        "Expired" => "Истёк",
+        "Pending" => "Ожидает",
+        "Revoked" => "Отозван",
+        _ => status
+    };
+}

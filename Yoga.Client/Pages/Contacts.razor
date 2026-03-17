@@ -1,0 +1,115 @@
+@page "/contacts"
+@inject LocalizationService Loc
+@inject ApiService Api
+@implements IDisposable
+
+<PageTitle>@(F("MetaTitle", Loc["page.contacts.title"]))</PageTitle>
+
+<section class="page-hero">
+    <div class="page-hero-bg" style="background-image: url('@F("HeroImageUrl", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1600&q=80")');"></div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+        <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.contacts.eyebrow"]</p>
+        <h1>@F("HeroTitle", Loc["page.contacts.h1"])</h1>
+        <div class="section-divider" style="margin:2rem 0;"></div>
+        <p>@F("HeroSubtitle", "Выберите удобный способ связи — мы отвечаем быстро.")</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrEmpty(F("Content")))
+{
+    <section class="info-cards-section">
+        <div class="container">
+            @((MarkupString)F("Content"))
+        </div>
+    </section>
+}
+else
+{
+    <section class="info-cards-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-eyebrow">@Loc["page.contacts.eyebrow"]</p>
+                <h2>@Loc["page.contacts.info.h2"]</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="info-cards-grid">
+                <div class="info-card reveal">
+                    <span class="info-card-icon">✈</span>
+                    <span class="info-card-label">Telegram</span>
+                    <h3>Telegram</h3>
+                    <p>@F("TelegramDesc", "Самый быстрый способ связаться с нами. Отвечаем в течение часа.")</p>
+                    <a href="@F("TelegramUrl", "https://t.me/yogalife_enterprise")" target="_blank" rel="noopener">@F("TelegramHandle", "@yogalife_enterprise")</a>
+                </div>
+                <div class="info-card reveal reveal-d1">
+                    <span class="info-card-icon">💬</span>
+                    <span class="info-card-label">WhatsApp</span>
+                    <h3>WhatsApp</h3>
+                    <p>@F("WhatsAppDesc", "Голосовые и текстовые сообщения. Удобно для развёрнутых вопросов.")</p>
+                    <a href="@F("WhatsAppUrl", "https://wa.me/79000000000")" target="_blank" rel="noopener">@F("WhatsAppPhone", "+7 (900) 000-00-00")</a>
+                </div>
+                <div class="info-card reveal reveal-d2">
+                    <span class="info-card-icon">📸</span>
+                    <span class="info-card-label">Instagram</span>
+                    <h3>Instagram</h3>
+                    <p>@F("InstagramDesc", "Следите за нашими практиками, ретритами и вдохновляющим контентом.")</p>
+                    <a href="@F("InstagramUrl", "https://instagram.com/yogalife_enterprise")" target="_blank" rel="noopener">@F("InstagramHandle", "@yogalife_enterprise")</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="social-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-eyebrow">@Loc["page.contacts.social.eyebrow"]</p>
+                <h2>@Loc["page.contacts.social.h2"]</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="social-links">
+                <a href="@F("TelegramUrl", "https://t.me/yogalife_enterprise")" class="social-link reveal" target="_blank" rel="noopener">
+                    <span>✈</span> Telegram
+                </a>
+                <a href="@F("WhatsAppUrl", "https://wa.me/79000000000")" class="social-link reveal reveal-d1" target="_blank" rel="noopener">
+                    <span>💬</span> WhatsApp
+                </a>
+                <a href="@F("InstagramUrl", "https://instagram.com/yogalife_enterprise")" class="social-link reveal reveal-d2" target="_blank" rel="noopener">
+                    <span>📸</span> Instagram
+                </a>
+                <a href="@F("YouTubeUrl", "https://youtube.com/@yogalife_enterprise")" class="social-link reveal reveal-d3" target="_blank" rel="noopener">
+                    <span>▶</span> YouTube
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    private SitePageDto? pageData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await LoadPage();
+    }
+
+    private async Task LoadPage()
+    {
+        try { pageData = await Api.GetSitePageAsync("contacts", Loc.CurrentLang); }
+        catch { pageData = null; }
+    }
+
+    private string F(string field, string fallback = "")
+    {
+        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrEmpty(val))
+            return val;
+        return fallback;
+    }
+
+    private async void Refresh()
+    {
+        await LoadPage();
+        await InvokeAsync(StateHasChanged);
+    }
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+}

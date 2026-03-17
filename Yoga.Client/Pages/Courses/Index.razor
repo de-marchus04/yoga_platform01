@@ -1,0 +1,88 @@
+@page "/courses"
+@inject LocalizationService Loc
+@inject ApiService Api
+@implements IDisposable
+
+<PageTitle>@Loc["page.courses.title"]</PageTitle>
+
+<section class="page-hero">
+    <div class="page-hero-bg" style="background-image: url('@F("HeroImageUrl", "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=1600&q=80")');" ></div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+        <p class="section-eyebrow" style="color:var(--accent);">@F("Eyebrow", Loc["page.courses.eyebrow"])</p>
+        <h1>@F("H1", Loc["page.courses.h1"])</h1>
+        <div class="section-divider" style="margin:2rem 0;"></div>
+        <p>@F("Intro", Loc["page.courses.intro"])</p>
+    </div>
+</section>
+
+<section class="course-cards-section">
+    <div class="container">
+        <div class="section-header reveal">
+            <p class="section-eyebrow">@F("Eyebrow", Loc["page.courses.eyebrow"])</p>
+            <h2>@F("H2", Loc["page.courses.h2"])</h2>
+            <div class="section-divider"></div>
+        </div>
+        @if (loading)
+        {
+            <div style="text-align:center;padding:4rem 0;opacity:0.5;">...</div>
+        }
+        else if (!courses.Any())
+        {
+            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);">Курсы скоро появятся</div>
+        }
+        else
+        {
+            <div class="course-cards-grid">
+                @foreach (var (c, i) in courses.Select((x, idx) => (x, idx)))
+                {
+                    var course = c;
+                    var revealClass = i == 1 ? "reveal-d1" : i == 2 ? "reveal-d2" : "";
+                    <ProductCard Url="@($"/courses/{course.Slug}")"
+                                 ImageUrl="@course.ImageUrl"
+                                 Title="@course.Title"
+                                 Eyebrow="@course.Eyebrow"
+                                 Description="@course.Subtitle"
+                                 CtaText="@F("CardCta", Loc["page.courses.card.cta"])"
+                                 RevealClass="@revealClass" />
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private List<CourseDto> courses = new();
+    private bool loading = true;
+    private SitePageDto? pageData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += OnLangChanged;
+        await Task.WhenAll(LoadAsync(), LoadPage());
+    }
+
+    private async Task LoadPage()
+    {
+        try { pageData = await Api.GetSitePageAsync("courses", Loc.CurrentLang); }
+        catch { pageData = null; }
+    }
+
+    private string F(string field, string fallback = "")
+    {
+        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrEmpty(val))
+            return val;
+        return fallback;
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        StateHasChanged();
+        courses = await CatalogState.GetCoursesAsync(Loc.CurrentLang) ?? new();
+        loading = false;
+    }
+
+    private void OnLangChanged() => InvokeAsync(async () => { await Task.WhenAll(LoadAsync(), LoadPage()); StateHasChanged(); });
+    public void Dispose() => Loc.OnLanguageChanged -= OnLangChanged;
+}

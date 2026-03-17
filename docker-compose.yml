@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: yoga-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-YogaLifeEnterpriseDb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.Api
+    container_name: yoga-api
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=db;Database=${POSTGRES_DB:-YogaLifeEnterpriseDb};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-ThisIsAVerySecretKeyForJwtTokenGenerationMinimum32CharsLength!!!}
+      - JwtSettings__Issuer=${JWT_ISSUER:-YogaEnterpriseApi}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-YogaEnterpriseClient}
+      - TelegramSettings__BotToken=${TELEGRAM_BOT_TOKEN:-}
+      - TelegramSettings__ChatId=${TELEGRAM_CHAT_ID:-}
+    restart: always
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.Client
+    container_name: yoga-client
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: always
+
+volumes:
+  postgres-data:

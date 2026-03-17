@@ -1,0 +1,169 @@
+@page "/admin/live-events/new"
+@page "/admin/live-events/{Id:guid}/edit"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>@(IsNew ? "Новый эфир" : "Редактирование эфира") — Админ</PageTitle>
+
+<div class="edit-page">
+    <div class="page-header">
+        <h1>@(IsNew ? "Новый эфир" : "Редактирование эфира")</h1>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else
+    {
+        <div class="form-card">
+            <div class="admin-form-group">
+                <label>Название</label>
+                <input class="admin-input" @bind="title" />
+            </div>
+
+            <div class="admin-form-group">
+                <label>Описание</label>
+                <textarea class="admin-input" rows="3" @bind="description"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="admin-form-group">
+                    <label>Начало</label>
+                    <input class="admin-input" type="datetime-local" @bind="startsAt" />
+                </div>
+                <div class="admin-form-group">
+                    <label>Окончание</label>
+                    <input class="admin-input" type="datetime-local" @bind="endsAt" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="admin-form-group">
+                    <label>Ссылка на Zoom</label>
+                    <input class="admin-input" @bind="joinUrl" placeholder="https://zoom.us/j/..." />
+                </div>
+                <div class="admin-form-group">
+                    <label>Политика доступа</label>
+                    <select class="admin-input" @bind="accessPolicy">
+                        <option value="GrantOnly">Только по доступу</option>
+                        <option value="AllSubscribers">Все подписчики</option>
+                        <option value="Public">Публичный</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (!IsNew)
+            {
+                <div class="form-row">
+                    <div class="admin-form-group">
+                        <label>Статус</label>
+                        <select class="admin-input" @bind="status">
+                            <option value="Scheduled">Запланировано</option>
+                            <option value="Live">В эфире</option>
+                            <option value="Ended">Завершено</option>
+                            <option value="Cancelled">Отменено</option>
+                        </select>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>URL записи</label>
+                        <input class="admin-input" @bind="recordingUrl" placeholder="https://..." />
+                    </div>
+                </div>
+
+                <div class="admin-form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" @bind="isPublished" />
+                        Опубликовано
+                    </label>
+                </div>
+            }
+
+            <div class="admin-form-group">
+                <label>ID серии (необязательно)</label>
+                <input class="admin-input" @bind="seriesIdStr" placeholder="GUID" style="max-width:400px;" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="form-error">@error</div>
+            }
+
+            <div class="form-actions">
+                <button class="btn-admin btn-admin-outline" @onclick="Cancel">Отмена</button>
+                <button class="btn-admin btn-admin-primary" disabled="@saving" @onclick="Save">
+                    @(saving ? "Сохранение..." : "Сохранить")
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+    private bool IsNew => Id == null;
+
+    private string title = "", status = "Scheduled", accessPolicy = "GrantOnly";
+    private string? description, joinUrl, recordingUrl, seriesIdStr;
+    private DateTime startsAt = DateTime.Now.AddDays(1);
+    private DateTime? endsAt;
+    private bool isPublished, loading, saving;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew)
+        {
+            loading = true;
+            try
+            {
+                var detail = await Api.GetLiveEventDetailAsync(Id!.Value);
+                if (detail != null)
+                {
+                    title = detail.Title;
+                    description = detail.Description;
+                    startsAt = detail.StartsAt;
+                    endsAt = detail.EndsAt;
+                    joinUrl = detail.JoinUrl;
+                    recordingUrl = detail.RecordingUrl;
+                    status = detail.Status;
+                    accessPolicy = detail.AccessPolicy;
+                    seriesIdStr = detail.SeriesId?.ToString();
+                    isPublished = detail.IsPublished;
+                }
+                else error = "Эфир не найден";
+            }
+            catch { error = "Ошибка загрузки"; }
+            loading = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(title)) { error = "Название обязательно"; return; }
+        saving = true; error = null;
+        Guid? seriesId = Guid.TryParse(seriesIdStr, out var sid) ? sid : null;
+        try
+        {
+            HttpResponseMessage r;
+            if (IsNew)
+            {
+                var req = new CreateLiveEventRequest(title, description, startsAt, endsAt, joinUrl, accessPolicy, seriesId);
+                r = await Api.CreateLiveEventAsync(req);
+            }
+            else
+            {
+                var req = new UpdateLiveEventRequest(title, description, startsAt, endsAt, joinUrl, recordingUrl, status, accessPolicy, seriesId, isPublished);
+                r = await Api.UpdateLiveEventAsync(Id!.Value, req);
+            }
+
+            if (r.IsSuccessStatusCode) Nav.NavigateTo("/admin/live-events");
+            else error = $"Ошибка: {r.StatusCode}";
+        }
+        catch (Exception ex) { error = ex.Message; }
+        saving = false;
+    }
+
+    private void Cancel() => Nav.NavigateTo("/admin/live-events");
+}

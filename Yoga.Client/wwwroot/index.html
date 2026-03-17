@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Yoga.Life</title>
+    <base href="/" />
+
+    <!-- Dark theme FOUC prevention: runs before CSS renders -->
+    <script>
+        (function () {
+            var t = localStorage.getItem('yl-theme');
+            if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
+
+    <!-- Google Fonts — Variant A: Editorial Luxury -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+    <link rel="stylesheet" href="css/cabinet.css" />
+    <link href="Yoga.Client.styles.css" rel="stylesheet" />
+    
+    <!-- Quill WYSIWYG Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <div style="position:absolute; top:50vh; width:100%; text-align:center; font-family: 'Cormorant Garamond', serif; color: #BFA07A; font-size: 1.8rem; font-weight: 300; letter-spacing: 4px;">
+            YOGA · LIFE
+        </div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <div id="cursor-dot" aria-hidden="true"></div>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        // ─── Custom Cursor (lerp lag, skip touch devices) ─────────────────────
+        (function () {
+            var dot = document.getElementById('cursor-dot');
+            if (!dot || window.matchMedia('(pointer: coarse)').matches) {
+                if (dot) dot.style.display = 'none';
+                return;
+            }
+            document.body.classList.add('custom-cursor-active');
+            var mx = window.innerWidth / 2, my = window.innerHeight / 2;
+            var dx = mx, dy = my;
+            document.addEventListener('mousemove', function(e) { mx = e.clientX; my = e.clientY; });
+            function lerp(a, b, t) { return a + (b - a) * t; }
+            function tick() {
+                dx = lerp(dx, mx, 0.13);
+                dy = lerp(dy, my, 0.13);
+                dot.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+                requestAnimationFrame(tick);
+            }
+            tick();
+            document.addEventListener('mouseover', function(e) {
+                if (e.target && e.target.closest && e.target.closest('a, button'))
+                    dot.classList.add('cursor-hover');
+                else
+                    dot.classList.remove('cursor-hover');
+            });
+            document.addEventListener('mouseleave', function() { dot.classList.add('cursor-hidden'); });
+            document.addEventListener('mouseenter', function() { dot.classList.remove('cursor-hidden'); });
+        })();
+
+        // ─── Theme & Language helpers (called from C# JS interop) ────────────────
+        window.ylSetTheme = function (theme) {
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            localStorage.setItem('yl-theme', theme);
+        };
+
+        window.ylGetLocalStorage = function (key) { return localStorage.getItem(key); };
+        window.ylSetLocalStorage = function (key, value) { localStorage.setItem(key, value); };
+
+        window.downloadTextFile = function (filename, content) {
+            var blob = new Blob([content], { type: 'text/calendar;charset=utf-8;' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click();
+            document.body.removeChild(a); URL.revokeObjectURL(url);
+        };
+
+        window.ylSetAvatarColor = function (color) {
+            localStorage.setItem('yl-avatar-color', color);
+            var el = document.querySelector('.cab-avatar');
+            if (el) el.style.background = color;
+        };
+
+        // ─── Scroll Reveal via IntersectionObserver ───────────────────────────
+        (function () {
+            var io = new IntersectionObserver(function(entries) {
+                entries.forEach(function(e) {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('visible');
+                        io.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            function observe() {
+                document.querySelectorAll('.reveal:not(.observed)').forEach(function(el) {
+                    el.classList.add('observed');
+                    io.observe(el);
+                });
+            }
+
+            new MutationObserver(observe).observe(document.body, { childList: true, subtree: true });
+            document.addEventListener('blazor:navigated', observe);
+            observe();
+        })();
+    </script>
+
+    <!-- Quill.js scripts -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script>
+        window.quillInterop = {
+            editors: {},
+            init: function (element, dotnetHelper, initialContent) {
+                if (!element) return;
+                var quill = new Quill(element, {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['blockquote', 'code-block'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'indent': '-1'}, { 'indent': '+1' }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            ['link', 'image', 'video'],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                if (initialContent) {
+                    quill.root.innerHTML = initialContent;
+                }
+
+                quill.on('text-change', function() {
+                    dotnetHelper.invokeMethodAsync('UpdateContent', quill.root.innerHTML);
+                });
+
+                var id = 'quill_' + Math.random().toString(36).substr(2, 9);
+                element.id = id;
+                this.editors[id] = quill;
+                return id;
+            },
+            setContent: function (editorId, content) {
+                var quill = this.editors[editorId];
+                if (quill) {
+                    quill.root.innerHTML = content || '';
+                }
+            },
+            destroy: function (editorId) {
+                if (this.editors[editorId]) {
+                    delete this.editors[editorId];
+                }
+            }
+        };
+    </script>
+</body>
+
+</html>

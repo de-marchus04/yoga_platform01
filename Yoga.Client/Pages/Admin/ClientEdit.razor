@@ -1,0 +1,213 @@
+@page "/admin/clients/new"
+@page "/admin/clients/{Id:guid}/edit"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>@(IsNew ? "Новый клиент" : "Редактирование клиента") — Админ</PageTitle>
+
+<div class="edit-page">
+    <div class="page-header">
+        <h1>@(IsNew ? "Новый клиент" : "Редактирование клиента")</h1>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else
+    {
+        <div class="form-card">
+            <h3 class="section-title">Данные клиента</h3>
+
+            <div class="form-row">
+                <div class="admin-form-group">
+                    <label>Email</label>
+                    <input class="admin-input" @bind="email" placeholder="client@email.com" disabled="@(!IsNew)" />
+                </div>
+                <div class="admin-form-group">
+                    <label>Полное имя</label>
+                    <input class="admin-input" @bind="fullName" />
+                </div>
+            </div>
+
+            @if (IsNew)
+            {
+                <div class="admin-form-group">
+                    <label>Пароль</label>
+                    <input class="admin-input" type="password" @bind="password" />
+                </div>
+            }
+
+            <div class="form-row">
+                <div class="admin-form-group">
+                    <label>Телефон</label>
+                    <input class="admin-input" @bind="phone" />
+                </div>
+                <div class="admin-form-group">
+                    <label>Мессенджер</label>
+                    <input class="admin-input" @bind="messenger" />
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="form-error">@error</div>
+            }
+
+            <div class="form-actions">
+                <button class="btn-admin btn-admin-outline" @onclick="Cancel">Отмена</button>
+                <button class="btn-admin btn-admin-primary" disabled="@saving" @onclick="Save">
+                    @(saving ? "Сохранение..." : "Сохранить")
+                </button>
+            </div>
+        </div>
+
+        @if (!IsNew && customer != null)
+        {
+            <!-- Subscription section -->
+            <div class="form-card" style="margin-top:1.5rem;">
+                <h3 class="section-title">Подписка</h3>
+                @if (customer.Subscription is { IsActive: true })
+                {
+                    <p>Тариф: <strong>@customer.Subscription.Tier</strong></p>
+                    <p>Действует: @customer.Subscription.StartsAt.ToString("dd.MM.yyyy") — @(customer.Subscription.EndsAt?.ToString("dd.MM.yyyy") ?? "бессрочно")</p>
+                    <button class="btn-admin btn-admin-danger" @onclick="RemoveSubscription">Отменить подписку</button>
+                }
+                else
+                {
+                    <div class="form-row">
+                        <div class="admin-form-group">
+                            <label>Тариф</label>
+                            <select class="admin-input" @bind="subTier">
+                                <option value="Premium">Premium</option>
+                                <option value="Vip">VIP</option>
+                            </select>
+                        </div>
+                        <div class="admin-form-group">
+                            <label>Срок (дни, 0 = бессрочно)</label>
+                            <input class="admin-input" type="number" @bind="subDays" />
+                        </div>
+                    </div>
+                    <button class="btn-admin btn-admin-primary" @onclick="CreateSubscription">Назначить подписку</button>
+                }
+            </div>
+
+            <!-- Access grants section -->
+            <div class="form-card" style="margin-top:1.5rem;">
+                <h3 class="section-title">Доступы</h3>
+                @if (grants.Count > 0)
+                {
+                    <table class="admin-table" style="margin-bottom:1rem;">
+                        <thead>
+                            <tr><th>Тип</th><th>Статус</th><th>До</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var g in grants)
+                            {
+                                <tr>
+                                    <td>@g.AccessType</td>
+                                    <td><span class="badge @(g.Status == "Active" ? "badge-success" : "badge-muted")">@g.Status</span></td>
+                                    <td>@(g.EndsAt?.ToString("dd.MM.yyyy") ?? "∞")</td>
+                                    <td>
+                                        @if (g.Status == "Active")
+                                        {
+                                            <button class="btn-admin btn-admin-sm btn-admin-danger" @onclick="() => RevokeGrant(g.Id)">Отозвать</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="admin-text-muted">Нет доступов</p>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+    private bool IsNew => Id == null;
+
+    private CustomerDto? customer;
+    private List<AccessGrantDto> grants = new();
+    private string email = "", fullName = "", password = "";
+    private string? phone, messenger;
+    private string? error;
+    private bool loading, saving;
+    private string subTier = "Premium";
+    private int subDays = 30;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew)
+        {
+            loading = true;
+            try
+            {
+                customer = await Api.GetCustomerAsync(Id!.Value);
+                if (customer != null)
+                {
+                    email = customer.Email;
+                    fullName = customer.FullName;
+                    phone = customer.Phone;
+                    messenger = customer.Messenger;
+                    grants = await Api.GetAccessGrantsAsync(customerId: Id);
+                }
+                else error = "Клиент не найден";
+            }
+            catch { error = "Ошибка загрузки"; }
+            loading = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        saving = true; error = null;
+        try
+        {
+            if (IsNew)
+            {
+                if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(fullName))
+                { error = "Email, пароль и имя обязательны"; saving = false; return; }
+                var (ok, err) = await Api.CreateCustomerAsync(new CreateCustomerRequest(email, password, fullName, phone, messenger));
+                if (ok) Nav.NavigateTo("/admin/clients");
+                else error = err ?? "Ошибка создания";
+            }
+            else
+            {
+                // In edit mode, profile changes not implemented admin-side (customer manages via cabinet)
+                Nav.NavigateTo("/admin/clients");
+            }
+        }
+        catch (Exception ex) { error = ex.Message; }
+        saving = false;
+    }
+
+    private async Task CreateSubscription()
+    {
+        if (Id == null) return;
+        var endsAt = subDays > 0 ? DateTime.UtcNow.AddDays(subDays) : (DateTime?)null;
+        var ok = await Api.CreateSubscriptionAsync(new CreateSubscriptionRequest(Id.Value, subTier, DateTime.UtcNow, endsAt));
+        if (ok) await OnInitializedAsync();
+    }
+
+    private async Task RemoveSubscription()
+    {
+        if (Id == null) return;
+        await Api.RemoveSubscriptionAsync(Id.Value);
+        await OnInitializedAsync();
+    }
+
+    private async Task RevokeGrant(Guid grantId)
+    {
+        await Api.RevokeAccessGrantAsync(grantId);
+        if (Id != null) grants = await Api.GetAccessGrantsAsync(customerId: Id);
+    }
+
+    private void Cancel() => Nav.NavigateTo("/admin/clients");
+}

@@ -1,0 +1,44 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Yoga.Client.Services
+@inject ModalService ModalService
+@implements IDisposable
+
+@if (ModalService.IsVisible && ModalService.CurrentComponentType != null)
+{
+    var parameters = new Dictionary<string, object>();
+    if (ModalService.CurrentParameters != null)
+    {
+        foreach (var kvp in ModalService.CurrentParameters)
+        {
+            parameters[kvp.Key] = kvp.Value;
+        }
+    }
+    
+    // Inject close callback if the modal expects it
+    if (!parameters.ContainsKey("OnClose"))
+    {
+        parameters["OnClose"] = EventCallback.Factory.Create(this, CloseModal);
+    }
+
+    <DynamicComponent Type="ModalService.CurrentComponentType" Parameters="parameters" />
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        ModalService.OnShow += StateHasChanged;
+        ModalService.OnClose += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ModalService.OnShow -= StateHasChanged;
+        ModalService.OnClose -= StateHasChanged;
+    }
+
+    private void CloseModal()
+    {
+        ModalService.Close();
+    }
+}

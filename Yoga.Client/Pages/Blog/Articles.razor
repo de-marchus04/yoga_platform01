@@ -1,0 +1,117 @@
+@page "/blog/articles"
+@inject LocalizationService Loc
+@inject ApiService Api
+@implements IDisposable
+
+<PageTitle>@Loc["page.blog.articles.title"]</PageTitle>
+
+<section class="page-hero">
+    <div class="page-hero-bg" style="background-image: url('https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1600&q=80');"></div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+        <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.blog.articles.eyebrow"]</p>
+        <h1>@Loc["page.blog.articles.h1"]</h1>
+        <div class="section-divider" style="margin:2rem 0;"></div>
+        <p>@Loc["page.blog.articles.intro"]</p>
+    </div>
+</section>
+
+<section style="padding:8rem 0;">
+    <div class="container">
+        @if (loading)
+        {
+            <div style="text-align:center;padding:4rem 0;opacity:0.5;">...</div>
+        }
+        else if (!posts.Any())
+        {
+            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);">Статьи появятся совсем скоро</div>
+        }
+        else
+        {
+            <div class="section-filter-bar">
+                <button class="filter-tab @(activeTag == "" ? "active" : "")" @onclick="() => SetTag(string.Empty)">Все</button>
+                @foreach (var tag in tags)
+                {
+                    var t = tag;
+                    <button class="filter-tab @(activeTag == t ? "active" : "")" @onclick="() => SetTag(t)">@t</button>
+                }
+            </div>
+
+            <div class="blog-grid">
+                @foreach (var post in PagedItems)
+                {
+                    var p = post;
+                    <a href="/blog/@p.Slug" class="blog-card reveal">
+                        <div class="blog-card-img">
+                            <img src="@(p.MediaUrl ?? "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80")" alt="@p.Title" loading="lazy" />
+                        </div>
+                        <div class="blog-card-body">
+                            @if (!string.IsNullOrEmpty(p.Tag))
+                            {
+                                <span class="blog-tag">@p.Tag</span>
+                            }
+                            <h3>@p.Title</h3>
+                            <p>@p.Excerpt</p>
+                            <span class="blog-read-more">@Loc["page.blog.readmore"] →</span>
+                        </div>
+                    </a>
+                }
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <div class="pagination">
+                    <button class="pagination-btn wide" @onclick="PrevPage" disabled="@(currentPage == 1)">←</button>
+                    @for (int pg = 1; pg <= totalPages; pg++)
+                    {
+                        var p = pg;
+                        <button class="pagination-btn @(currentPage == p ? "active" : "")" @onclick="() => GoTo(p)">@p</button>
+                    }
+                    <button class="pagination-btn wide" @onclick="NextPage" disabled="@(currentPage == totalPages)">→</button>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+@code {
+    private List<BlogPostDto> posts = new();
+    private List<string> tags = new();
+    private bool loading = true;
+    private string activeTag = "";
+    private int currentPage = 1;
+    private const int PageSize = 6;
+
+    private IEnumerable<BlogPostDto> Filtered =>
+        string.IsNullOrEmpty(activeTag) ? posts : posts.Where(p => p.Tag == activeTag);
+
+    private int totalPages => (int)Math.Ceiling(Filtered.Count() / (double)PageSize);
+
+    private IEnumerable<BlogPostDto> PagedItems =>
+        Filtered.Skip((currentPage - 1) * PageSize).Take(PageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += OnLangChanged;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        StateHasChanged();
+        posts = await Api.GetBlogPostsAsync(Loc.CurrentLang, "articles") ?? new();
+        tags = posts.Select(p => p.Tag).Where(t => !string.IsNullOrEmpty(t)).Distinct().OrderBy(t => t).ToList();
+        activeTag = "";
+        currentPage = 1;
+        loading = false;
+    }
+
+    private void SetTag(string tag) { activeTag = tag; currentPage = 1; }
+    private void PrevPage() { if (currentPage > 1) currentPage--; }
+    private void NextPage() { if (currentPage < totalPages) currentPage++; }
+    private void GoTo(int p) => currentPage = p;
+
+    private void OnLangChanged() => InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+    public void Dispose() => Loc.OnLanguageChanged -= OnLangChanged;
+}

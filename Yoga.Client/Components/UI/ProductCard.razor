@@ -1,0 +1,29 @@
+@namespace Yoga.Client.Components.UI
+
+<a href="@Url" class="course-card reveal @RevealClass">
+    <div class="course-card-photo">
+        <img src="@(!string.IsNullOrEmpty(ImageUrl) ? ImageUrl : "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=800&q=80")" alt="@Title" />
+    </div>
+    <div class="course-card-body">
+        @if (!string.IsNullOrEmpty(Eyebrow))
+        {
+            <span class="course-card-eyebrow">@Eyebrow</span>
+        }
+        <h3>@Title</h3>
+        @if (!string.IsNullOrEmpty(Description))
+        {
+            <p>@Description</p>
+        }
+        <span class="course-card-cta">@CtaText</span>
+    </div>
+</a>
+
+@code {
+    [Parameter] public string Url { get; set; } = "";
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string? Eyebrow { get; set; }
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public string CtaText { get; set; } = "Подробнее";
+    [Parameter] public string RevealClass { get; set; } = "";
+}

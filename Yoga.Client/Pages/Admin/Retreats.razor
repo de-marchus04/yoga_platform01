@@ -1,0 +1,149 @@
+@page "/admin/retreats"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>Ретриты — Админ</PageTitle>
+
+<div class="retreats-page">
+    <div class="page-header">
+        <h1>Ретриты</h1>
+        <button class="btn-admin btn-admin-primary" @onclick="CreateNew">+ Добавить ретрит</button>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else if (retreats.Count == 0)
+    {
+        <div class="admin-empty">Ретриты не найдены</div>
+    }
+    else
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Локация</th>
+                        <th>Даты</th>
+                        <th>Цена</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in retreats)
+                    {
+                        <tr>
+                            <td>@r.Title</td>
+                            <td>@r.Location</td>
+                            <td class="nowrap">@r.StartDate.ToString("dd.MM.yy") — @r.EndDate.ToString("dd.MM.yy")</td>
+                            <td>@(r.PriceLabel ?? "—")</td>
+                            <td>
+                                @if (r.IsActive)
+                                {
+                                    <span class="badge badge-success">Активен</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-muted">Неактивен</span>
+                                }
+                            </td>
+                            <td class="actions-cell">
+                                <button class="btn-admin btn-admin-sm btn-admin-outline" @onclick="() => Edit(r.Id)">✎</button>
+                                <button class="btn-admin btn-admin-sm btn-admin-danger" @onclick="() => ConfirmDelete(r)">✕</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (deleteTarget != null)
+    {
+        <div class="modal-backdrop" @onclick="CancelDelete">
+            <div class="modal-card" @onclick:stopPropagation="true">
+                <h3>Удалить ретрит?</h3>
+                <p>Ретрит «@deleteTarget.Title» будет удалён вместе со всеми переводами.</p>
+                <div class="modal-actions">
+                    <button class="btn-admin btn-admin-outline" @onclick="CancelDelete">Отмена</button>
+                    <button class="btn-admin btn-admin-danger" @onclick="ExecuteDelete">Удалить</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(toast))
+    {
+        <div class="admin-toast @toastType">@toast</div>
+    }
+</div>
+
+@code {
+    private List<Retreat> retreats = new();
+    private bool loading = true;
+    private Retreat? deleteTarget;
+    private string? toast;
+    private string toastType = "";
+    private System.Threading.Timer? toastTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        try
+        {
+            retreats = await Api.GetAllRetreatsAsync();
+        }
+        catch
+        {
+            retreats = new();
+        }
+        loading = false;
+    }
+
+    private void CreateNew() => Nav.NavigateTo("/admin/retreats/new");
+    private void Edit(Guid id) => Nav.NavigateTo($"/admin/retreats/{id}/edit");
+
+    private void ConfirmDelete(Retreat r) => deleteTarget = r;
+    private void CancelDelete() => deleteTarget = null;
+
+    private async Task ExecuteDelete()
+    {
+        if (deleteTarget == null) return;
+        var ok = await Api.DeleteRetreatAsync(deleteTarget.Id);
+        deleteTarget = null;
+        if (ok)
+        {
+            ShowToast("Ретрит удалён", "success");
+            await LoadData();
+        }
+        else
+        {
+            ShowToast("Ошибка при удалении", "error");
+        }
+    }
+
+    private void ShowToast(string message, string type)
+    {
+        toast = message;
+        toastType = type;
+        StateHasChanged();
+        toastTimer?.Dispose();
+        toastTimer = new System.Threading.Timer(_ =>
+        {
+            toast = null;
+            InvokeAsync(StateHasChanged);
+        }, null, 3000, System.Threading.Timeout.Infinite);
+    }
+
+    public void Dispose() => toastTimer?.Dispose();
+}

@@ -1,0 +1,110 @@
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+
+<div class="media-picker-overlay" @onclick="Close">
+    <div class="media-picker-modal" @onclick:stopPropagation="true">
+        <div class="media-picker-header">
+            <h3>Выбрать изображение</h3>
+            <button class="btn-admin btn-admin-outline" @onclick="Close">✕</button>
+        </div>
+        <div class="media-picker-body">
+            @if (loading)
+            {
+                <div class="admin-loading">Загрузка...</div>
+            }
+            else if (files.Count == 0)
+            {
+                <div class="admin-empty">Нет загруженных изображений</div>
+            }
+            else
+            {
+                <div class="media-picker-grid">
+                    @foreach (var f in files)
+                    {
+                        @if (IsImage(f.Url))
+                        {
+                            <div class="media-picker-item" @onclick="() => Select(f)">
+                                <img src="@GetFullUrl(f.Url)" alt="@f.Alt" loading="lazy" />
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+        <div class="media-picker-footer">
+            <div class="media-picker-upload">
+                <label class="btn-admin btn-admin-primary upload-btn" style="margin:0; font-size:0.85rem;">
+                    + Загрузить
+                    <InputFile OnChange="HandleUpload" accept="image/*" style="display:none" />
+                </label>
+            </div>
+            <div class="media-picker-url">
+                <input type="text" placeholder="Или вставьте URL..." @bind="manualUrl" />
+                <button class="btn-admin btn-admin-outline" @onclick="UseManualUrl" disabled="@string.IsNullOrWhiteSpace(manualUrl)">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string EntityType { get; set; } = "General";
+    [Parameter] public EventCallback<string> OnSelected { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private List<Yoga.Shared.Models.MediaFile> files = new();
+    private bool loading = true;
+    private string manualUrl = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { files = await Api.GetAllMediaAsync(); }
+        catch { }
+        loading = false;
+    }
+
+    private async Task Select(Yoga.Shared.Models.MediaFile f)
+    {
+        await OnSelected.InvokeAsync(GetFullUrl(f.Url));
+    }
+
+    private async Task UseManualUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(manualUrl))
+            await OnSelected.InvokeAsync(manualUrl.Trim());
+    }
+
+    private async Task HandleUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > 10 * 1024 * 1024) return;
+
+        var content = new MultipartFormDataContent();
+        var stream = file.OpenReadStream(10 * 1024 * 1024);
+        content.Add(new StreamContent(stream), "file", file.Name);
+        content.Add(new StringContent(EntityType), "entityType");
+
+        var result = await Api.UploadMediaAsync(content);
+        if (result != null)
+        {
+            files.Insert(0, result);
+            await OnSelected.InvokeAsync(GetFullUrl(result.Url));
+        }
+    }
+
+    private async Task Close() => await OnClose.InvokeAsync();
+
+    private string GetFullUrl(string url)
+    {
+        if (url.StartsWith("http")) return url;
+        var baseUri = Nav.BaseUri.TrimEnd('/').Replace(":5190", ":5293");
+        return baseUri + url;
+    }
+
+    private bool IsImage(string url) =>
+        url.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".svg", StringComparison.OrdinalIgnoreCase);
+}

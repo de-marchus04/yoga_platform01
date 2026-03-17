@@ -1,0 +1,325 @@
+@page "/"
+@inject Yoga.Client.Services.ApiService ApiService
+@inject LocalizationService Loc
+@implements IDisposable
+
+<PageTitle>@(F("MetaTitle", Loc["page.home.title"]))</PageTitle>
+
+<HeadContent>
+    <meta name="description" content="@(F("MetaDescription", "Эксклюзивные авторские ретриты и программы обучения. Погружение в тишину и возврат к себе."))" />
+    <meta property="og:title" content="@(F("MetaTitle", "Yoga.Life | Премиальные Ретриты"))" />
+    <meta property="og:description" content="@(F("MetaDescription", "Бутиковые туры и практики осознанности. Забронируйте свое место."))" />
+    <meta property="og:image" content="https://yoga-life.ru/img/og-preview.jpg" />
+    <meta property="og:type" content="website" />
+</HeadContent>
+
+<section class="hero">
+    <div class="hero-text">
+        <p class="hero-eyebrow">@(F("HeroEyebrow", Loc["page.home.hero.eyebrow"]))</p>
+        <h1>@(F("HeroTitle", Loc["page.home.hero.h1.line1"]))<br/><em>@(F("HeroSubtitle", Loc["page.home.hero.h1.em"]))</em></h1>
+        <div class="hero-gold-line"></div>
+        <p>@(F("HeroText", Loc["page.home.hero.text"]))</p>
+        <button class="btn btn-primary" @onclick="OpenLeadModal">@Loc["page.home.hero.cta"]</button>
+    </div>
+    <div class="hero-photo">
+        <img src="@(F("HeroImage", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1400&q=80"))" alt="Йога ретрит" />
+    </div>
+</section>
+
+@if (!string.IsNullOrEmpty(F("Content")))
+{
+    <section class="story-section">
+        <div class="container">
+            @((MarkupString)F("Content"))
+        </div>
+    </section>
+}
+
+<section class="stats-section">
+    <div class="container stats-grid">
+        <div class="stat-item reveal">
+            <span class="stat-number">@F("Stats1Value", "12+")</span>
+            <span class="stat-label">@F("Stats1Label", Loc["page.home.stats.retreats"])</span>
+        </div>
+        <div class="stat-item reveal reveal-d1">
+            <span class="stat-number">@F("Stats2Value", "300+")</span>
+            <span class="stat-label">@F("Stats2Label", Loc["page.home.stats.members"])</span>
+        </div>
+        <div class="stat-item reveal reveal-d2">
+            <span class="stat-number">@F("Stats3Value", "5")</span>
+            <span class="stat-label">@F("Stats3Label", Loc["page.home.stats.countries"])</span>
+        </div>
+        <div class="stat-item reveal reveal-d3">
+            <span class="stat-number">@F("Stats4Value", "8")</span>
+            <span class="stat-label">@F("Stats4Label", Loc["page.home.stats.years"])</span>
+        </div>
+    </div>
+</section>
+
+<section class="retreats-section" id="retreats">
+    <div class="container">
+        <div class="section-header reveal">
+            <p class="section-eyebrow">@Loc["page.home.retreats.eyebrow"]</p>
+            <h2>@Loc["page.home.retreats.h2"]</h2>
+            <div class="section-divider"></div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-text">
+                <strong>Данные временно недоступны:</strong> @errorMessage
+            </div>
+        }
+
+        @if (retreats == null)
+        {
+            <div class="retreats-grid">
+                @for (int i = 0; i < 3; i++)
+                {
+                    <div class="retreat-card skeleton-card" style="border:1px solid var(--divider); padding:0; display:flex; flex-direction:column;">
+                        <div class="card-img-wrapper skeleton" style="min-height:220px; border-bottom:1px solid var(--divider);"></div>
+                        <div class="card-content" style="padding: 2.5rem 2rem;">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton skeleton-text" style="width:40%"></div>
+                            <div class="skeleton skeleton-text" style="width:60%; margin-bottom:1.5rem"></div>
+                            <div class="skeleton skeleton-text" style="height:3rem"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else if (!retreats.Any() && string.IsNullOrEmpty(errorMessage))
+        {
+            <p style="text-align:center;">@Loc["page.home.retreats.empty"]</p>
+        }
+        else
+        {
+            <div class="retreats-grid">
+                @foreach (var retreat in retreats)
+                {
+                    <div class="retreat-card reveal reveal-d1">
+                        <div class="card-img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=600&q=80" alt="@retreat.Title" class="card-img" />
+                        </div>
+                        <div class="card-content">
+                            <h3>@retreat.Title</h3>
+                            <p class="location">📍 @retreat.Location</p>
+                            <p class="dates">🗓 @retreat.StartDate.ToString("dd MMM yyyy") — @retreat.EndDate.ToString("dd MMM yyyy")</p>
+                            <p class="description">@retreat.Description</p>
+                            <button class="btn btn-outline" style="width: 100%" @onclick="() => OpenLeadModalForRetreat(retreat)">@Loc["page.home.retreats.cta"]</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section class="directions-section">
+    <div class="container">
+        <div class="section-header reveal">
+            <p class="section-eyebrow">@Loc["page.home.directions.eyebrow"]</p>
+            <h2>@Loc["page.home.directions.h2"]</h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="directions-grid">
+            <a href="/courses" class="direction-block reveal">
+                <div class="direction-number">@Loc["page.home.directions.01"]</div>
+                <h3>@F("Dir1Title", Loc["page.home.directions.01.h3"])</h3>
+                <p>@F("Dir1Text", Loc["page.home.directions.01.text"])</p>
+                <span class="direction-link">@F("Dir1LinkText", Loc["page.home.directions.01.link"])</span>
+            </a>
+            <a href="/consultations" class="direction-block reveal reveal-d1">
+                <div class="direction-number">@Loc["page.home.directions.02"]</div>
+                <h3>@F("Dir2Title", Loc["page.home.directions.02.h3"])</h3>
+                <p>@F("Dir2Text", Loc["page.home.directions.02.text"])</p>
+                <span class="direction-link">@F("Dir2LinkText", Loc["page.home.directions.02.link"])</span>
+            </a>
+            <a href="/retreats/actual" class="direction-block reveal reveal-d2">
+                <div class="direction-number">@Loc["page.home.directions.03"]</div>
+                <h3>@F("Dir3Title", Loc["page.home.directions.03.h3"])</h3>
+                <p>@F("Dir3Text", Loc["page.home.directions.03.text"])</p>
+                <span class="direction-link">@F("Dir3LinkText", Loc["page.home.directions.03.link"])</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="quote-section">
+    <div class="container">
+        <blockquote class="philosophy-quote reveal">
+            <p>@((MarkupString)F("QuoteText", $"{Loc["page.home.quote.line1"]}<br/>{Loc["page.home.quote.line2"]}"))</p>
+            <footer>@F("QuoteAuthor", Loc["page.home.quote.by"])</footer>
+        </blockquote>
+    </div>
+</section>
+
+<section class="formats-section">
+    <div class="format-block format-online reveal">
+        <div class="format-content">
+            <p class="section-eyebrow">@Loc["page.home.formats.eyebrow1"]</p>
+            <h2>@F("Format1Title", Loc["page.home.formats.h2.1"])</h2>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            <p>@F("Format1Text", Loc["page.home.formats.text1"])</p>
+            <a href="/courses" class="btn btn-outline">@F("Format1Cta", Loc["page.home.formats.cta1"])</a>
+        </div>
+    </div>
+    <div class="format-block format-offline reveal reveal-d1">
+        <div class="format-content">
+            <p class="section-eyebrow">@Loc["page.home.formats.eyebrow2"]</p>
+            <h2>@F("Format2Title", Loc["page.home.formats.h2.2"])</h2>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            <p>@F("Format2Text", Loc["page.home.formats.text2"])</p>
+            <a href="/retreats/actual" class="btn btn-outline">@F("Format2Cta", Loc["page.home.formats.cta2"])</a>
+        </div>
+    </div>
+</section>
+
+<section class="reviews-section">
+    <div class="container">
+        <div class="section-header reveal">
+            <p class="section-eyebrow">@Loc["page.home.reviews.eyebrow"]</p>
+            <h2>@Loc["page.home.reviews.h2"]</h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="reviews-grid">
+            <div class="review-card reveal">
+                <p class="review-quote">@F("Review1Quote", Loc["page.home.reviews.1.quote"])</p>
+                <div class="review-author">
+                    <span class="review-name">@F("Review1Author", Loc["page.home.reviews.1.name"])</span>
+                    <span class="review-program">@F("Review1Program", Loc["page.home.reviews.1.program"])</span>
+                </div>
+            </div>
+            <div class="review-card reveal reveal-d1">
+                <p class="review-quote">@F("Review2Quote", Loc["page.home.reviews.2.quote"])</p>
+                <div class="review-author">
+                    <span class="review-name">@F("Review2Author", Loc["page.home.reviews.2.name"])</span>
+                    <span class="review-program">@F("Review2Program", Loc["page.home.reviews.2.program"])</span>
+                </div>
+            </div>
+            <div class="review-card reveal reveal-d2">
+                <p class="review-quote">@F("Review3Quote", Loc["page.home.reviews.3.quote"])</p>
+                <div class="review-author">
+                    <span class="review-name">@F("Review3Author", Loc["page.home.reviews.3.name"])</span>
+                    <span class="review-program">@F("Review3Program", Loc["page.home.reviews.3.program"])</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="blog-section">
+    <div class="container">
+        <div class="section-header reveal">
+            <p class="section-eyebrow">@Loc["page.home.blog.eyebrow"]</p>
+            <h2>@Loc["page.home.blog.h2"]</h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="blog-grid">
+            <a href="/blog/articles" class="blog-card reveal">
+                <span class="blog-tag">@Loc["page.home.blog.1.tag"]</span>
+                <h3>@Loc["page.home.blog.1.h3"]</h3>
+                <p>@Loc["page.home.blog.1.text"]</p>
+                <span class="blog-read-more">@Loc["page.home.blog.readmore"]</span>
+            </a>
+            <a href="/blog/articles" class="blog-card reveal reveal-d1">
+                <span class="blog-tag">@Loc["page.home.blog.2.tag"]</span>
+                <h3>@Loc["page.home.blog.2.h3"]</h3>
+                <p>@Loc["page.home.blog.2.text"]</p>
+                <span class="blog-read-more">@Loc["page.home.blog.readmore"]</span>
+            </a>
+            <a href="/blog/articles" class="blog-card reveal reveal-d2">
+                <span class="blog-tag">@Loc["page.home.blog.3.tag"]</span>
+                <h3>@Loc["page.home.blog.3.h3"]</h3>
+                <p>@Loc["page.home.blog.3.text"]</p>
+                <span class="blog-read-more">@Loc["page.home.blog.readmore"]</span>
+            </a>
+        </div>
+        <div class="blog-footer reveal">
+            <a href="/blog/articles" class="btn btn-outline">@Loc["page.home.blog.all"]</a>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="cta-overlay reveal">
+        <p class="section-eyebrow" style="color:rgba(255,255,255,0.45);">@Loc["page.home.cta.eyebrow"]</p>
+        <h2>@Loc["page.home.cta.h2"]</h2>
+        <p>@Loc["page.home.cta.text"]</p>
+        <button class="btn btn-primary" @onclick="OpenLeadModal">@Loc["page.home.cta.btn"]</button>
+    </div>
+</section>
+
+
+{
+    
+}
+
+@code {
+    private List<Yoga.Shared.DTOs.RetreatDto>? retreats;
+    private string? errorMessage;
+    private Yoga.Shared.DTOs.SitePageDto? pageData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            retreats = await CatalogState.GetActiveRetreatsAsync(Loc.CurrentLang);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Возникла проблема с подключением к серверу (Cross-Origin/SSL). Убедитесь, что API запущен и доступен.";
+            Console.WriteLine(ex.Message);
+            retreats = new List<Yoga.Shared.DTOs.RetreatDto>();
+        }
+
+        try
+        {
+            pageData = await ApiService.GetSitePageAsync("home", Loc.CurrentLang);
+        }
+        catch { }
+    }
+
+    private string F(string field, string fallback = "")
+    {
+        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrWhiteSpace(val))
+            return val.Trim();
+        return fallback;
+    }
+
+    private void OpenLeadModal()
+    {
+        ModalService.Show<LeadModal>();
+    }
+
+    private void OpenLeadModalForRetreat(Yoga.Shared.DTOs.RetreatDto retreat)
+    {
+        ModalService.Show<LeadModal>(new Dictionary<string, object>
+        {
+            { "ContextTitle", retreat.Title },
+            { "TargetRetreatId", retreat.Id }
+        });
+    }
+
+
+    protected override void OnInitialized()
+    {
+        Loc.OnLanguageChanged += Refresh;
+    }
+
+    private async void Refresh()
+    {
+        await LoadDataAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Loc.OnLanguageChanged -= Refresh;
+    }
+}

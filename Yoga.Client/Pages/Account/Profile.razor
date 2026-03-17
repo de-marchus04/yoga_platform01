@@ -1,0 +1,124 @@
+@page "/account/profile"
+@layout CabinetLayout
+@inject UserApiService Api
+@inject ToastService Toast
+@inject IJSRuntime JS
+
+<PageTitle>Профиль</PageTitle>
+
+<div class="cab-page-header">
+    <h1 class="cab-page-title">Профиль</h1>
+    <p class="cab-page-subtitle">Личные данные и настройки безопасности</p>
+</div>
+
+@if (loading)
+{
+    <div class="cab-section cab-skeleton" style="min-height:200px"></div>
+}
+else if (profile != null)
+{
+    <div class="cab-section">
+        <h3 class="cab-section-title">Цвет аватара</h3>
+        <p style="font-size:0.83rem;color:var(--cab-muted);margin:0 0 0.25rem;">Выберите цвет для вашей иконки во всём кабинете</p>
+        <div class="cab-avatar-swatches">
+            @foreach (var c in AvatarColors)
+            {
+                <button class="cab-avatar-swatch @(avatarColor == c ? "selected" : "")"
+                        style="background:@c"
+                        @onclick="() => SetAvatarColor(c)"
+                        title="@c"></button>
+            }
+        </div>
+    </div>
+
+    <div class="cab-section">
+        <h3 class="cab-section-title">Личные данные</h3>
+        <div class="cab-form-row">
+            <div class="cab-form-group">
+                <label class="cab-form-label">Имя</label>
+                <input @bind="profile.FullName" class="cab-form-input" placeholder="Ваше имя" />
+            </div>
+            <div class="cab-form-group">
+                <label class="cab-form-label">Телефон</label>
+                <input @bind="profile.Phone" class="cab-form-input" placeholder="+7 (___) ___-__-__" />
+            </div>
+            <div class="cab-form-group">
+                <label class="cab-form-label">Мессенджер</label>
+                <input @bind="profile.Messenger" class="cab-form-input" placeholder="@@username или ссылка" />
+            </div>
+        </div>
+        <div class="cab-form-actions">
+            <button class="cab-save-btn" @onclick="Save">Сохранить</button>
+        </div>
+    </div>
+
+    <div class="cab-section">
+        <h3 class="cab-section-title">Безопасность</h3>
+        <div class="cab-form-row">
+            <div class="cab-form-group">
+                <label class="cab-form-label">Текущий пароль</label>
+                <input type="password" @bind="currentPwd" class="cab-form-input" placeholder="••••••••" />
+            </div>
+            <div class="cab-form-group">
+                <label class="cab-form-label">Новый пароль</label>
+                <input type="password" @bind="newPwd" class="cab-form-input" placeholder="••••••••" />
+            </div>
+        </div>
+        <div class="cab-form-actions">
+            <button class="cab-ghost-btn" @onclick="ChangePassword">Сменить пароль</button>
+        </div>
+    </div>
+}
+
+@code {
+    private ProfileModel? profile;
+    private bool loading = true;
+    private string currentPwd = "";
+    private string newPwd = "";
+    private string avatarColor = "#BFA07A";
+    private static readonly string[] AvatarColors = { "#BFA07A", "#9BC4A8", "#B0A8D4", "#E8A598", "#8ABDCE", "#D4B896" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var me = await Api.GetMeAsync();
+        if (me != null)
+            profile = new ProfileModel { FullName = me.FullName, Phone = me.Phone, Messenger = me.Messenger };
+        loading = false;
+        try
+        {
+            var saved = await JS.InvokeAsync<string?>("ylGetLocalStorage", "yl-avatar-color");
+            if (!string.IsNullOrEmpty(saved)) avatarColor = saved;
+        }
+        catch { }
+    }
+
+    private async Task Save()
+    {
+        if (profile == null) return;
+        var ok = await Api.UpdateProfileAsync(new CustomerProfileDto(profile.FullName, profile.Phone, profile.Messenger));
+        if (ok) Toast.ShowSuccess("Профиль", "Профиль обновлён");
+        else Toast.ShowError("Ошибка", "Не удалось сохранить профиль");
+    }
+
+    private async Task ChangePassword()
+    {
+        if (string.IsNullOrWhiteSpace(currentPwd) || string.IsNullOrWhiteSpace(newPwd)) return;
+        var (ok, err) = await Api.ChangePasswordAsync(currentPwd, newPwd);
+        if (ok) Toast.ShowSuccess("Пароль", "Пароль изменён");
+        else Toast.ShowError("Ошибка", err ?? "Не удалось сменить пароль");
+        if (ok) { currentPwd = ""; newPwd = ""; }
+    }
+
+    private async Task SetAvatarColor(string color)
+    {
+        avatarColor = color;
+        await JS.InvokeVoidAsync("ylSetAvatarColor", color);
+    }
+
+    private class ProfileModel
+    {
+        public string FullName { get; set; } = "";
+        public string? Phone { get; set; }
+        public string? Messenger { get; set; }
+    }
+}

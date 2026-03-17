@@ -1,0 +1,90 @@
+@page "/blog"
+@inject LocalizationService Loc
+@inject ApiService Api
+@implements IDisposable
+
+<PageTitle>@Loc["page.blog.title"]</PageTitle>
+
+<section class="page-hero">
+    <div class="page-hero-bg" style="background-image: url('@F("HeroImageUrl", "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1600&q=80")');" ></div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+        <p class="section-eyebrow" style="color:var(--accent);">@F("Eyebrow", Loc["page.blog.eyebrow"])</p>
+        <h1>@F("H1", Loc["page.blog.h1"])</h1>
+        <div class="section-divider" style="margin:2rem 0;"></div>
+        <p>@F("Intro", "Статьи, видео и фотографии о практике, ретритах и жизни сообщества.")</p>
+    </div>
+</section>
+
+<section class="categories-section">
+    <div class="container">
+        <div class="section-header reveal">
+            <p class="section-eyebrow">@F("Eyebrow", Loc["page.blog.eyebrow"])</p>
+            <h2>@F("H2", Loc["page.blog.h2"])</h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="category-links-grid">
+            <a href="/blog/articles" class="category-link-card reveal">
+                <div class="category-link-bg" style="background-image: url('@F("ArticlesImageUrl", "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80")');" ></div>
+                <div class="category-link-overlay"></div>
+                <div class="category-link-body">
+                    <span class="category-link-eyebrow">@Loc["page.blog.articles.eyebrow"]</span>
+                    <h3>@Loc["nav.blog.articles"]</h3>
+                    <p>@Loc["page.blog.articles.intro"]</p>
+                    <span class="category-link-cta">@Loc["page.blog.readmore"]</span>
+                </div>
+            </a>
+            <a href="/blog/videos" class="category-link-card reveal reveal-d1">
+                <div class="category-link-bg" style="background-image: url('@F("VideosImageUrl", "https://images.unsplash.com/photo-1611162616475-46b635cb6868?auto=format&fit=crop&w=800&q=80")');" ></div>
+                <div class="category-link-overlay"></div>
+                <div class="category-link-body">
+                    <span class="category-link-eyebrow">@Loc["page.blog.videos.eyebrow"]</span>
+                    <h3>@Loc["nav.blog.videos"]</h3>
+                    <p>@Loc["page.blog.videos.intro"]</p>
+                    <span class="category-link-cta">@Loc["page.blog.readmore"]</span>
+                </div>
+            </a>
+            <a href="/blog/photos" class="category-link-card reveal reveal-d2">
+                <div class="category-link-bg" style="background-image: url('@F("PhotosImageUrl", "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80")');" ></div>
+                <div class="category-link-overlay"></div>
+                <div class="category-link-body">
+                    <span class="category-link-eyebrow">@Loc["page.blog.photos.eyebrow"]</span>
+                    <h3>@Loc["nav.blog.photos"]</h3>
+                    <p>@Loc["page.blog.photos.intro"]</p>
+                    <span class="category-link-cta">@Loc["page.blog.readmore"]</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+@code {
+    private SitePageDto? pageData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await LoadPage();
+    }
+
+    private async Task LoadPage()
+    {
+        try { pageData = await Api.GetSitePageAsync("blog", Loc.CurrentLang); }
+        catch { pageData = null; }
+    }
+
+    private string F(string field, string fallback = "")
+    {
+        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrEmpty(val))
+            return val;
+        return fallback;
+    }
+
+    private async void Refresh()
+    {
+        await LoadPage();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+}

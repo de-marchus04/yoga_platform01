@@ -1,0 +1,93 @@
+@page "/blog/photos"
+@inject LocalizationService Loc
+@inject ApiService Api
+@implements IDisposable
+
+<PageTitle>@Loc["page.blog.photos.title"]</PageTitle>
+
+<section class="page-hero">
+    <div class="page-hero-bg" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80');"></div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+        <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.blog.photos.eyebrow"]</p>
+        <h1>@Loc["page.blog.photos.h1"]</h1>
+        <div class="section-divider" style="margin:2rem 0;"></div>
+        <p>@Loc["page.blog.photos.intro"]</p>
+    </div>
+</section>
+
+@if (loading)
+{
+    <div style="text-align:center;padding:4rem 0;opacity:0.5;">...</div>
+}
+else if (!posts.Any())
+{
+    <div style="text-align:center;padding:8rem 0;color:var(--text-muted);">Фотографии появятся совсем скоро</div>
+}
+else
+{
+    @foreach (var sec in SectionDefs)
+    {
+        var secPosts = posts.Where(p => p.Sections.Any(s => s.Equals(sec.Key, StringComparison.OrdinalIgnoreCase))).ToList();
+        var s = sec;
+        @if (secPosts.Any())
+        {
+            <div class="photo-section-block @(s.Reverse ? "reverse" : "")">
+                <div class="container">
+                    <div class="photo-section-header reveal">
+                        <div>
+                            <p class="section-eyebrow">@s.Eyebrow</p>
+                            <h2>@s.Title</h2>
+                        </div>
+                        <a href="@s.IndexUrl" class="btn btn-outline">@Loc["section.back_to_list"] →</a>
+                    </div>
+                    <div class="photo-mosaic">
+                        @foreach (var (post, pi) in secPosts.Take(4).Select((p, i) => (p, i)))
+                        {
+                            var photoPost = post;
+                            <div class="photo-mosaic-item @(pi == 0 ? "featured" : "") reveal">
+                                <img src="@(photoPost.MediaUrl ?? "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=900&q=80")"
+                                     alt="@photoPost.Title" loading="lazy" />
+                                <a href="/blog/@photoPost.Slug" class="photo-mosaic-label">
+                                    <span>@s.Name</span>
+                                    <strong>@photoPost.Title</strong>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}
+
+@code {
+    private record SecDef(string Key, string Name, string Eyebrow, string Title, string IndexUrl, bool Reverse);
+
+    private static readonly List<SecDef> SectionDefs = new()
+    {
+        new("courses",       "Курсы",        "Направления обучения", "Авторские программы",   "/courses",       false),
+        new("consultations", "Консультации", "Индивидуальная работа",    "Глубокое погружение",   "/consultations", true),
+        new("retreats",      "Ретриты",      "Сакральные места силы", "Жизнь в практике",         "/retreats",      false),
+    };
+
+    private List<BlogPostDto> posts = new();
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += OnLangChanged;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        StateHasChanged();
+        posts = await Api.GetBlogPostsAsync(Loc.CurrentLang, "photos") ?? new();
+        loading = false;
+    }
+
+    private void OnLangChanged() => InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+    public void Dispose() => Loc.OnLanguageChanged -= OnLangChanged;
+}

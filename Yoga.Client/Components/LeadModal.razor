@@ -1,0 +1,105 @@
+@inject LocalizationService Loc
+
+<div class="lead-modal-backdrop" @onclick="Close">
+    <div class="lead-modal-content" @onclick:stopPropagation>
+        <button class="close-btn" @onclick="Close">&times;</button>
+        @if (!string.IsNullOrWhiteSpace(ContextTitle))
+        {
+            <p class="modal-context-label">@Loc["form.context_prefix"]: <strong>@ContextTitle</strong> @(string.IsNullOrEmpty(TargetFormat) ? "" : $"({TargetFormat})")</p>
+        }
+        <h2>@Loc["form.heading"]</h2>
+        <p>@Loc["form.subtext"]</p>
+
+        @if (isSubmitted)
+        {
+            <div class="success-message">
+                @Loc["form.success"]
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@leadModel" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label>@Loc["form.name"]</label>
+                    <InputText @bind-Value="leadModel.Name" class="form-control" />
+                    <ValidationMessage For="@(() => leadModel.Name)" />
+                </div>
+
+                <div class="form-group">
+                    <label>@Loc["form.messenger"]</label>
+                    <InputSelect @bind-Value="leadModel.Messager" class="form-control">
+                        <option value="Telegram">Telegram</option>
+                        <option value="WhatsApp">WhatsApp</option>
+                        <option value="Viber">Viber</option>
+                        <option value="Phone">@Loc["form.phone_call"]</option>
+                    </InputSelect>
+                    <ValidationMessage For="@(() => leadModel.Messager)" />
+                </div>
+
+                <div class="form-group">
+                    <label>@Loc["form.contact"]</label>
+                    <InputText @bind-Value="leadModel.ContactDetails" class="form-control" />
+                    <ValidationMessage For="@(() => leadModel.ContactDetails)" />
+                </div>
+
+                <div class="form-group">
+                    <label>@Loc["form.comment"]</label>
+                    <InputTextArea @bind-Value="leadModel.Comment" class="form-control" />
+                    <ValidationMessage For="@(() => leadModel.Comment)" />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" disabled="@isSubmitting">
+                    @(isSubmitting ? Loc["form.submitting"] : Loc["form.submit"])
+                </button>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public string? ContextTitle { get; set; }
+    
+    // Structured backend targeting
+    [Parameter] public Guid? TargetCourseId { get; set; }
+    [Parameter] public Guid? TargetConsultationId { get; set; }
+    [Parameter] public Guid? TargetRetreatId { get; set; }
+    [Parameter] public string TargetFormat { get; set; } = string.Empty; // "Online" or "Offline"
+
+    [Inject] private Yoga.Client.Services.ApiService ApiService { get; set; } = default!;
+
+    private Yoga.Shared.Models.Lead leadModel = new() { Messager = "Telegram" };
+    private bool isSubmitting = false;
+    private bool isSubmitted = false;
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        if (!string.IsNullOrWhiteSpace(ContextTitle))
+        {
+            var formatSuffix = string.IsNullOrEmpty(TargetFormat) ? "" : $" ({TargetFormat})";
+            leadModel.Comment = string.IsNullOrWhiteSpace(leadModel.Comment)
+                ? $"Запись на: {ContextTitle}{formatSuffix}"
+                : $"Запись на: {ContextTitle}{formatSuffix}. {leadModel.Comment}";
+        }
+
+        // Apply robust references
+        leadModel.CourseId = TargetCourseId;
+        leadModel.ConsultationId = TargetConsultationId;
+        leadModel.RetreatId = TargetRetreatId;
+        leadModel.TargetFormat = TargetFormat;
+
+        var success = await ApiService.SubmitLeadAsync(leadModel);
+        if (success)
+            isSubmitted = true;
+
+        isSubmitting = false;
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

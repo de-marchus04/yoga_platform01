@@ -1,0 +1,287 @@
+@page "/retreats/{Id:guid}"
+@inject LocalizationService Loc
+@inject Yoga.Client.Services.ApiService ApiService
+@inject NavigationManager Nav
+@implements IDisposable
+@using Yoga.Shared.DTOs
+
+<PageTitle>@(retreat?.Title ?? Loc["page.retreat.detail.loading"]) | Yoga.Life</PageTitle>
+
+@if (retreat == null && !notFound)
+{
+    <section class="retreat-detail-hero">
+        <div class="retreat-detail-hero-overlay" style="background:var(--background);"></div>
+        <div class="container retreat-detail-hero-content">
+            <div class="skeleton skeleton-title" style="height:1rem; width:15%; margin-bottom:1rem;"></div>
+            <div class="skeleton" style="height:3rem; width:70%; margin-bottom:1.5rem;"></div>
+            <div style="display:flex; gap:1rem;">
+                <div class="skeleton" style="height:2rem; width:120px; border-radius:30px;"></div>
+                <div class="skeleton" style="height:2rem; width:200px; border-radius:30px;"></div>
+            </div>
+        </div>
+    </section>
+}
+else if (notFound)
+{
+    <div style="min-height:65vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2rem; text-align:center;">
+        <p style="color:var(--text-muted);">@Loc["page.retreat.detail.not_found"]</p>
+        <a href="/retreats/actual" class="btn btn-outline">← @Loc["page.retreat.detail.back"]</a>
+    </div>
+}
+else
+{
+    var r = retreat!;
+
+    <!-- ====== HERO ====== -->
+    <section class="retreat-detail-hero"
+             style="background-image: url('@(r.ImageUrl ?? "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1600&q=80")');">
+        <div class="retreat-detail-hero-overlay"></div>
+        <div class="container retreat-detail-hero-content">
+            <a href="/retreats/actual" class="retreat-back-link">← @Loc["page.retreat.detail.back"]</a>
+            <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.retreats.eyebrow"]</p>
+            <h1>@r.Title</h1>
+            <div class="retreat-meta-pills">
+                <span class="meta-pill">📍 @r.Location</span>
+                <span class="meta-pill">🗓 @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")</span>
+                @if (IsPast)
+                {
+                    <span class="meta-pill meta-pill-past">@Loc["page.retreat.past.badge"]</span>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== BODY ====== -->
+    <section class="retreat-detail-section">
+        <div class="container retreat-detail-body">
+
+            <!-- LEFT: content column -->
+            <div class="retreat-detail-content">
+
+                <!-- About -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@Loc["page.retreat.detail.about_eyebrow"]</p>
+                    <h2>@Loc["page.retreat.detail.about_h2"]</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    <p style="line-height:1.9; color:var(--text-muted);">@r.Description</p>
+                </div>
+
+                <!-- Programme -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@Loc["page.retreat.detail.program_eyebrow"]</p>
+                    <h2>@Loc["page.retreat.detail.program_h2"]</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    @if (!string.IsNullOrWhiteSpace(r.Program))
+                    {
+                        <div class="retreat-program-days">@((MarkupString)r.Program)</div>
+                    }
+                    else
+                    {
+                        <div class="retreat-program-days">
+                            <div class="day-item reveal">
+                                <span class="day-chip">День 1</span>
+                                <div>
+                                    <strong>Прибытие и встреча</strong>
+                                    <p>Заселение, знакомство группы, вечерняя медитация при свечах.</p>
+                                </div>
+                            </div>
+                            <div class="day-item reveal">
+                                <span class="day-chip">Дни 2–6</span>
+                                <div>
+                                    <strong>Практики и погружение</strong>
+                                    <p>Утренняя и вечерняя пранаяма, групповые медитации, ахарагита, пеший маршрут к местам силы, авторские лекции и беседы у костра.</p>
+                                </div>
+                            </div>
+                            <div class="day-item reveal">
+                                <span class="day-chip">День 7</span>
+                                <div>
+                                    <strong>Интеграция и отъезд</strong>
+                                    <p>Финальный круг, церемония благодарности, индивидуальная беседа с куратором, возвращение в мир.</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- What's included -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@Loc["page.retreat.detail.included_eyebrow"]</p>
+                    <h2>@Loc["page.retreat.detail.included_h2"]</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    <ul class="retreat-included-list">
+                        <li>@Loc["page.retreat.detail.included.1"]</li>
+                        <li>@Loc["page.retreat.detail.included.2"]</li>
+                        <li>@Loc["page.retreat.detail.included.3"]</li>
+                        <li>@Loc["page.retreat.detail.included.4"]</li>
+                        <li>@Loc["page.retreat.detail.included.5"]</li>
+                        <li>@Loc["page.retreat.detail.included.6"]</li>
+                        <li>@Loc["page.retreat.detail.included.7"]</li>
+                    </ul>
+                </div>
+
+                <!-- Gallery -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@Loc["page.retreat.detail.gallery_eyebrow"]</p>
+                    <h2>@Loc["page.retreat.detail.gallery_h2"]</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    <div class="retreat-gallery-grid">
+                        @foreach (var img in GalleryImages)
+                        {
+                            <div class="retreat-gallery-item">
+                                <img src="@img" alt="@r.Title" loading="lazy" />
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Reviews -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@Loc["page.retreat.detail.reviews_eyebrow"]</p>
+                    <h2>@Loc["page.retreat.detail.reviews_h2"]</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    <div class="retreat-reviews-grid">
+                        <div class="review-card reveal">
+                            <p class="review-quote">«После этого ретрита я вернулась другим человеком. Тишина, природа, глубина практик — всё на своём месте.»</p>
+                            <p class="review-author">— Елена М.</p>
+                        </div>
+                        <div class="review-card reveal">
+                            <p class="review-quote">«Первый раз попала на подобную программу и сразу поняла: это именно то, чего не хватало годами.»</p>
+                            <p class="review-author">— Ирина В.</p>
+                        </div>
+                        <div class="review-card reveal">
+                            <p class="review-quote">«Организация на высоте, куратор всегда рядом. Тело и ум получили именно тот отдых, который нужен.»</p>
+                            <p class="review-author">— Дмитрий К.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <RelatedBlog EntityId="retreat?.Id" Section="retreats" />
+
+                <!-- Other retreats -->
+                @if (otherRetreats.Any())
+                {
+                    <div class="retreat-content-block reveal">
+                        <p class="section-eyebrow">@Loc["page.retreat.detail.other_eyebrow"]</p>
+                        <h2>@Loc["page.retreat.detail.other_h2"]</h2>
+                        <div class="section-divider" style="margin:1.5rem 0;"></div>
+                        <div class="retreat-other-grid">
+                            @foreach (var other in otherRetreats)
+                            {
+                                var o = other;
+                                <div class="retreat-other-card reveal">
+                                    <img src="@(o.ImageUrl ?? "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
+                                         alt="@o.Title" loading="lazy" />
+                                    <div class="retreat-other-body">
+                                        <h4>@o.Title</h4>
+                                        <p>📍 @o.Location</p>
+                                        <p>🗓 @o.StartDate.ToString("dd MMM yyyy")</p>
+                                        <a href="/retreats/@o.Id" class="btn btn-outline btn-sm" style="display:inline-block; margin-top:1rem;">@Loc["page.retreat.detail.other_cta"]</a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            <!-- RIGHT: sticky booking sidebar -->
+            <aside class="retreat-booking-sidebar">
+                <div class="retreat-booking-card sticky-panel">
+                    @if (IsPast)
+                    {
+                        <div class="retreat-past-block">
+                            <p class="section-eyebrow" style="color:var(--text-muted);">@Loc["page.retreat.past.eyebrow"]</p>
+                            <h3>@Loc["page.retreat.past.title"]</h3>
+                            <div class="section-divider" style="margin:1.25rem 0;"></div>
+                            <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.75;">@Loc["page.retreat.past.subtitle"]</p>
+                            <a href="/retreats/actual" class="btn btn-outline" style="display:block; text-align:center; margin-top:2rem;">@Loc["page.retreat.past.cta"]</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.retreats.eyebrow"]</p>
+                        <h3 style="font-size:1.5rem; margin:0.75rem 0 1.25rem;">@Loc["page.retreat.detail.booking_h3"]</h3>
+                        <div class="section-divider" style="margin:0 0 1.75rem;"></div>
+                        <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.8; margin-bottom:2rem;">
+                            📍 @r.Location<br/>
+                            🗓 @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")
+                        </p>
+                        <button class="btn btn-primary" style="width:100%;" @onclick="OpenModal">@Loc["page.retreats.card.cta"]</button>
+                    }
+                </div>
+            </aside>
+
+        </div>
+    </section>
+}
+
+
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private RetreatDto? retreat;
+    private bool notFound = false;
+    private List<RetreatDto> otherRetreats = new();
+
+    private bool IsPast => retreat?.EndDate.ToUniversalTime() < DateTime.UtcNow;
+
+    private List<string> GalleryImages => new()
+    {
+        retreat?.ImageUrl ?? "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1508672019048-805c876b67e2?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (retreat?.Id != Id)
+            await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        notFound = false;
+        retreat = null;
+        try
+        {
+            retreat = await ApiService.GetRetreatByIdAsync(Id, Loc.CurrentLang);
+            if (retreat == null) { notFound = true; return; }
+            var all = await CatalogState.GetActiveRetreatsAsync(Loc.CurrentLang);
+            otherRetreats = all.Where(x => x.Id != Id).Take(2).ToList();
+        }
+        catch
+        {
+            notFound = true;
+        }
+    }
+
+    private async void Refresh()
+    {
+        await LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenModal()
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters["ContextTitle"] = retreat?.Title ?? "Ретрит";
+        if (retreat != null)
+        {
+            parameters["TargetRetreatId"] = retreat.Id;
+        }
+        ModalService.Show<LeadModal>(parameters);
+    }
+
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+}

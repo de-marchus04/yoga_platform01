@@ -1,0 +1,142 @@
+@page "/about"
+@inject LocalizationService Loc
+@inject ApiService Api
+@implements IDisposable
+
+<PageTitle>@(F("MetaTitle", Loc["page.about.title"]))</PageTitle>
+
+<section class="page-hero">
+    <div class="page-hero-bg" style="background-image: url('@F("HeroImageUrl", "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1600&q=80")');"></div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+        <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.about.founders.eyebrow"]</p>
+        <h1>@F("HeroTitle", Loc["page.about.h1"])</h1>
+        <div class="section-divider" style="margin:2rem 0;"></div>
+        <p>@F("HeroSubtitle", "Yoga.Life Enterprise — это пространство, где встречаются традиция и современность, практика и трансформация.")</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrEmpty(F("Content")))
+{
+    <section class="story-section">
+        <div class="container">
+            @((MarkupString)F("Content"))
+        </div>
+    </section>
+}
+else
+{
+    <!-- Founder 1: Olga -->
+    <section class="story-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-eyebrow">@Loc["page.about.founders.eyebrow"]</p>
+                <h2>@Loc["page.about.founders.h2"]</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="story-grid reveal">
+                <div class="story-text">
+                    <span class="story-role">@F("Founder1Role", "Автор методик · Инструктор · 15+ лет практики")</span>
+                    <h2>@F("Founder1Name", "Ольга Шалетина")</h2>
+                    <p>@F("Founder1Text1", "Ольга начала путь йоги в 20 лет — и с тех пор не останавливалась. За 15+ лет практики и преподавания она разработала авторские программы оздоровления через дыхание, которые прошли более 300 студентов.")</p>
+                    <p>@F("Founder1Text2", "Специализация — пранаяма, йога-нидра и работа с хроническим стрессом. Её классы сочетают строгость традиции с теплотой живого присутствия.")</p>
+                </div>
+                <div class="story-photo">
+                    <img src="@F("Founder1ImageUrl", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder1Name", "Ольга Шалетина")" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Founder 2: Alexander -->
+    <section class="story-section" style="background: var(--section-bg-warm);">
+        <div class="container">
+            <div class="story-grid reveal" style="direction: rtl;">
+                <div class="story-text" style="direction: ltr;">
+                    <span class="story-role">@F("Founder2Role", "Учитель · Духовный наставник · 25+ лет опыта")</span>
+                    <h2>@F("Founder2Name", "Александр Украинцев")</h2>
+                    <p>@F("Founder2Text1", "Александр изучает йогу и ведическую философию более 25 лет. Он провёл свыше 40 ретритов в России, Европе и Азии, а его наставничество глубоко уходит корнями в традицию крийя-йоги.")</p>
+                    <p>@F("Founder2Text2", "Его подход — не набор техник, а целостный путь: от физического тела к самому тонкому. Каждый ретрит под его руководством становится точкой отсчёта новой жизни.")</p>
+                </div>
+                <div class="story-photo" style="direction: ltr;">
+                    <img src="@F("Founder2ImageUrl", "https://images.unsplash.com/photo-1566753323558-f4e0952af115?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder2Name", "Александр Украинцев")" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Founder 3: Dmitry -->
+    <section class="story-section">
+        <div class="container">
+            <div class="story-grid reveal">
+                <div class="story-text">
+                    <span class="story-role">@F("Founder3Role", "Создатель платформы · Разработчик")</span>
+                    <h2>@F("Founder3Name", "Дмитрий Державин")</h2>
+                    <p>@F("Founder3Text1", "Дмитрий создал технологическую основу Yoga.Life Enterprise — систему, которая объединяет учителей и студентов со всего мира в единое пространство практики и роста.")</p>
+                    <p>@F("Founder3Text2", "Его видение: технологии должны служить духовному развитию, а не отвлекать от него. Платформа строится на принципах простоты, красоты и функциональности.")</p>
+                </div>
+                <div class="story-photo">
+                    <img src="@F("Founder3ImageUrl", "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder3Name", "Дмитрий Державин")" />
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Philosophy grid -->
+    <section class="philosophy-grid-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-eyebrow">@Loc["page.about.philosophy.eyebrow"]</p>
+                <h2>@Loc["page.about.philosophy.h2"]</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="philosophy-grid">
+                <div class="philosophy-item reveal">
+                    <span class="philosophy-item-num">01</span>
+                    <h3>@F("Phil1Title", "Присутствие")</h3>
+                    <p>@F("Phil1Text", "Каждая практика начинается с момента здесь и сейчас. Мы создаём пространство, где тело и ум обретают покой.")</p>
+                </div>
+                <div class="philosophy-item reveal reveal-d1">
+                    <span class="philosophy-item-num">02</span>
+                    <h3>@F("Phil2Title", "Традиция")</h3>
+                    <p>@F("Phil2Text", "Наши методики уходят корнями в многовековые практики йоги, аюрведы и ведической философии.")</p>
+                </div>
+                <div class="philosophy-item reveal reveal-d2">
+                    <span class="philosophy-item-num">03</span>
+                    <h3>@F("Phil3Title", "Трансформация")</h3>
+                    <p>@F("Phil3Text", "Мы не просто учим асанам — мы помогаем переосмыслить жизнь через осознанное движение, дыхание и тишину.")</p>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    private SitePageDto? pageData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await LoadPage();
+    }
+
+    private async Task LoadPage()
+    {
+        try { pageData = await Api.GetSitePageAsync("about", Loc.CurrentLang); }
+        catch { pageData = null; }
+    }
+
+    private string F(string field, string fallback = "")
+    {
+        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrEmpty(val))
+            return val;
+        return fallback;
+    }
+
+    private async void Refresh()
+    {
+        await LoadPage();
+        await InvokeAsync(StateHasChanged);
+    }
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+}

@@ -1,0 +1,146 @@
+@using Yoga.Shared.DTOs
+@inject ApiService Api
+@inject LocalizationService Loc
+@inject BlogHubService HubSvc
+@implements IDisposable
+
+@if (articles.Any() || videos.Any() || photos.Any())
+{
+    <section class="related-blog-section">
+        <div class="container">
+            <p class="section-eyebrow">@Loc["section.related_blog.eyebrow"]</p>
+
+            @if (articles.Any())
+            {
+                <div class="related-blog-block">
+                    <div class="related-blog-block-header">
+                        <h3>@Loc["section.related_blog.articles_heading"]</h3>
+                        <a href="/blog/articles" class="related-blog-all-link">@Loc["section.related_blog.all_articles"]</a>
+                    </div>
+                    <div class="related-blog-article-grid">
+                        @foreach (var post in articles.Take(3))
+                        {
+                            var p = post;
+                            <a href="/blog/@p.Slug" class="related-blog-card">
+                                @if (!string.IsNullOrEmpty(p.MediaUrl))
+                                {
+                                    <img src="@p.MediaUrl" alt="@p.Title" class="related-blog-card-img" loading="lazy" />
+                                }
+                                <div class="related-blog-card-body">
+                                    @if (!string.IsNullOrEmpty(p.Tag))
+                                    {
+                                        <span class="related-blog-tag">@p.Tag</span>
+                                    }
+                                    <h4>@p.Title</h4>
+                                    <p class="related-blog-excerpt">@p.Excerpt</p>
+                                    <span class="related-blog-read-more">@Loc["section.related_blog.read_more"]</span>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (videos.Any())
+            {
+                <div class="related-blog-block">
+                    <div class="related-blog-block-header">
+                        <h3>@Loc["section.related_blog.videos_heading"]</h3>
+                        <a href="/blog/videos" class="related-blog-all-link">@Loc["section.related_blog.all_videos"]</a>
+                    </div>
+                    <div class="related-blog-video-grid">
+                        @foreach (var post in videos.Take(3))
+                        {
+                            var p = post;
+                            <a href="/blog/@p.Slug" class="related-blog-card related-blog-card--video">
+                                <div class="related-blog-video-thumb">
+                                    @if (!string.IsNullOrEmpty(p.MediaUrl))
+                                    {
+                                        <img src="@p.MediaUrl" alt="@p.Title" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <div class="related-blog-video-placeholder"></div>
+                                    }
+                                    <span class="related-blog-play-icon">▶</span>
+                                </div>
+                                <div class="related-blog-card-body">
+                                    <h4>@p.Title</h4>
+                                    <span class="related-blog-meta">@p.PublishedAt.ToString("dd MMM yyyy")</span>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (photos.Any())
+            {
+                <div class="related-blog-block">
+                    <div class="related-blog-block-header">
+                        <h3>@Loc["section.related_blog.photos_heading"]</h3>
+                        <a href="/blog/photos" class="related-blog-all-link">@Loc["section.related_blog.all_photos"]</a>
+                    </div>
+                    <div class="related-blog-photo-grid">
+                        @foreach (var post in photos.Take(6))
+                        {
+                            var p = post;
+                            <a href="/blog/@p.Slug" class="related-blog-photo-item">
+                                <img src="@(p.MediaUrl ?? "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
+                                     alt="@p.Title" loading="lazy" />
+                                <span class="related-blog-photo-overlay">@p.Title</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = string.Empty;
+    [Parameter] public Guid? EntityId { get; set; }
+
+    private List<BlogPostDto> articles = new();
+    private List<BlogPostDto> videos   = new();
+    private List<BlogPostDto> photos   = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+        Loc.OnLanguageChanged += OnLangChanged;
+        HubSvc.OnBlogUpdated += OnHubUpdated;
+        _ = HubSvc.EnsureStartedAsync(Api.ApiBaseUrl);
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            var all = await Api.GetBlogPostsAsync(Loc.CurrentLang, section: string.IsNullOrEmpty(Section) ? null : Section, relatedEntityId: EntityId);
+            articles = all.Where(p => p.Category == "articles").ToList();
+            videos   = all.Where(p => p.Category == "videos").ToList();
+            photos   = all.Where(p => p.Category == "photos").ToList();
+        }
+        catch
+        {
+            // API unavailable
+        }
+    }
+
+    private void OnHubUpdated(string[] sections)
+    {
+        if (sections != null && sections.Contains(Section))
+            InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+    }
+
+    private void OnLangChanged()
+        => InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    public void Dispose()
+    {
+        Loc.OnLanguageChanged -= OnLangChanged;
+        HubSvc.OnBlogUpdated  -= OnHubUpdated;
+    }
+}

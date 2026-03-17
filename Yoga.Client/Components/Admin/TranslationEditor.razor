@@ -1,0 +1,289 @@
+@inject Yoga.Client.Services.AdminApiService Api
+@implements IDisposable
+
+@if (EntityId != Guid.Empty)
+{
+    <div class="translation-editor-component">
+        <h3 class="section-title">Контент (переводы)</h3>
+
+        @if (loadingTranslations)
+        {
+            <div class="admin-loading">Загрузка переводов...</div>
+        }
+        else
+        {
+            <div class="lang-tabs">
+                @foreach (var lang in Languages)
+                {
+                    <button class="lang-tab @(currentLang == lang ? "active" : "")"
+                            @onclick="() => SwitchLang(lang)">@lang.ToUpper()</button>
+                }
+            </div>
+
+            <div class="translation-fields">
+                @foreach (var field in Fields)
+                {
+                    <div class="admin-form-group">
+                        <label>@GetFieldLabel(field)</label>
+                        @if (IsRichTextField(field))
+                        {
+                            <div class="admin-richtext-wrapper">
+                                <Yoga.Client.Components.Admin.RichTextEditor 
+                                    Value="@GetValue(field)" 
+                                    ValueChanged="@(val => SetValue(field, val ?? ""))" />
+                            </div>
+                        }
+                        else if (IsLongField(field))
+                        {
+                            <textarea class="admin-input admin-textarea" rows="4"
+                                      value="@GetValue(field)"
+                                      @oninput='e => SetValue(field, e.Value?.ToString() ?? "")'></textarea>
+                        }
+                        else if (IsImageField(field))
+                        {
+                            <div style="display:flex; gap:0.5rem;">
+                                <input class="admin-input" style="flex:1"
+                                       value="@GetValue(field)"
+                                       @oninput='e => SetValue(field, e.Value?.ToString() ?? "")' />
+                                <button type="button" class="btn-admin btn-admin-outline" @onclick="() => OpenMediaPicker(field)">📁</button>
+                            </div>
+                        }
+                        else
+                        {
+                            <input class="admin-input"
+                                   value="@GetValue(field)"
+                                   @oninput='e => SetValue(field, e.Value?.ToString() ?? "")' />
+                        }
+                    </div>
+                }
+
+                <div class="form-actions">
+                    <button class="btn-admin btn-admin-primary" disabled="@saving" @onclick="SaveTranslations">
+                        @(saving ? "Сохранение..." : "Сохранить переводы")
+                    </button>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(toast))
+        {
+            <div class="admin-toast @toastType">@toast</div>
+        }
+    </div>
+}
+
+@if (showMediaPicker)
+{
+    <Yoga.Client.Components.Admin.MediaPicker
+        EntityType="@EntityType"
+        OnSelected="OnMediaSelected"
+        OnClose="() => showMediaPicker = false" />
+}
+
+@code {
+    [Parameter] public string EntityType { get; set; } = "";
+    [Parameter] public Guid EntityId { get; set; }
+    [Parameter] public string[] Fields { get; set; } = Array.Empty<string>();
+    [Parameter] public string[] LongFields { get; set; } = new[] { "Description", "Content", "Program", "Benefits", "ForWhom", "Excerpt", "Quote" };
+
+    private static readonly string[] Languages = { "ru", "en", "uk" };
+    private string currentLang = "ru";
+    private List<Translation> translations = new();
+    private Dictionary<string, Dictionary<string, string>> buffers = new(); // lang -> field -> value
+    private bool loadingTranslations;
+    private bool saving;
+    private string? toast;
+    private string toastType = "";
+    private System.Threading.Timer? toastTimer;
+
+    private Guid loadedEntityId;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EntityId != Guid.Empty && EntityId != loadedEntityId)
+        {
+            loadedEntityId = EntityId;
+            await LoadTranslations();
+        }
+    }
+
+    private async Task LoadTranslations()
+    {
+        loadingTranslations = true;
+        StateHasChanged();
+
+        try
+        {
+            translations = await Api.GetEntityTranslationsAsync(EntityType, EntityId);
+        }
+        catch { translations = new(); }
+
+        buffers = new();
+        foreach (var lang in Languages)
+        {
+            var dict = new Dictionary<string, string>();
+            foreach (var field in Fields)
+            {
+                var t = translations.FirstOrDefault(t => t.Field == field && t.Language == lang);
+                dict[field] = t?.Value ?? "";
+            }
+            buffers[lang] = dict;
+        }
+
+        loadingTranslations = false;
+        StateHasChanged();
+    }
+
+    private void SwitchLang(string lang)
+    {
+        currentLang = lang;
+    }
+
+    private string GetValue(string field)
+    {
+        if (buffers.TryGetValue(currentLang, out var dict) && dict.TryGetValue(field, out var val))
+            return val;
+        return "";
+    }
+
+    private void SetValue(string field, string value)
+    {
+        if (!buffers.ContainsKey(currentLang))
+            buffers[currentLang] = new();
+        buffers[currentLang][field] = value;
+    }
+
+    private bool IsRichTextField(string field) =>
+        field.Equals("Content", StringComparison.OrdinalIgnoreCase) ||
+        field.Equals("Program", StringComparison.OrdinalIgnoreCase) ||
+        field.Equals("Description", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsLongField(string field) =>
+        LongFields.Contains(field) ||
+        field.EndsWith("Text",  StringComparison.OrdinalIgnoreCase) ||
+        field.EndsWith("Text1", StringComparison.OrdinalIgnoreCase) ||
+        field.EndsWith("Text2", StringComparison.OrdinalIgnoreCase) ||
+        field.EndsWith("Desc",  StringComparison.OrdinalIgnoreCase);
+
+    private bool IsImageField(string field) =>
+        field.Contains("Image", StringComparison.OrdinalIgnoreCase) ||
+        field == "ImageUrl";
+
+    private bool showMediaPicker;
+    private string? pickerTargetField;
+
+    private void OpenMediaPicker(string field)
+    {
+        pickerTargetField = field;
+        showMediaPicker = true;
+    }
+
+    private void OnMediaSelected(string url)
+    {
+        if (pickerTargetField != null)
+            SetValue(pickerTargetField, url);
+        showMediaPicker = false;
+        pickerTargetField = null;
+    }
+
+    private string GetFieldLabel(string field) => field switch
+    {
+        "Title" => "Заголовок",
+        "Subtitle" => "Подзаголовок",
+        "Eyebrow" => "Надзаголовок",
+        "Description" => "Описание",
+        "Benefits" => "Преимущества",
+        "ImageUrl" => "URL изображения",
+        "Duration" => "Длительность",
+        "Level" => "Уровень",
+        "Format" => "Формат",
+        "Schedule" => "Расписание",
+        "ForWhom" => "Для кого",
+        "CtaHeading" => "CTA заголовок",
+        "CtaText" => "CTA текст",
+        "Quote" => "Цитата",
+        "LanguageOffered" => "Язык проведения",
+        "PriceLabel" => "Цена",
+        "Location" => "Локация",
+        "Program" => "Программа",
+        "Excerpt" => "Краткое описание",
+        "Tag" => "Тег",
+        "Content" => "Контент",
+        "HeroTitle" => "Заголовок героя",
+        "HeroSubtitle" => "Подзаголовок героя",
+        "HeroEyebrow" => "Надзаголовок героя",
+        "HeroText" => "Текст героя",
+        "HeroImage" => "URL изображения героя",
+        "HeroImageUrl" => "Фото героя",
+        "MetaTitle" => "Meta Title",
+        "MetaDescription" => "Meta Description",
+        "Stats1Label" => "Статистика 1 - Подпись", "Stats1Value" => "Статистика 1 - Значение",
+        "Stats2Label" => "Статистика 2 - Подпись", "Stats2Value" => "Статистика 2 - Значение",
+        "Stats3Label" => "Статистика 3 - Подпись", "Stats3Value" => "Статистика 3 - Значение",
+        "Stats4Label" => "Статистика 4 - Подпись", "Stats4Value" => "Статистика 4 - Значение",
+        "Dir1Title" => "Направление 1 - Заголовок", "Dir1Text" => "Направление 1 - Текст", "Dir1LinkText" => "Направление 1 - Ссылка",
+        "Dir2Title" => "Направление 2 - Заголовок", "Dir2Text" => "Направление 2 - Текст", "Dir2LinkText" => "Направление 2 - Ссылка",
+        "Dir3Title" => "Направление 3 - Заголовок", "Dir3Text" => "Направление 3 - Текст", "Dir3LinkText" => "Направление 3 - Ссылка",
+        "QuoteText" => "Текст цитаты", "QuoteAuthor" => "Автор цитаты", "QuoteBackgroundImage" => "Фон цитаты",
+        "Format1Title" => "Формат 1 - Заголовок", "Format1Text" => "Формат 1 - Текст", "Format1Cta" => "Формат 1 - Кнопка", "Format1Image" => "Формат 1 - Фон",
+        "Format2Title" => "Формат 2 - Заголовок", "Format2Text" => "Формат 2 - Текст", "Format2Cta" => "Формат 2 - Кнопка", "Format2Image" => "Формат 2 - Фон",
+        "Review1Quote" => "Отзыв 1 - Цитата", "Review1Author" => "Отзыв 1 - Автор", "Review1Program" => "Отзыв 1 - Программа",
+        "Review2Quote" => "Отзыв 2 - Цитата", "Review2Author" => "Отзыв 2 - Автор", "Review2Program" => "Отзыв 2 - Программа",
+        "Review3Quote" => "Отзыв 3 - Цитата", "Review3Author" => "Отзыв 3 - Автор", "Review3Program" => "Отзыв 3 - Программа",
+        _ when field.StartsWith("Founder") && field.EndsWith("Name") => $"Основатель {field[7..^4]}: Имя",
+        _ when field.StartsWith("Founder") && field.EndsWith("Role") => $"Основатель {field[7..^4]}: Роль",
+        _ when field.StartsWith("Founder") && field.EndsWith("ImageUrl") => $"Основатель {field[7..^8]}: Фото",
+        _ when field.StartsWith("Founder") => $"Основатель: {field}",
+        _ when field.StartsWith("Phil") && field.EndsWith("Title") => $"Философия {field[4..^5]}: Заголовок",
+        _ when field.StartsWith("Phil") => $"Философия: Текст",
+        _ when field.StartsWith("Telegram") => $"Telegram: {field[8..]}",
+        _ when field.StartsWith("WhatsApp") => $"WhatsApp: {field[8..]}",
+        _ when field.StartsWith("Instagram") => $"Instagram: {field[9..]}",
+        _ when field.StartsWith("YouTube") => $"YouTube: {field[7..]}",
+        _ => field
+    };
+
+    private async Task SaveTranslations()
+    {
+        saving = true;
+        StateHasChanged();
+
+        try
+        {
+            foreach (var lang in Languages)
+            {
+                if (!buffers.ContainsKey(lang)) continue;
+                foreach (var kv in buffers[lang])
+                {
+                    if (string.IsNullOrEmpty(kv.Value)) continue;
+                    var translation = new Translation
+                    {
+                        EntityType = EntityType,
+                        EntityId = EntityId,
+                        Field = kv.Key,
+                        Language = lang,
+                        Value = kv.Value
+                    };
+                    await Api.UpsertEntityTranslationAsync(translation);
+                }
+            }
+            translations = await Api.GetEntityTranslationsAsync(EntityType, EntityId);
+            ShowToast("Переводы сохранены", "success");
+        }
+        catch
+        {
+            ShowToast("Ошибка сохранения", "error");
+        }
+        saving = false;
+        StateHasChanged();
+    }
+
+    private void ShowToast(string message, string type)
+    {
+        toast = message; toastType = type; StateHasChanged();
+        toastTimer?.Dispose();
+        toastTimer = new System.Threading.Timer(_ => { toast = null; InvokeAsync(StateHasChanged); }, null, 3000, System.Threading.Timeout.Infinite);
+    }
+
+    public void Dispose() => toastTimer?.Dispose();
+}

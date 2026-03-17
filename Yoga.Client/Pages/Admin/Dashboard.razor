@@ -1,0 +1,164 @@
+@page "/admin"
+@layout AdminLayout
+@inject AdminApiService Api
+
+<PageTitle>Dashboard — Yoga.Life Admin</PageTitle>
+
+<div class="admin-page-header">
+    <h1>Dashboard</h1>
+</div>
+
+@if (dashboard == null)
+{
+    <div class="admin-loading">Загрузка...</div>
+}
+else
+{
+    <!-- Stat cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-card-label">Ретриты</div>
+            <div class="stat-card-value">@dashboard.ActiveRetreats<span class="stat-card-sub">/ @dashboard.TotalRetreats</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-label">Курсы</div>
+            <div class="stat-card-value">@dashboard.TotalCourses</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-label">Консультации</div>
+            <div class="stat-card-value">@dashboard.TotalConsultations</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-label">Блог</div>
+            <div class="stat-card-value">@dashboard.TotalBlogPosts</div>
+        </div>
+        <div class="stat-card stat-card-accent">
+            <div class="stat-card-label">Заявки</div>
+            <div class="stat-card-value">@dashboard.TotalLeads</div>
+        </div>
+        <div class="stat-card stat-card-highlight">
+            <div class="stat-card-label">Необработанные</div>
+            <div class="stat-card-value">@dashboard.UnprocessedLeads</div>
+        </div>
+    </div>
+
+    <!-- Activity chart -->
+    @if (dashboard.Activity.Any())
+    {
+        <div class="dashboard-section">
+            <h3>Активность за 30 дней</h3>
+            <div class="activity-chart">
+                @{ var maxCount = dashboard.Activity.Max(a => a.Count); }
+                @foreach (var day in dashboard.Activity)
+                {
+                    var pct = maxCount > 0 ? (int)(day.Count * 100.0 / maxCount) : 0;
+                    <div class="activity-bar" title="@day.Date.ToString("dd.MM"): @day.Count">
+                        <div class="activity-bar-fill" style="height: @(Math.Max(pct, 4))%"></div>
+                        <span class="activity-bar-label">@day.Date.ToString("dd")</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Recent leads -->
+    <div class="dashboard-section">
+        <div class="dashboard-section-header">
+            <h3>Последние заявки</h3>
+            <a href="/admin/leads" class="btn-admin btn-admin-outline btn-admin-sm">Все заявки</a>
+        </div>
+
+        @if (!dashboard.RecentLeads.Any())
+        {
+            <div class="admin-empty">Заявок пока нет</div>
+        }
+        else
+        {
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Имя</th>
+                            <th>Контакт</th>
+                            <th>Мессенджер</th>
+                            <th>Дата</th>
+                            <th>Статус</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var lead in dashboard.RecentLeads)
+                        {
+                            <tr>
+                                <td>@lead.Name</td>
+                                <td>@lead.ContactDetails</td>
+                                <td>@(lead.Messager ?? "—")</td>
+                                <td>@lead.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    @if (lead.IsProcessed)
+                                    {
+                                        <span class="badge badge-success">Обработана</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-warning">Новая</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!lead.IsProcessed)
+                                    {
+                                        <button class="btn-admin btn-admin-sm btn-admin-outline" @onclick="() => MarkProcessed(lead.Id)">✓</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private DashboardDto? dashboard;
+    private System.Threading.Timer? refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+
+        // Auto-refresh every 60 seconds
+        refreshTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+            {
+                await LoadDashboard();
+                StateHasChanged();
+            });
+        }, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
+    }
+
+    private async Task LoadDashboard()
+    {
+        try
+        {
+            dashboard = await Api.GetDashboardAsync();
+        }
+        catch
+        {
+            // Silently handle API errors
+        }
+    }
+
+    private async Task MarkProcessed(Guid id)
+    {
+        var api = Api;
+        await api.MarkLeadProcessedAsync(id, true);
+        await LoadDashboard();
+    }
+
+    public void Dispose()
+    {
+        refreshTimer?.Dispose();
+    }
+}

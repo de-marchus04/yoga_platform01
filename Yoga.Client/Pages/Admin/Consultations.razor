@@ -1,0 +1,122 @@
+@page "/admin/consultations"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>Консультации — Админ</PageTitle>
+
+<div class="consult-page">
+    <div class="page-header">
+        <h1>Консультации</h1>
+        <button class="btn-admin btn-admin-primary" @onclick="CreateNew">+ Добавить</button>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else if (items.Count == 0)
+    {
+        <div class="admin-empty">Консультации не найдены</div>
+    }
+    else
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Slug</th>
+                        <th>Порядок</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in items)
+                    {
+                        <tr>
+                            <td>@c.Slug</td>
+                            <td>@c.SortOrder</td>
+                            <td>
+                                @if (c.IsActive)
+                                {
+                                    <span class="badge badge-success">Активна</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-muted">Скрыта</span>
+                                }
+                            </td>
+                            <td class="actions-cell">
+                                <button class="btn-admin btn-admin-sm btn-admin-outline" @onclick="() => Edit(c.Id)">✎</button>
+                                <button class="btn-admin btn-admin-sm btn-admin-danger" @onclick="() => ConfirmDelete(c)">✕</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (deleteTarget != null)
+    {
+        <div class="modal-backdrop" @onclick="CancelDelete">
+            <div class="modal-card" @onclick:stopPropagation="true">
+                <h3>Удалить консультацию?</h3>
+                <p>Консультация «@deleteTarget.Slug» будет удалена вместе с переводами.</p>
+                <div class="modal-actions">
+                    <button class="btn-admin btn-admin-outline" @onclick="CancelDelete">Отмена</button>
+                    <button class="btn-admin btn-admin-danger" @onclick="ExecuteDelete">Удалить</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(toast))
+    {
+        <div class="admin-toast @toastType">@toast</div>
+    }
+</div>
+
+@code {
+    private List<Consultation> items = new();
+    private bool loading = true;
+    private Consultation? deleteTarget;
+    private string? toast;
+    private string toastType = "";
+    private System.Threading.Timer? toastTimer;
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        loading = true;
+        try { items = await Api.GetAllConsultationsAsync(); }
+        catch { items = new(); }
+        loading = false;
+    }
+
+    private void CreateNew() => Nav.NavigateTo("/admin/consultations/new");
+    private void Edit(Guid id) => Nav.NavigateTo($"/admin/consultations/{id}/edit");
+    private void ConfirmDelete(Consultation c) => deleteTarget = c;
+    private void CancelDelete() => deleteTarget = null;
+
+    private async Task ExecuteDelete()
+    {
+        if (deleteTarget == null) return;
+        var ok = await Api.DeleteConsultationAsync(deleteTarget.Id);
+        deleteTarget = null;
+        if (ok) { ShowToast("Консультация удалена", "success"); await LoadData(); }
+        else ShowToast("Ошибка при удалении", "error");
+    }
+
+    private void ShowToast(string message, string type)
+    {
+        toast = message; toastType = type; StateHasChanged();
+        toastTimer?.Dispose();
+        toastTimer = new System.Threading.Timer(_ => { toast = null; InvokeAsync(StateHasChanged); }, null, 3000, System.Threading.Timeout.Infinite);
+    }
+
+    public void Dispose() => toastTimer?.Dispose();
+}
