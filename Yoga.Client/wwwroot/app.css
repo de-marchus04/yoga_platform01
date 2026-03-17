@@ -2,8 +2,8 @@
 :root {
   /* Color Palette */
   --background:      #FAFAF7;
-  --accent:          #BFA07A;
-  --accent-hover:    #9E8060;
+  --accent:          #8C6B3A;
+  --accent-hover:    #6F5128;
   --accent-light:    #F0E8DC;
   --charcoal:        #1A1A1A;
   --charcoal-footer: #111010;
@@ -12,16 +12,16 @@
   --format-bg-online: #F6F3EE;
   --text-on-dark:     #E0DCD4;
   --text-main:       #1A1A1A;
-  --text-muted:      #888888;
+  --text-muted:      #767676;
   --divider:         #E4DDD4;
   --white:           #FFFFFF;
 
   /* Legacy aliases kept for compatibility with existing components */
-  --sage:            #BFA07A;
-  --sage-light:      #D4C4AC;
-  --sage-dark:       #9E8060;
-  --terracotta:      #BFA07A;
-  --terracotta-hover:#9E8060;
+  --sage:            #8C6B3A;
+  --sage-light:      #B89060;
+  --sage-dark:       #6F5128;
+  --terracotta:      #8C6B3A;
+  --terracotta-hover:#6F5128;
   --sand:            #FAFAF7;
   --dark-sand:       #F0E8DC;
 
@@ -97,7 +97,7 @@ a:hover {
 }
 .btn-primary {
   background-color: var(--accent);
-  color: var(--white);
+  color: #FFFFFF;
   border-color: var(--accent);
 }
 .btn-primary:hover {
@@ -196,8 +196,8 @@ html {
 }
 
 @keyframes drawLine {
-  from { width: 0; }
-  to   { width: 50px; }
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
 }
 
 @keyframes kenBurns {
