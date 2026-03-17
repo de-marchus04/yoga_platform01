@@ -30,6 +30,19 @@ main {
 .align-items-center { align-items: center; }
 .justify-content-between { justify-content: space-between; }
 
+/* Logo wrapper must be a flex container so the <a> sits on same baseline */
+.logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Nav wrapper — must also be flex so nav-menu row is centred */
+.main-nav {
+    display: flex;
+    align-items: center;
+}
+
 /* Logo */
 .logo a {
     font-family: var(--font-serif);
@@ -55,7 +68,6 @@ main {
 .nav-menu > li {
     position: relative;
     margin-left: 2.5rem;
-    align-self: stretch;
     display: flex;
     align-items: center;
 }
