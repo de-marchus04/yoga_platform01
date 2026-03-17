@@ -337,7 +337,7 @@ main {
 .mobile-nav-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 1rem;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--divider);
@@ -345,14 +345,6 @@ main {
     position: sticky;
     top: 0;
     z-index: 1;
-}
-
-.mobile-nav-title {
-    font-family: var(--font-serif);
-    font-size: 1.3rem;
-    font-style: italic;
-    color: var(--charcoal);
-    line-height: 1;
 }
 
 .mobile-nav-close,
@@ -484,6 +476,16 @@ main {
         padding-right: 1rem;
     }
 
+    .app-footer {
+        padding: 2.75rem 0 calc(2rem + env(safe-area-inset-bottom));
+    }
+
+    .app-footer p {
+        font-size: 0.64rem;
+        letter-spacing: 2.2px;
+        line-height: 1.6;
+    }
+
     .mobile-nav {
         left: 0;
         width: 100%;
@@ -522,10 +524,6 @@ main {
         width: 34px;
         height: 34px;
         font-size: 1rem;
-    }
-
-    .mobile-nav-title {
-        font-size: 1.15rem;
     }
 
     .mobile-nav-header,

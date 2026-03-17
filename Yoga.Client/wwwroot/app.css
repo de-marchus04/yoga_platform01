@@ -338,6 +338,39 @@ html {
   width: 100%;
 }
 
+.format-badges {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.format-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.format-badge-online {
+  background: rgba(46,204,113,0.2);
+  color: #2ecc71;
+}
+
+.format-badge-offline {
+  background: rgba(52,152,219,0.2);
+  color: #3498db;
+}
+
 .page-hero-content .page-eyebrow {
   display: block;
   font-family: var(--font-sans);
@@ -381,12 +414,23 @@ html {
 
 @media (max-width: 768px) {
   .page-hero { height: 44vh; min-height: 280px; }
+  .page-hero-content { padding: 3rem 0; }
   .page-hero-content h1 { font-size: 2.8rem; }
 }
 @media (max-width: 480px) {
   .page-hero { height: 50vh; min-height: 240px; }
+  .page-hero-content { padding: 2.35rem 0 2rem; }
+  .page-hero-content .section-eyebrow { letter-spacing: 3px; }
   .page-hero-content h1 { font-size: 2rem; }
   .page-hero-content p { font-size: 0.88rem; }
+  .format-badges { gap: 0.4rem; margin-bottom: 0.85rem; }
+  .format-badge { font-size: 0.64rem; letter-spacing: 1px; padding: 0.28rem 0.6rem; }
+}
+
+@media (max-width: 360px) {
+  .page-hero-content h1 { font-size: 1.8rem; }
+  .page-hero-content p { font-size: 0.84rem; }
+  .format-badges { justify-content: flex-start; }
 }
 
 /* ===================================================
@@ -488,6 +532,28 @@ html {
 
 @media (max-width: 700px) {
   .format-strip-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .format-strip-grid {
+    grid-template-columns: 1fr;
+    border-right: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .format-strip-cell {
+    padding: 1.4rem 1rem;
+  }
+
+  .format-strip-label {
+    font-size: 0.56rem;
+    letter-spacing: 2px;
+    margin-bottom: 0.55rem;
+  }
+
+  .format-strip-value {
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
 }
 
 /* ===================================================
@@ -908,6 +974,98 @@ html {
 
 @media (max-width: 900px) {
   .overview-grid { grid-template-columns: 1fr; gap: 3rem; }
+}
+
+@media (max-width: 480px) {
+  .overview-section,
+  .program-section,
+  .for-whom-section,
+  .page-cta,
+  .related-blog-section,
+  .retreat-detail-section {
+    padding: 5rem 0;
+  }
+
+  .overview-grid,
+  .program-list,
+  .for-whom-grid {
+    margin-top: 2.5rem;
+  }
+
+  .overview-desc p,
+  .program-module p,
+  .for-whom-card p,
+  .page-cta p {
+    font-size: 0.9rem;
+    line-height: 1.75;
+  }
+
+  .benefit-item {
+    gap: 0.85rem;
+    padding: 0.95rem 0;
+  }
+
+  .benefit-item span {
+    font-size: 0.88rem;
+    line-height: 1.65;
+  }
+
+  .program-module {
+    padding: 2rem 0;
+  }
+
+  .program-module-num {
+    font-size: 2rem;
+  }
+
+  .program-module h3,
+  .for-whom-card h3 {
+    font-size: 1.3rem;
+  }
+
+  .for-whom-card {
+    padding: 2rem 1.25rem;
+  }
+
+  .consultation-quote {
+    padding: 1.1rem 1.1rem 1.1rem 1.25rem;
+    margin: 1.8rem 0;
+  }
+
+  .consultation-quote p {
+    font-size: 1.08rem;
+    line-height: 1.55;
+  }
+
+  .page-cta h2 {
+    font-size: 2.3rem;
+  }
+
+  .page-cta p {
+    margin-bottom: 2.2rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .overview-section,
+  .program-section,
+  .for-whom-section,
+  .page-cta,
+  .related-blog-section,
+  .retreat-detail-section {
+    padding: 4rem 0;
+  }
+
+  .page-cta h2 {
+    font-size: 2rem;
+  }
+
+  .page-cta p,
+  .overview-desc p,
+  .program-module p,
+  .for-whom-card p {
+    font-size: 0.86rem;
+  }
 }
 
 /* ===================================================
@@ -2137,11 +2295,80 @@ html {
 }
 
 @media (max-width: 640px) {
+  .retreat-detail-hero-content {
+    padding-bottom: 3rem;
+  }
+
+  .retreat-back-link {
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    margin-bottom: 1.25rem;
+  }
+
+  .retreat-meta-pills {
+    gap: 0.5rem;
+  }
+
+  .meta-pill {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.68rem;
+    letter-spacing: 0.6px;
+    padding: 0.5rem 0.9rem;
+  }
+
+  .retreat-booking-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .day-item {
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1.1rem 0;
+  }
+
+  .day-chip {
+    min-width: 0;
+  }
+
   .retreat-included-list { grid-template-columns: 1fr; }
   .retreat-other-grid { grid-template-columns: 1fr; }
   .retreat-gallery-grid { columns: 2; }
   .retreat-reviews-grid { grid-template-columns: 1fr; }
   .retreat-card-actions { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+  .retreat-detail-hero {
+    min-height: 60vh;
+    background-position: center 28%;
+  }
+
+  .retreat-detail-content {
+    gap: 3.25rem;
+  }
+
+  .retreat-gallery-grid {
+    columns: 1;
+  }
+
+  .review-card {
+    padding: 1.4rem 1.1rem;
+  }
+
+  .retreat-other-card img {
+    height: 200px;
+  }
+
+  .retreat-other-body {
+    padding: 1rem 1rem 1.2rem;
+  }
+
+  .retreat-other-body p {
+    font-size: 0.7rem;
+    letter-spacing: 0.8px;
+  }
 }
 
 /* ===================================================
@@ -2367,6 +2594,49 @@ html {
   .related-blog-video-grid { grid-template-columns: 1fr; }
   .related-blog-photo-grid { grid-template-columns: repeat(2, 1fr); }
   .related-blog-block-header { flex-direction: column; gap: 0.5rem; }
+}
+
+@media (max-width: 480px) {
+  .related-blog-block {
+    margin-top: 2.5rem;
+  }
+
+  .related-blog-block-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .related-blog-block-header h3 {
+    font-size: 1.45rem;
+  }
+
+  .related-blog-all-link,
+  .related-blog-read-more {
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+  }
+
+  .related-blog-card-body {
+    padding: 1rem 1rem 1.1rem;
+  }
+
+  .related-blog-card-body h4 {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .related-blog-excerpt {
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .related-blog-photo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .related-blog-photo-overlay {
+    opacity: 1;
+    font-size: 0.68rem;
+  }
 }
 
 /* ================================================================

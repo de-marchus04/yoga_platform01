@@ -80,9 +80,8 @@
     {
         <div class="mobile-backdrop" @onclick="CloseMenu"></div>
     }
-    <nav id="mobile-menu" class="mobile-nav @(menuOpen ? "open" : "")" aria-hidden="@(!menuOpen)">
+    <nav id="mobile-menu" class="mobile-nav @(menuOpen ? "open" : "")" aria-hidden="@(!menuOpen)" aria-label="Mobile menu">
         <div class="mobile-nav-header">
-            <span class="mobile-nav-title">Yoga.Life</span>
             <button class="mobile-nav-close" @onclick="CloseMenu" aria-label="Close menu">✕</button>
         </div>
         <ul class="mobile-nav-menu">
@@ -171,7 +170,7 @@
         await SetBodyScrollLockAsync(false);
     }
 
-    private Task SetBodyScrollLockAsync(bool locked) => JS.InvokeVoidAsync("ylToggleBodyScroll", locked).AsTask();
+    private Task SetBodyScrollLockAsync(bool locked) => JS.InvokeVoidAsync("ylToggleBodyScroll", "menu", locked).AsTask();
 
     public void Dispose()
     {

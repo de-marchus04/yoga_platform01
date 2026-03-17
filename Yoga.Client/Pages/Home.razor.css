@@ -338,6 +338,7 @@
 
     .retreats-grid {
         grid-template-columns: 1fr;
+        margin-top: 3rem;
     }
 
     .card-img-wrapper {
@@ -346,6 +347,22 @@
 
     .card-content {
         padding: 1.8rem 1.4rem;
+    }
+
+    .card-content h3 {
+        font-size: 1.5rem;
+    }
+
+    .card-content .location,
+    .card-content .dates {
+        font-size: 0.64rem;
+        letter-spacing: 1.6px;
+    }
+
+    .card-content .description {
+        font-size: 0.9rem;
+        line-height: 1.7;
+        margin: 1rem 0 1.5rem;
     }
 
     .stats-grid {
@@ -371,6 +388,34 @@
     .blog-card,
     .format-block {
         padding: 2.5rem 1.5rem;
+    }
+
+    .review-card {
+        gap: 1.5rem;
+    }
+
+    .review-quote {
+        font-size: 1.02rem;
+        line-height: 1.65;
+    }
+
+    .review-author {
+        padding-top: 1.1rem;
+    }
+
+    .blog-card h3 {
+        font-size: 1.5rem;
+        line-height: 1.15;
+    }
+
+    .blog-card p {
+        font-size: 0.88rem;
+        line-height: 1.7;
+    }
+
+    .blog-read-more,
+    .direction-link {
+        letter-spacing: 2px;
     }
 
     .direction-block h3 {
@@ -437,6 +482,12 @@
     .format-block {
         padding-left: 1rem;
         padding-right: 1rem;
+    }
+
+    .hero-text .btn,
+    .cta-overlay .btn,
+    .card-content .btn {
+        width: 100%;
     }
 
     .philosophy-quote p {

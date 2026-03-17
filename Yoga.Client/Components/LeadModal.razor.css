@@ -9,6 +9,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
     z-index: 1000;
 }
 
@@ -18,8 +23,10 @@
     border-top: 2px solid var(--accent);
     max-width: 520px;
     width: 100%;
-    margin: 1rem;
+    max-height: calc(100dvh - 2rem);
     position: relative;
+    overflow-y: auto;
+    box-sizing: border-box;
 }
 
 .lead-modal-content h2 {
@@ -84,6 +91,12 @@
     outline: none;
     border-bottom-color: var(--accent);
 }
+
+textarea.form-control {
+    min-height: 6rem;
+    resize: vertical;
+}
+
 select.form-control {
     appearance: none;
     cursor: pointer;
@@ -120,24 +133,41 @@ select.form-control {
 }
 
 @media (max-width: 600px) {
+    .lead-modal-backdrop {
+        align-items: flex-start;
+        padding: 0.75rem;
+    }
+
     .lead-modal-content {
         padding: 2rem 1.5rem;
-        margin: 0.75rem;
+        max-height: calc(100dvh - 1.5rem);
     }
+
     .lead-modal-content h2 {
         font-size: 1.8rem;
+    }
+
+    .close-btn {
+        top: 1rem;
+        right: 1rem;
     }
 }
 
 @media (max-width: 400px) {
     .lead-modal-content {
-        padding: 1.5rem 1.2rem;
-        margin: 0.5rem;
+        padding: 1.5rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom));
+        max-height: calc(100dvh - 1rem);
     }
+
     .lead-modal-content h2 {
         font-size: 1.5rem;
     }
+
     .lead-modal-content > p {
         margin-bottom: 1.4rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.1rem;
     }
 }

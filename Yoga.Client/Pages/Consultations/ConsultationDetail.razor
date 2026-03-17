@@ -32,14 +32,14 @@ else
                 <p class="section-eyebrow" style="color:var(--accent);">@item.Eyebrow</p>
             }
 
-            <div class="format-badges" style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+            <div class="format-badges">
                 @if (item.IsOnline)
                 {
-                    <span class="format-badge" style="background: rgba(46,204,113,0.2); color: #2ecc71; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Онлайн</span>
+                    <span class="format-badge format-badge-online">Онлайн</span>
                 }
                 @if (item.IsOffline)
                 {
-                    <span class="format-badge" style="background: rgba(52,152,219,0.2); color: #3498db; padding: 4px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: 600; text-transform: uppercase;">Офлайн</span>
+                    <span class="format-badge format-badge-offline">Офлайн</span>
                 }
             </div>
 
@@ -154,11 +154,11 @@ else
 
     <section class="page-cta">
         <div class="container" style="text-align:center;">
-            @if (!string.IsNullOrEmpty(item.CtaHeading))
+            @if (!string.IsNullOrEmpty(item?.CtaHeading))
             {
                 <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
-                <h2>@item.CtaHeading</h2>
-                <p>@item.CtaText</p>
+                <h2>@item?.CtaHeading</h2>
+                <p>@item?.CtaText</p>
             }
             else
             {
@@ -204,10 +204,11 @@ else
     private void OpenModal()
     {
         var parameters = new Dictionary<string, object>();
-        parameters["ContextTitle"] = item?.Title ?? "Консультация";
-        if (item != null)
+        var currentItem = item;
+        parameters["ContextTitle"] = currentItem?.Title ?? "Консультация";
+        if (currentItem is not null)
         {
-            parameters["TargetConsultationId"] = item.Id;
+            parameters["TargetConsultationId"] = currentItem.Id;
         }
         ModalService.Show<LeadModal>(parameters);
     }

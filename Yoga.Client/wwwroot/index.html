@@ -87,8 +87,23 @@
         window.ylGetLocalStorage = function (key) { return localStorage.getItem(key); };
         window.ylSetLocalStorage = function (key, value) { localStorage.setItem(key, value); };
 
-        window.ylToggleBodyScroll = function (locked) {
-            document.body.style.overflow = locked ? 'hidden' : '';
+        window.ylToggleBodyScroll = function (sourceOrLocked, maybeLocked) {
+            var source = typeof sourceOrLocked === 'string' ? sourceOrLocked : 'default';
+            var locked = typeof sourceOrLocked === 'string' ? !!maybeLocked : !!sourceOrLocked;
+            var locks = window.__ylScrollLocks;
+
+            if (!locks) {
+                locks = new Set();
+                window.__ylScrollLocks = locks;
+            }
+
+            if (locked) {
+                locks.add(source);
+            } else {
+                locks.delete(source);
+            }
+
+            document.body.style.overflow = locks.size > 0 ? 'hidden' : '';
         };
 
         window.downloadTextFile = function (filename, content) {
