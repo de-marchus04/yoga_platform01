@@ -314,6 +314,136 @@
     }
 }
 
+@media (max-width: 480px) {
+    .retreats-section,
+    .directions-section,
+    .quote-section,
+    .reviews-section,
+    .blog-section {
+        padding: 5rem 0;
+    }
+
+    .section-header {
+        margin-bottom: 2.5rem;
+    }
+
+    .retreats-section h2,
+    .directions-section h2,
+    .reviews-section h2,
+    .blog-section h2,
+    .format-content h2,
+    .cta-overlay h2 {
+        font-size: 2.35rem;
+    }
+
+    .retreats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-img-wrapper {
+        height: 220px;
+    }
+
+    .card-content {
+        padding: 1.8rem 1.4rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        border-right: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .stat-item {
+        padding: 2.75rem 1.25rem;
+    }
+
+    .stat-number {
+        font-size: 2.8rem;
+    }
+
+    .stat-label {
+        font-size: 0.58rem;
+        letter-spacing: 2px;
+    }
+
+    .direction-block,
+    .review-card,
+    .blog-card,
+    .format-block {
+        padding: 2.5rem 1.5rem;
+    }
+
+    .direction-block h3 {
+        font-size: 1.8rem;
+    }
+
+    .philosophy-quote::before {
+        font-size: 5rem;
+        top: -1rem;
+        left: 0;
+    }
+
+    .philosophy-quote p {
+        font-size: 1.35rem;
+    }
+
+    .blog-grid,
+    .reviews-grid,
+    .directions-grid,
+    .formats-section {
+        grid-template-columns: 1fr;
+    }
+
+    .cta-overlay {
+        padding: 1.5rem;
+    }
+
+    .cta-overlay p {
+        margin-bottom: 2.2rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .hero-text {
+        padding: 3rem 1rem 2.5rem;
+    }
+
+    .hero-text h1 {
+        font-size: 2.1rem;
+    }
+
+    .hero-text p {
+        font-size: 0.86rem;
+    }
+
+    .hero-photo {
+        min-height: 220px;
+    }
+
+    .retreats-section h2,
+    .directions-section h2,
+    .reviews-section h2,
+    .blog-section h2,
+    .format-content h2,
+    .cta-overlay h2 {
+        font-size: 2rem;
+    }
+
+    .card-content,
+    .direction-block,
+    .review-card,
+    .blog-card,
+    .format-block {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .philosophy-quote p {
+        font-size: 1.2rem;
+    }
+}
+
 /* ===================================================
    DIRECTIONS SECTION — 3 editorial blocks
    =================================================== */

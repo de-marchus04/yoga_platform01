@@ -55,21 +55,21 @@
                 </ul>
             </nav>
             <div class="header-controls">
-                <a href="/account" class="cabinet-icon-link" title="Личный кабинет">
+                <a href="/account" class="cabinet-icon-link header-account" title="Личный кабинет">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="12" cy="7" r="4"/>
                         <path d="M4 21c0-4 3.582-7 8-7s8 3 8 7"/>
                     </svg>
                 </a>
-                <div class="lang-switcher">
+                <div class="lang-switcher header-languages">
                     <button class="lang-btn @(Loc.CurrentLang == "ru" ? "active" : "")" @onclick='() => SetLang("ru")'>RU</button>
                     <span class="lang-sep">·</span>
                     <button class="lang-btn @(Loc.CurrentLang == "uk" ? "active" : "")" @onclick='() => SetLang("uk")'>UK</button>
                     <span class="lang-sep">·</span>
                     <button class="lang-btn @(Loc.CurrentLang == "en" ? "active" : "")" @onclick='() => SetLang("en")'>EN</button>
                 </div>
-                <button class="theme-toggle" @onclick="ToggleTheme">@(Theme.IsDark ? "☀" : "☾")</button>
-                <button class="menu-toggle" @onclick="ToggleMenu" aria-label="Menu">
+                <button class="theme-toggle header-theme" @onclick="ToggleTheme">@(Theme.IsDark ? "☀" : "☾")</button>
+                <button class="menu-toggle" @onclick="ToggleMenu" aria-label="Menu" aria-expanded="@menuOpen" aria-controls="mobile-menu">
                     @(menuOpen ? "✕" : "☰")
                 </button>
             </div>
@@ -80,7 +80,11 @@
     {
         <div class="mobile-backdrop" @onclick="CloseMenu"></div>
     }
-    <nav class="mobile-nav @(menuOpen ? "open" : "")">
+    <nav id="mobile-menu" class="mobile-nav @(menuOpen ? "open" : "")" aria-hidden="@(!menuOpen)">
+        <div class="mobile-nav-header">
+            <span class="mobile-nav-title">Yoga.Life</span>
+            <button class="mobile-nav-close" @onclick="CloseMenu" aria-label="Close menu">✕</button>
+        </div>
         <ul class="mobile-nav-menu">
             <li><a href="/" @onclick="CloseMenu">@Loc["nav.home"]</a></li>
             <li class="mobile-section-label">@Loc["nav.courses"]</li>
@@ -113,6 +117,7 @@
                 <span class="lang-sep">·</span>
                 <button class="lang-btn @(Loc.CurrentLang == "en" ? "active" : "")" @onclick='() => SetLang("en")'>EN</button>
             </div>
+            <button class="mobile-theme-toggle" @onclick="ToggleTheme" aria-label="Toggle theme">@(Theme.IsDark ? "☀ Светлая тема" : "☾ Тёмная тема")</button>
         </div>
     </nav>
 
@@ -149,8 +154,24 @@
     private void OpenDropdown(string name) => openDropdown = name;
     private void CloseDropdown() => openDropdown = "";
 
-    private void ToggleMenu() => menuOpen = !menuOpen;
-    private void CloseMenu() => menuOpen = false;
+    private async Task ToggleMenu()
+    {
+        menuOpen = !menuOpen;
+        await SetBodyScrollLockAsync(menuOpen);
+    }
+
+    private async Task CloseMenu()
+    {
+        if (!menuOpen)
+        {
+            return;
+        }
+
+        menuOpen = false;
+        await SetBodyScrollLockAsync(false);
+    }
+
+    private Task SetBodyScrollLockAsync(bool locked) => JS.InvokeVoidAsync("ylToggleBodyScroll", locked).AsTask();
 
     public void Dispose()
     {

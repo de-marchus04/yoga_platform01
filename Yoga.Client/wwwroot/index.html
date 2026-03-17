@@ -87,6 +87,10 @@
         window.ylGetLocalStorage = function (key) { return localStorage.getItem(key); };
         window.ylSetLocalStorage = function (key, value) { localStorage.setItem(key, value); };
 
+        window.ylToggleBodyScroll = function (locked) {
+            document.body.style.overflow = locked ? 'hidden' : '';
+        };
+
         window.downloadTextFile = function (filename, content) {
             var blob = new Blob([content], { type: 'text/calendar;charset=utf-8;' });
             var url = URL.createObjectURL(blob);
