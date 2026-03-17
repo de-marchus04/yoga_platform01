@@ -68,4 +68,11 @@ builder.Services.AddHttpClient<UserApiService>(client =>
 }).AddHttpMessageHandler<UserHttpHandler>()
   .AddHttpMessageHandler<HttpErrorInterceptor>();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+// Pre-load translations before first render to avoid flash of translation keys
+var locService = host.Services.GetRequiredService<LocalizationService>();
+var jsRuntime = host.Services.GetRequiredService<Microsoft.JSInterop.IJSRuntime>();
+await locService.InitAsync(jsRuntime);
+
+await host.RunAsync();

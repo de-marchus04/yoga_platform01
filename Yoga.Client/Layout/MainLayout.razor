@@ -135,7 +135,7 @@
         if (firstRender)
         {
             await Theme.InitAsync(JS);
-            await Loc.InitAsync(JS);
+            // Loc.InitAsync already called in Program.cs before RunAsync — translations pre-loaded
             Theme.OnThemeChanged += Refresh;
             Loc.OnLanguageChanged += Refresh;
             StateHasChanged();

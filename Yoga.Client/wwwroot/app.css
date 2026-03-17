@@ -59,6 +59,11 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.01em;
 }
 
+/* Suppress browser focus ring when Blazor FocusOnNavigate focuses heading */
+h1:focus, h2:focus, h3:focus, h4:focus, h5:focus, h6:focus {
+  outline: none;
+}
+
 a {
   text-decoration: none;
   color: var(--text-main);
