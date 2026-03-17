@@ -2,7 +2,7 @@
 
 <div class="lead-modal-backdrop" @onclick="Close">
     <div class="lead-modal-content" @onclick:stopPropagation>
-        <button class="close-btn" @onclick="Close">&times;</button>
+        <button class="close-btn" @onclick="Close" aria-label="Закрыть">&times;</button>
         @if (!string.IsNullOrWhiteSpace(ContextTitle))
         {
             <p class="modal-context-label">@Loc["form.context_prefix"]: <strong>@ContextTitle</strong> @(string.IsNullOrEmpty(TargetFormat) ? "" : $"({TargetFormat})")</p>
@@ -22,14 +22,14 @@
                 <DataAnnotationsValidator />
 
                 <div class="form-group">
-                    <label>@Loc["form.name"]</label>
-                    <InputText @bind-Value="leadModel.Name" class="form-control" />
+                    <label for="lead-name">@Loc["form.name"]</label>
+                    <InputText id="lead-name" @bind-Value="leadModel.Name" class="form-control" />
                     <ValidationMessage For="@(() => leadModel.Name)" />
                 </div>
 
                 <div class="form-group">
-                    <label>@Loc["form.messenger"]</label>
-                    <InputSelect @bind-Value="leadModel.Messager" class="form-control">
+                    <label for="lead-messenger">@Loc["form.messenger"]</label>
+                    <InputSelect id="lead-messenger" @bind-Value="leadModel.Messager" class="form-control">
                         <option value="Telegram">Telegram</option>
                         <option value="WhatsApp">WhatsApp</option>
                         <option value="Viber">Viber</option>
@@ -39,14 +39,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label>@Loc["form.contact"]</label>
-                    <InputText @bind-Value="leadModel.ContactDetails" class="form-control" />
+                    <label for="lead-contact">@Loc["form.contact"]</label>
+                    <InputText id="lead-contact" @bind-Value="leadModel.ContactDetails" class="form-control" />
                     <ValidationMessage For="@(() => leadModel.ContactDetails)" />
                 </div>
 
                 <div class="form-group">
-                    <label>@Loc["form.comment"]</label>
-                    <InputTextArea @bind-Value="leadModel.Comment" class="form-control" />
+                    <label for="lead-comment">@Loc["form.comment"]</label>
+                    <InputTextArea id="lead-comment" @bind-Value="leadModel.Comment" class="form-control" />
                     <ValidationMessage For="@(() => leadModel.Comment)" />
                 </div>
 

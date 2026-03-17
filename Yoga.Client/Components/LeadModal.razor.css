@@ -118,3 +118,26 @@ select.form-control {
     color: var(--text-muted);
     margin-bottom: 1rem;
 }
+
+@media (max-width: 600px) {
+    .lead-modal-content {
+        padding: 2rem 1.5rem;
+        margin: 0.75rem;
+    }
+    .lead-modal-content h2 {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .lead-modal-content {
+        padding: 1.5rem 1.2rem;
+        margin: 0.5rem;
+    }
+    .lead-modal-content h2 {
+        font-size: 1.5rem;
+    }
+    .lead-modal-content > p {
+        margin-bottom: 1.4rem;
+    }
+}

@@ -104,6 +104,27 @@
     }
 }
 
+@media (max-width: 480px) {
+    .hero-eyebrow {
+        font-size: 0.6rem;
+        letter-spacing: 3px;
+    }
+    .hero-text {
+        padding: 3rem 1.5rem;
+    }
+    .hero-text h1 {
+        font-size: 2.4rem;
+    }
+    .hero-text p {
+        font-size: 0.9rem;
+        margin-bottom: 2.2rem;
+    }
+    .hero-photo {
+        height: 65vw;
+        min-height: 260px;
+    }
+}
+
 /* ===================================================
    RETREATS SECTION — Editorial grid
    =================================================== */

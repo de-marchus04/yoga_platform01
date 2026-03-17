@@ -49,6 +49,7 @@ body {
   line-height: 1.7;
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -77,6 +78,10 @@ a:hover {
   max-width: var(--container-width);
   margin: 0 auto;
   padding: 0 2rem;
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 1.2rem; }
 }
 
 /* --- BUTTONS — sharp, uppercase, letter-spaced --- */
@@ -377,6 +382,11 @@ html {
 @media (max-width: 768px) {
   .page-hero { height: 44vh; min-height: 280px; }
   .page-hero-content h1 { font-size: 2.8rem; }
+}
+@media (max-width: 480px) {
+  .page-hero { height: 50vh; min-height: 240px; }
+  .page-hero-content h1 { font-size: 2rem; }
+  .page-hero-content p { font-size: 0.88rem; }
 }
 
 /* ===================================================
@@ -2813,4 +2823,33 @@ html {
   stroke: currentColor;
   fill: none;
   stroke-width: 1.5;
+}
+
+/* ===================================================
+   GLOBAL MOBILE OVERRIDES — section padding ≤768px
+   =================================================== */
+@media (max-width: 768px) {
+  .process-section,
+  .info-cards-section,
+  .course-cards-section,
+  .story-section,
+  .philosophy-grid-section,
+  .overview-section,
+  .program-section,
+  .for-whom-section,
+  .categories-section,
+  .video-section,
+  .photo-section,
+  .page-cta,
+  .retreats-section,
+  .social-section {
+    padding: 4.5rem 0;
+  }
+  .section-header {
+    margin-bottom: 3rem;
+  }
+  .format-strip-label {
+    opacity: 1;
+    color: rgba(224, 220, 212, 0.75);
+  }
 }

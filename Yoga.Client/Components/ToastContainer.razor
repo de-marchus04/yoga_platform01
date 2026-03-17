@@ -1,7 +1,7 @@
 @inject Yoga.Client.Services.ToastService ToastService
 @implements IDisposable
 
-<div class="toast-container">
+<div class="toast-container" role="status" aria-live="polite" aria-atomic="true">
     @foreach (var toast in ToastService.Toasts)
     {
         <div class="toast-item toast-@toast.Level.ToString().ToLower() show" @key="toast.Id">
