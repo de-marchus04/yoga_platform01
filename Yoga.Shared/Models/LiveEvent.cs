@@ -25,6 +25,8 @@ namespace Yoga.Shared.Models
         /// <summary>Recording URL (available after the event ends).</summary>
         public string? RecordingUrl { get; set; }
 
+        public bool IsRecordingPrivate { get; set; } = true;
+
         /// <summary>Access policy: "GrantOnly" (per-customer grant) | "AllSubscribers" | "Public"</summary>
         [StringLength(30)]
         public string AccessPolicy { get; set; } = "GrantOnly";

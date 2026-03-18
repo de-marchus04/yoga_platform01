@@ -8,19 +8,21 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+var apiBaseUri = ResolveApiBaseUri(builder);
+
 // Default HTTP client
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-// Typed API client pointing to our backend API (using http locally to avoid SSL cert issues in browser)
+// Typed API client pointing to our backend API.
 builder.Services.AddHttpClient<ApiService>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5293/"); 
+    client.BaseAddress = apiBaseUri;
 }).AddHttpMessageHandler<HttpErrorInterceptor>();
 
 // Named HTTP client for API (used by LocalizationService)
 builder.Services.AddHttpClient("ApiClient", client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5293/");
+    client.BaseAddress = apiBaseUri;
 });
 
 // Theme & Localisation services
@@ -57,14 +59,14 @@ builder.Services.AddTransient<HttpErrorInterceptor>();
 // Admin API client with JWT handler and Error Interceptor
 builder.Services.AddHttpClient<AdminApiService>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5293/");
+        client.BaseAddress = apiBaseUri;
 }).AddHttpMessageHandler<AdminHttpHandler>()
   .AddHttpMessageHandler<HttpErrorInterceptor>();
 
 // User API client with JWT handler
 builder.Services.AddHttpClient<UserApiService>(client =>
 {
-    client.BaseAddress = new Uri("http://localhost:5293/");
+        client.BaseAddress = apiBaseUri;
 }).AddHttpMessageHandler<UserHttpHandler>()
   .AddHttpMessageHandler<HttpErrorInterceptor>();
 
@@ -76,3 +78,49 @@ var jsRuntime = host.Services.GetRequiredService<Microsoft.JSInterop.IJSRuntime>
 await locService.InitAsync(jsRuntime);
 
 await host.RunAsync();
+
+static Uri ResolveApiBaseUri(WebAssemblyHostBuilder builder)
+{
+    var config = builder.Configuration;
+    var hostBaseUri = new Uri(builder.HostEnvironment.BaseAddress);
+
+    var configuredBaseUrl = config["Api:BaseUrl"];
+    if (!string.IsNullOrWhiteSpace(configuredBaseUrl))
+    {
+        if (Uri.TryCreate(configuredBaseUrl, UriKind.Absolute, out var absoluteUri))
+        {
+            return EnsureTrailingSlash(absoluteUri);
+        }
+
+        return EnsureTrailingSlash(new Uri(hostBaseUri, configuredBaseUrl));
+    }
+
+    if (bool.TryParse(config["Api:UseCurrentHost"], out var useCurrentHost) && useCurrentHost)
+    {
+        var scheme = config["Api:Scheme"];
+        var uriBuilder = new UriBuilder(hostBaseUri)
+        {
+            Path = "/"
+        };
+
+        if (!string.IsNullOrWhiteSpace(scheme))
+        {
+            uriBuilder.Scheme = scheme;
+        }
+
+        if (int.TryParse(config["Api:Port"], out var port))
+        {
+            uriBuilder.Port = port;
+        }
+
+        return EnsureTrailingSlash(uriBuilder.Uri);
+    }
+
+    return EnsureTrailingSlash(hostBaseUri);
+}
+
+static Uri EnsureTrailingSlash(Uri uri)
+{
+    var value = uri.AbsoluteUri;
+    return value.EndsWith('/') ? uri : new Uri(value + "/");
+}

@@ -102,7 +102,13 @@ namespace Yoga.Shared.DTOs
         string? MinimumTier,
         string? Category,
         int SortOrder,
-        bool IsActive
+        bool IsActive,
+        bool IsPrivateMedia = true
+    );
+
+    public record ProtectedMediaAccessDto(
+        string Url,
+        DateTimeOffset? ExpiresAt
     );
 
     public record CreatePremiumResourceRequest(
@@ -113,7 +119,8 @@ namespace Yoga.Shared.DTOs
         TimeSpan? Duration,
         string? MinimumTier,
         string? Category,
-        int SortOrder
+        int SortOrder,
+        bool IsPrivateMedia = true
     );
 
     // ── Live Events ──
@@ -143,7 +150,8 @@ namespace Yoga.Shared.DTOs
         string? RecordingUrl,   // Only included when customer has access and event ended
         string AccessPolicy,
         Guid? SeriesId,
-        bool IsPublished
+        bool IsPublished,
+        bool IsRecordingPrivate = true
     );
 
     public record CreateLiveEventRequest(
@@ -153,7 +161,8 @@ namespace Yoga.Shared.DTOs
         DateTime? EndsAt,
         string? JoinUrl,
         string AccessPolicy,
-        Guid? SeriesId
+        Guid? SeriesId,
+        bool IsRecordingPrivate = true
     );
 
     public record UpdateLiveEventRequest(
@@ -166,7 +175,8 @@ namespace Yoga.Shared.DTOs
         string Status,
         string AccessPolicy,
         Guid? SeriesId,
-        bool IsPublished
+        bool IsPublished,
+        bool IsRecordingPrivate = true
     );
 
     // ── Cabinet aggregates ──

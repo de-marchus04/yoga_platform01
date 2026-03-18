@@ -17,5 +17,32 @@
   "TelegramSettings": {
     "BotToken": "YOUR_TELEGRAM_BOT_TOKEN",
     "ChatId": "YOUR_TELEGRAM_CHAT_ID"
+  },
+  "Storage": {
+    "Provider": "Local",
+    "LocalRootPath": "wwwroot/uploads",
+    "PublicBaseUrl": "/uploads",
+    "PublicHost": "",
+    "BucketName": "YOUR_BUCKET_NAME",
+    "ServiceUrl": "https://YOUR_S3_ENDPOINT",
+    "Region": "",
+    "AccessKey": "YOUR_STORAGE_ACCESS_KEY",
+    "SecretKey": "YOUR_STORAGE_SECRET_KEY",
+    "ForcePathStyle": true,
+    "KeyPrefix": "media",
+    "SignedUrlLifetimeMinutes": 20
+  },
+  "Security": {
+    "AllowedOrigins": [
+      "http://localhost:5190",
+      "http://localhost:5293"
+    ],
+    "EnableHsts": false
+  },
+  "ErrorTracking": {
+    "Enabled": false,
+    "Provider": "None",
+    "Dsn": "",
+    "Environment": "Development"
   }
 }

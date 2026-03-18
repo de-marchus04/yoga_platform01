@@ -2,6 +2,7 @@
 @layout CabinetLayout
 @inject UserApiService Api
 @inject IJSRuntime JS
+@inject NavigationManager Nav
 
 <PageTitle>Трансляции</PageTitle>
 
@@ -85,11 +86,17 @@ else
             @if (!string.IsNullOrEmpty(watchDetail.RecordingUrl))
             {
                 <p class="cab-watch-label">Запись трансляции:</p>
-                <a href="@watchDetail.RecordingUrl" target="_blank" class="cab-watch-btn">Смотреть запись</a>
+                <button class="cab-watch-btn" disabled="@openingRecording" @onclick="OpenRecordingAsync">
+                    @(openingRecording ? "Подготавливаем запись..." : "Смотреть запись")
+                </button>
             }
             @if (string.IsNullOrEmpty(watchDetail.JoinUrl) && string.IsNullOrEmpty(watchDetail.RecordingUrl))
             {
                 <p style="color:var(--cab-muted);font-size:0.88rem;">Ссылка ещё не доступна</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(watchError))
+            {
+                <p style="color:var(--cab-muted);font-size:0.88rem;">@watchError</p>
             }
             <button class="cab-watch-close" @onclick="CloseWatch">Закрыть</button>
         </div>
@@ -101,6 +108,9 @@ else
     private LiveEventDetailDto? watchDetail;
     private bool loading = true;
     private string streamTab = "upcoming";
+    private Guid? activeWatchEventId;
+    private bool openingRecording;
+    private string? watchError;
 
     private IEnumerable<LiveEventDto> FilteredEvents() => streamTab switch
     {
@@ -117,10 +127,60 @@ else
 
     private async Task WatchEvent(Guid id)
     {
-        watchDetail = await Api.WatchEventAsync(id);
+        watchError = null;
+        activeWatchEventId = id;
+
+        try
+        {
+            watchDetail = await Api.GetLiveEventAccessAsync(id);
+            if (watchDetail == null)
+                watchError = "Не удалось получить доступ к эфиру.";
+        }
+        catch
+        {
+            watchDetail = null;
+            watchError = "Ссылка временно недоступна. Попробуйте ещё раз.";
+        }
     }
 
-    private void CloseWatch() => watchDetail = null;
+    private void CloseWatch()
+    {
+        watchDetail = null;
+        activeWatchEventId = null;
+        openingRecording = false;
+        watchError = null;
+    }
+
+    private async Task OpenRecordingAsync()
+    {
+        if (!activeWatchEventId.HasValue)
+            return;
+
+        openingRecording = true;
+        watchError = null;
+
+        try
+        {
+            var refreshed = await Api.GetLiveEventAccessAsync(activeWatchEventId.Value);
+            watchDetail = refreshed;
+
+            if (!string.IsNullOrWhiteSpace(refreshed?.RecordingUrl))
+            {
+                Nav.NavigateTo(refreshed.RecordingUrl, true);
+                return;
+            }
+
+            watchError = "Запись пока недоступна. Обновите доступ чуть позже.";
+        }
+        catch
+        {
+            watchError = "Ссылка истекла или недоступна. Попробуйте запросить запись ещё раз.";
+        }
+        finally
+        {
+            openingRecording = false;
+        }
+    }
 
     private string StatusLabel(string status) => status switch
     {

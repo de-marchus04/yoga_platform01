@@ -48,9 +48,15 @@ namespace Yoga.Client.Services
         public async Task<LiveEventDetailDto?> WatchEventAsync(Guid id) =>
             await _http.GetFromJsonAsync<LiveEventDetailDto>($"api/live-events/{id}/watch");
 
+        public async Task<LiveEventDetailDto?> GetLiveEventAccessAsync(Guid id) =>
+            await _http.GetFromJsonAsync<LiveEventDetailDto>($"api/live-events/{id}/watch");
+
         // ── Premium Library ──
         public async Task<List<PremiumResourceDto>> GetPremiumResourcesAsync() =>
             await _http.GetFromJsonAsync<List<PremiumResourceDto>>("api/premium-resources") ?? new();
+
+        public async Task<ProtectedMediaAccessDto?> GetPremiumResourceAccessAsync(Guid id) =>
+            await _http.GetFromJsonAsync<ProtectedMediaAccessDto>($"api/premium-resources/{id}/access");
 
         // ── Public events ──
         public async Task<List<LiveEventDto>> GetPublishedEventsAsync() =>

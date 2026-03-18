@@ -5,6 +5,8 @@ namespace Yoga.Api.Data
 {
     public class AppDbContext : DbContext
     {
+        private const string SeedAdminPasswordHash = "$2a$11$5GzmO4VSpubKXylzDjfXpuaxwNy.1b3yEaWf8Qdps3a2.cKQBwz7O";
+
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
@@ -27,6 +29,7 @@ namespace Yoga.Api.Data
         public DbSet<CustomerAccessGrant> CustomerAccessGrants { get; set; }
         public DbSet<PremiumResource> PremiumResources { get; set; }
         public DbSet<LiveEvent> LiveEvents { get; set; }
+        public DbSet<AdminAuditLog> AdminAuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -82,13 +85,18 @@ namespace Yoga.Api.Data
             modelBuilder.Entity<LiveEvent>().HasKey(e => e.Id);
             modelBuilder.Entity<LiveEvent>()
                 .HasIndex(e => e.Status);
+            modelBuilder.Entity<AdminAuditLog>().HasKey(a => a.Id);
+            modelBuilder.Entity<AdminAuditLog>()
+                .HasIndex(a => a.CreatedAt);
+            modelBuilder.Entity<AdminAuditLog>()
+                .HasIndex(a => new { a.EntityType, a.EntityId, a.CreatedAt });
 
             // Seed SuperAdmin Default
             modelBuilder.Entity<AdminUser>().HasData(new AdminUser
             {
                 Id = Guid.Parse("00000000-0000-0000-0000-000000000001"),
                 Username = "admin",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                PasswordHash = SeedAdminPasswordHash,
                 DisplayName = "Администратор",
                 CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             });

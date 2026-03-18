@@ -17,6 +17,7 @@ namespace Yoga.Shared.Models
         public string ResourceType { get; set; } = "video";
 
         public string? MediaUrl { get; set; }
+        public bool IsPrivateMedia { get; set; } = true;
         public TimeSpan? Duration { get; set; }
         public int SortOrder { get; set; }
         public bool IsActive { get; set; } = true;

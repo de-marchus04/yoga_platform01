@@ -206,6 +206,32 @@ namespace Yoga.Client.Services
             return response.IsSuccessStatusCode;
         }
 
+        public async Task<PaginatedResult<AdminAuditLogDto>?> GetAuditLogsAsync(
+            int page = 1,
+            int pageSize = 50,
+            string? action = null,
+            string? entityType = null,
+            Guid? entityId = null)
+        {
+            var parameters = new List<string>
+            {
+                $"page={page}",
+                $"pageSize={pageSize}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(action))
+                parameters.Add($"action={Uri.EscapeDataString(action)}");
+
+            if (!string.IsNullOrWhiteSpace(entityType))
+                parameters.Add($"entityType={Uri.EscapeDataString(entityType)}");
+
+            if (entityId.HasValue)
+                parameters.Add($"entityId={entityId.Value}");
+
+            var url = $"api/admin/audit?{string.Join("&", parameters)}";
+            return await _http.GetFromJsonAsync<PaginatedResult<AdminAuditLogDto>>(url);
+        }
+
         // ── Customers ──
 
         public async Task<List<CustomerDto>> GetCustomersAsync(int page = 1, int pageSize = 20, string? search = null)

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
+using Yoga.Api.Services;
 using Yoga.Shared.Models;
 
 namespace Yoga.Api.Controllers
@@ -11,13 +12,22 @@ namespace Yoga.Api.Controllers
     [Authorize(Roles = "SuperAdmin")]
     public class MediaController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _env;
+        private const long MaxUploadSizeBytes = 256L * 1024 * 1024;
+        private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg",
+            ".mp4", ".webm", ".mov",
+            ".mp3", ".wav", ".m4a", ".aac", ".ogg",
+            ".pdf"
+        };
 
-        public MediaController(AppDbContext context, IWebHostEnvironment env)
+        private readonly AppDbContext _context;
+        private readonly IFileStorageService _storageService;
+
+        public MediaController(AppDbContext context, IFileStorageService storageService)
         {
             _context = context;
-            _env = env;
+            _storageService = storageService;
         }
 
         [HttpGet]
@@ -30,32 +40,25 @@ namespace Yoga.Api.Controllers
         }
 
         [HttpPost("upload")]
-        [RequestSizeLimit(10 * 1024 * 1024)] // 10MB
+        [RequestSizeLimit(MaxUploadSizeBytes)]
         public async Task<ActionResult<MediaFile>> Upload(IFormFile file, [FromForm] string? entityType = null, [FromForm] string? entityId = null)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file provided");
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".mp4", ".webm" };
+            if (file.Length > MaxUploadSizeBytes)
+                return BadRequest($"File is too large. Maximum allowed size is {MaxUploadSizeBytes / (1024 * 1024)} MB.");
+
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(ext))
+            if (!AllowedExtensions.Contains(ext))
                 return BadRequest("File type not allowed");
 
-            var uploadsDir = Path.Combine(_env.ContentRootPath, "wwwroot", "uploads");
-            Directory.CreateDirectory(uploadsDir);
-
-            var fileName = $"{Guid.NewGuid()}{ext}";
-            var filePath = Path.Combine(uploadsDir, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+            var storedFile = await _storageService.SaveAsync(file, entityType, HttpContext.RequestAborted);
 
             var media = new MediaFile
             {
                 Id = Guid.NewGuid(),
-                Url = $"/uploads/{fileName}",
+                Url = storedFile.Url,
                 Alt = Path.GetFileNameWithoutExtension(file.FileName),
                 EntityType = entityType ?? "",
                 EntityId = Guid.TryParse(entityId, out var eid) ? eid : Guid.Empty
@@ -88,13 +91,7 @@ namespace Yoga.Api.Controllers
             var media = await _context.MediaFiles.FindAsync(id);
             if (media == null) return NotFound();
 
-            // Try to delete physical file
-            if (media.Url.StartsWith("/uploads/"))
-            {
-                var filePath = Path.Combine(_env.ContentRootPath, "wwwroot", media.Url.TrimStart('/'));
-                if (System.IO.File.Exists(filePath))
-                    System.IO.File.Delete(filePath);
-            }
+            await _storageService.DeleteAsync(media.Url, HttpContext.RequestAborted);
 
             _context.MediaFiles.Remove(media);
             await _context.SaveChangesAsync();

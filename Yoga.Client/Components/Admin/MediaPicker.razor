@@ -4,7 +4,7 @@
 <div class="media-picker-overlay" @onclick="Close">
     <div class="media-picker-modal" @onclick:stopPropagation="true">
         <div class="media-picker-header">
-            <h3>Выбрать изображение</h3>
+            <h3>@PickerTitle</h3>
             <button class="btn-admin btn-admin-outline" @onclick="Close">✕</button>
         </div>
         <div class="media-picker-body">
@@ -12,21 +12,31 @@
             {
                 <div class="admin-loading">Загрузка...</div>
             }
-            else if (files.Count == 0)
+            else if (VisibleFiles.Count == 0)
             {
-                <div class="admin-empty">Нет загруженных изображений</div>
+                <div class="admin-empty">@EmptyStateText</div>
             }
             else
             {
                 <div class="media-picker-grid">
-                    @foreach (var f in files)
+                    @foreach (var f in VisibleFiles)
                     {
-                        @if (IsImage(f.Url))
-                        {
-                            <div class="media-picker-item" @onclick="() => Select(f)">
+                        <div class="media-picker-item" @onclick="() => Select(f)">
+                            @if (IsImage(f.Url))
+                            {
                                 <img src="@GetFullUrl(f.Url)" alt="@f.Alt" loading="lazy" />
-                            </div>
-                        }
+                            }
+                            else if (IsVideo(f.Url))
+                            {
+                                <video src="@GetFullUrl(f.Url)" muted preload="metadata"></video>
+                                <div class="admin-text-muted" style="font-size:0.78rem; margin-top:0.4rem;">Видео</div>
+                            }
+                            else
+                            {
+                                <div style="min-height:120px; display:flex; align-items:center; justify-content:center; font-size:2rem; background:#f7f2ea; border-radius:12px;">@FileIcon(f.Url)</div>
+                                <div class="admin-text-muted" style="font-size:0.78rem; margin-top:0.4rem; word-break:break-word;">@DisplayName(f)</div>
+                            }
+                        </div>
                     }
                 </div>
             }
@@ -35,7 +45,7 @@
             <div class="media-picker-upload">
                 <label class="btn-admin btn-admin-primary upload-btn" style="margin:0; font-size:0.85rem;">
                     + Загрузить
-                    <InputFile OnChange="HandleUpload" accept="image/*" style="display:none" />
+                    <InputFile OnChange="HandleUpload" accept="@AcceptValue" style="display:none" />
                 </label>
             </div>
             <div class="media-picker-url">
@@ -43,17 +53,50 @@
                 <button class="btn-admin btn-admin-outline" @onclick="UseManualUrl" disabled="@string.IsNullOrWhiteSpace(manualUrl)">OK</button>
             </div>
         </div>
+        @if (!string.IsNullOrWhiteSpace(uploadError))
+        {
+            <div class="form-error" style="margin:0.75rem 1.5rem 1.25rem;">@uploadError</div>
+        }
     </div>
 </div>
 
 @code {
     [Parameter] public string EntityType { get; set; } = "General";
+    [Parameter] public string MediaKind { get; set; } = "image";
+    [Parameter] public long MaxFileSizeBytes { get; set; } = 256L * 1024 * 1024;
     [Parameter] public EventCallback<string> OnSelected { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     private List<Yoga.Shared.Models.MediaFile> files = new();
     private bool loading = true;
     private string manualUrl = "";
+    private string? uploadError;
+
+    private IReadOnlyList<Yoga.Shared.Models.MediaFile> VisibleFiles => files.Where(f => MatchesMediaKind(f.Url)).ToList();
+    private string PickerTitle => MediaKind switch
+    {
+        "video" => "Выбрать видео",
+        "audio" => "Выбрать аудио",
+        "document" => "Выбрать документ",
+        "mixed" => "Выбрать медиа",
+        _ => "Выбрать изображение"
+    };
+    private string EmptyStateText => MediaKind switch
+    {
+        "video" => "Нет загруженных видео",
+        "audio" => "Нет загруженного аудио",
+        "document" => "Нет загруженных документов",
+        "mixed" => "Нет подходящих файлов",
+        _ => "Нет загруженных изображений"
+    };
+    private string AcceptValue => MediaKind switch
+    {
+        "video" => "video/*",
+        "audio" => "audio/*",
+        "document" => ".pdf",
+        "mixed" => "image/*,video/*,audio/*,.pdf",
+        _ => "image/*"
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,11 +118,22 @@
 
     private async Task HandleUpload(InputFileChangeEventArgs e)
     {
+        uploadError = null;
         var file = e.File;
-        if (file.Size > 10 * 1024 * 1024) return;
+        if (file.Size > MaxFileSizeBytes)
+        {
+            uploadError = $"Файл слишком большой. Максимум {MaxFileSizeBytes / (1024 * 1024)} MB.";
+            return;
+        }
+
+        if (!MatchesMediaKind(file.Name))
+        {
+            uploadError = "Тип файла не подходит для этого поля.";
+            return;
+        }
 
         var content = new MultipartFormDataContent();
-        var stream = file.OpenReadStream(10 * 1024 * 1024);
+        var stream = file.OpenReadStream(MaxFileSizeBytes);
         content.Add(new StreamContent(stream), "file", file.Name);
         content.Add(new StringContent(EntityType), "entityType");
 
@@ -88,6 +142,10 @@
         {
             files.Insert(0, result);
             await OnSelected.InvokeAsync(GetFullUrl(result.Url));
+        }
+        else
+        {
+            uploadError = "Не удалось загрузить файл.";
         }
     }
 
@@ -107,4 +165,40 @@
         url.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
         url.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ||
         url.EndsWith(".svg", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsVideo(string url) =>
+        url.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".webm", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".mov", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsAudio(string url) =>
+        url.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".m4a", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".aac", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase);
+
+    private bool IsDocument(string url) =>
+        url.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+
+    private bool MatchesMediaKind(string url) => MediaKind switch
+    {
+        "video" => IsVideo(url),
+        "audio" => IsAudio(url),
+        "document" => IsDocument(url),
+        "mixed" => IsImage(url) || IsVideo(url) || IsAudio(url) || IsDocument(url),
+        _ => IsImage(url)
+    };
+
+    private string FileIcon(string url) => MediaKind switch
+    {
+        "audio" => "🎧",
+        "document" => "📄",
+        _ when IsAudio(url) => "🎧",
+        _ when IsDocument(url) => "📄",
+        _ => "📦"
+    };
+
+    private static string DisplayName(Yoga.Shared.Models.MediaFile file) =>
+        !string.IsNullOrWhiteSpace(file.Alt) ? file.Alt : Path.GetFileName(file.Url);
 }

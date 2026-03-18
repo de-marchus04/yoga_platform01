@@ -48,6 +48,7 @@ packages/
 # Sensitive configuration — НЕ коммитить
 appsettings.Development.json
 appsettings.Production.json
+!Yoga.Client/wwwroot/appsettings.Development.json
 .env
 
 # Logs

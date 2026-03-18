@@ -143,6 +143,9 @@
             <li><a href="/about" @onclick="CloseMenu">@Loc["nav.about"]</a></li>
             <li><a href="/contacts" @onclick="CloseMenu">@Loc["nav.contacts"]</a></li>
             <li class="mobile-divider"></li>
+            <li><a href="/privacy" @onclick="CloseMenu">Политика конфиденциальности</a></li>
+            <li><a href="/terms" @onclick="CloseMenu">Условия использования</a></li>
+            <li class="mobile-divider"></li>
             <li><a href="/account" @onclick="CloseMenu">👤 Личный кабинет</a></li>
         </ul>
         <div class="mobile-nav-footer">
@@ -164,6 +167,10 @@
     <footer class="app-footer">
         <div class="container">
             <p>@Loc["footer.copy"]</p>
+            <div class="footer-legal-links">
+                <a href="/privacy">Политика конфиденциальности</a>
+                <a href="/terms">Условия использования</a>
+            </div>
         </div>
     </footer>
 </div>

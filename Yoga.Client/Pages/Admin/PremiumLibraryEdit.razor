@@ -43,7 +43,14 @@
             <div class="form-row">
                 <div class="admin-form-group">
                     <label>URL медиа</label>
-                    <input class="admin-input" @bind="mediaUrl" placeholder="https://..." />
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <input class="admin-input" style="flex:1" @bind="mediaUrl" placeholder="https://..." />
+                        <button type="button" class="btn-admin btn-admin-outline" @onclick="() => showMediaPicker = true">📁</button>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(mediaUrl))
+                    {
+                        <div class="admin-text-muted" style="margin-top:0.45rem; word-break:break-all;">@mediaUrl</div>
+                    }
                 </div>
                 <div class="admin-form-group">
                     <label>Длительность (минуты)</label>
@@ -71,6 +78,13 @@
                 <input class="admin-input" type="number" @bind="sortOrder" style="max-width:150px;" />
             </div>
 
+            <div class="admin-form-group checkbox-group">
+                <label>
+                    <input type="checkbox" @bind="isPrivateMedia" />
+                    Выдавать медиа только через приватный доступ
+                </label>
+            </div>
+
             @if (!string.IsNullOrEmpty(error))
             {
                 <div class="form-error">@error</div>
@@ -86,6 +100,15 @@
     }
 </div>
 
+@if (showMediaPicker)
+{
+    <Yoga.Client.Components.Admin.MediaPicker
+        EntityType="PremiumResource"
+        MediaKind="@PickerMediaKind"
+        OnSelected="OnMediaSelected"
+        OnClose="CloseMediaPicker" />
+}
+
 @code {
     [Parameter] public Guid? Id { get; set; }
     private bool IsNew => Id == null;
@@ -93,8 +116,17 @@
     private string title = "", resourceType = "video";
     private string? description, mediaUrl, category, minimumTier;
     private int durationMinutes, sortOrder;
+    private bool isPrivateMedia = true;
+    private bool showMediaPicker;
     private bool loading, saving;
     private string? error;
+    private string PickerMediaKind => resourceType switch
+    {
+        "audio" => "audio",
+        "document" => "document",
+        "guide" => "document",
+        _ => "video"
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -115,6 +147,7 @@
                     category = found.Category;
                     minimumTier = found.MinimumTier;
                     sortOrder = found.SortOrder;
+                    isPrivateMedia = found.IsPrivateMedia;
                 }
                 else error = "Ресурс не найден";
             }
@@ -131,7 +164,7 @@
         {
             var duration = durationMinutes > 0 ? TimeSpan.FromMinutes(durationMinutes) : (TimeSpan?)null;
             var tier = string.IsNullOrEmpty(minimumTier) ? null : minimumTier;
-            var request = new CreatePremiumResourceRequest(title, description, resourceType, mediaUrl, duration, tier, category, sortOrder);
+            var request = new CreatePremiumResourceRequest(title, description, resourceType, mediaUrl, duration, tier, category, sortOrder, isPrivateMedia);
 
             HttpResponseMessage r;
             if (IsNew) r = await Api.CreatePremiumResourceAsync(request);
@@ -145,4 +178,17 @@
     }
 
     private void Cancel() => Nav.NavigateTo("/admin/premium-library");
+
+    private Task OnMediaSelected(string url)
+    {
+        mediaUrl = url;
+        showMediaPicker = false;
+        return Task.CompletedTask;
+    }
+
+    private Task CloseMediaPicker()
+    {
+        showMediaPicker = false;
+        return Task.CompletedTask;
+    }
 }

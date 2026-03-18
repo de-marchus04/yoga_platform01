@@ -1,6 +1,7 @@
 @page "/account/library"
 @layout CabinetLayout
 @inject UserApiService Api
+@inject NavigationManager Nav
 
 <PageTitle>Библиотека</PageTitle>
 
@@ -49,6 +50,19 @@ else
                     {
                         <a href="@r.MediaUrl" target="_blank" class="cab-link-accent">Открыть →</a>
                     }
+                    else if (r.IsPrivateMedia)
+                    {
+                        <button class="cab-link-accent"
+                                style="background:none;border:none;cursor:pointer;padding:0;font:inherit;"
+                                disabled="@openingIds.Contains(r.Id)"
+                                @onclick="() => OpenProtectedResource(r.Id)">
+                            @(openingIds.Contains(r.Id) ? "Подготавливаем..." : "Открыть →")
+                        </button>
+                    }
+                    @if (resourceErrors.TryGetValue(r.Id, out var resourceError))
+                    {
+                        <div class="cab-empty-sub" style="margin-top:0.4rem;">@resourceError</div>
+                    }
                 </div>
             </div>
         }
@@ -58,11 +72,38 @@ else
 @code {
     private List<PremiumResourceDto> resources = new();
     private bool loading = true;
+    private HashSet<Guid> openingIds = new();
+    private Dictionary<Guid, string> resourceErrors = new();
 
     protected override async Task OnInitializedAsync()
     {
         resources = await Api.GetPremiumResourcesAsync();
         loading = false;
+    }
+
+    private async Task OpenProtectedResource(Guid id)
+    {
+        openingIds.Add(id);
+        resourceErrors.Remove(id);
+        try
+        {
+            var access = await Api.GetPremiumResourceAccessAsync(id);
+            if (!string.IsNullOrWhiteSpace(access?.Url))
+            {
+                Nav.NavigateTo(access.Url, true);
+                return;
+            }
+
+            resourceErrors[id] = "Не удалось подготовить ссылку. Попробуйте ещё раз.";
+        }
+        catch
+        {
+            resourceErrors[id] = "Ссылка истекла или временно недоступна. Запросите доступ ещё раз.";
+        }
+        finally
+        {
+            openingIds.Remove(id);
+        }
     }
 
     private string FormatType(string type) => type switch

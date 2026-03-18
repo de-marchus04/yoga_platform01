@@ -32,11 +32,12 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=db;Database=${POSTGRES_DB:-YogaLifeEnterpriseDb};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
-      - JwtSettings__SecretKey=${JWT_SECRET_KEY:-ThisIsAVerySecretKeyForJwtTokenGenerationMinimum32CharsLength!!!}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER:-YogaEnterpriseApi}
       - JwtSettings__Audience=${JWT_AUDIENCE:-YogaEnterpriseClient}
       - TelegramSettings__BotToken=${TELEGRAM_BOT_TOKEN:-}
       - TelegramSettings__ChatId=${TELEGRAM_CHAT_ID:-}
+      - Security__AllowedOrigins__0=${APP_ORIGIN:-http://localhost}
     restart: always
 
   client:

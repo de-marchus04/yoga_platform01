@@ -1,0 +1,31 @@
+@using Microsoft.AspNetCore.Components
+
+<section class="legal-shell">
+    <div class="container legal-container">
+        <header class="legal-hero">
+            <p class="legal-eyebrow">@Eyebrow</p>
+            <h1>@Title</h1>
+            <p class="legal-intro">@Intro</p>
+            <div class="legal-meta">
+                <span>Актуально с @EffectiveDate.ToString("dd.MM.yyyy")</span>
+                @if (!string.IsNullOrWhiteSpace(ContactLine))
+                {
+                    <span>@ContactLine</span>
+                }
+            </div>
+        </header>
+
+        <div class="legal-content">
+            @ChildContent
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string Eyebrow { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Intro { get; set; } = string.Empty;
+    [Parameter] public DateOnly EffectiveDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+    [Parameter] public string? ContactLine { get; set; }
+    [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
+}

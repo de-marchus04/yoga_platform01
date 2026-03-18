@@ -68,8 +68,22 @@
                     </div>
                     <div class="admin-form-group">
                         <label>URL записи</label>
-                        <input class="admin-input" @bind="recordingUrl" placeholder="https://..." />
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <input class="admin-input" style="flex:1" @bind="recordingUrl" placeholder="https://..." />
+                            <button type="button" class="btn-admin btn-admin-outline" @onclick="() => showRecordingPicker = true">📁</button>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(recordingUrl))
+                        {
+                            <div class="admin-text-muted" style="margin-top:0.45rem; word-break:break-all;">@recordingUrl</div>
+                        }
                     </div>
+                </div>
+
+                <div class="admin-form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" @bind="isRecordingPrivate" />
+                        Выдавать запись только через приватный доступ
+                    </label>
                 </div>
 
                 <div class="admin-form-group checkbox-group">
@@ -100,6 +114,15 @@
     }
 </div>
 
+@if (showRecordingPicker)
+{
+    <Yoga.Client.Components.Admin.MediaPicker
+        EntityType="LiveEvent"
+        MediaKind="video"
+        OnSelected="OnRecordingSelected"
+        OnClose="CloseRecordingPicker" />
+}
+
 @code {
     [Parameter] public Guid? Id { get; set; }
     private bool IsNew => Id == null;
@@ -108,6 +131,8 @@
     private string? description, joinUrl, recordingUrl, seriesIdStr;
     private DateTime startsAt = DateTime.Now.AddDays(1);
     private DateTime? endsAt;
+    private bool isRecordingPrivate = true;
+    private bool showRecordingPicker;
     private bool isPublished, loading, saving;
     private string? error;
 
@@ -131,6 +156,7 @@
                     accessPolicy = detail.AccessPolicy;
                     seriesIdStr = detail.SeriesId?.ToString();
                     isPublished = detail.IsPublished;
+                    isRecordingPrivate = detail.IsRecordingPrivate;
                 }
                 else error = "Эфир не найден";
             }
@@ -149,12 +175,12 @@
             HttpResponseMessage r;
             if (IsNew)
             {
-                var req = new CreateLiveEventRequest(title, description, startsAt, endsAt, joinUrl, accessPolicy, seriesId);
+                var req = new CreateLiveEventRequest(title, description, startsAt, endsAt, joinUrl, accessPolicy, seriesId, isRecordingPrivate);
                 r = await Api.CreateLiveEventAsync(req);
             }
             else
             {
-                var req = new UpdateLiveEventRequest(title, description, startsAt, endsAt, joinUrl, recordingUrl, status, accessPolicy, seriesId, isPublished);
+                var req = new UpdateLiveEventRequest(title, description, startsAt, endsAt, joinUrl, recordingUrl, status, accessPolicy, seriesId, isPublished, isRecordingPrivate);
                 r = await Api.UpdateLiveEventAsync(Id!.Value, req);
             }
 
@@ -166,4 +192,17 @@
     }
 
     private void Cancel() => Nav.NavigateTo("/admin/live-events");
+
+    private Task OnRecordingSelected(string url)
+    {
+        recordingUrl = url;
+        showRecordingPicker = false;
+        return Task.CompletedTask;
+    }
+
+    private Task CloseRecordingPicker()
+    {
+        showRecordingPicker = false;
+        return Task.CompletedTask;
+    }
 }

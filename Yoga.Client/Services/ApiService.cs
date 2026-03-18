@@ -14,7 +14,7 @@ namespace Yoga.Client.Services
         }
 
         /// <summary>Base API URL for use by SignalR hub connection.</summary>
-        public string ApiBaseUrl => _http.BaseAddress?.AbsoluteUri.TrimEnd('/') ?? "http://localhost:5293";
+        public string ApiBaseUrl => _http.BaseAddress?.AbsoluteUri.TrimEnd('/') ?? string.Empty;
 
         // Retreats
         public async Task<List<RetreatDto>> GetActiveRetreatsAsync(string lang = "ru")

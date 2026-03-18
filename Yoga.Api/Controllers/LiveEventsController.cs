@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
+using Yoga.Api.Services;
 using Yoga.Shared.DTOs;
 using Yoga.Shared.Models;
 
@@ -15,8 +16,15 @@ namespace Yoga.Api.Controllers
     public class LiveEventsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuditTrailService _auditTrail;
+        private readonly IFileStorageService _storageService;
 
-        public LiveEventsController(AppDbContext context) => _context = context;
+        public LiveEventsController(AppDbContext context, IAuditTrailService auditTrail, IFileStorageService storageService)
+        {
+            _context = context;
+            _auditTrail = auditTrail;
+            _storageService = storageService;
+        }
 
         // ── Public: published events (no JoinUrl) ──
         [HttpGet]
@@ -47,12 +55,19 @@ namespace Yoga.Api.Controllers
             var hasAccess = await CheckAccess(customerId.Value, ev);
             if (!hasAccess) return Forbid();
 
+            string? recordingUrl = null;
+            if (!string.IsNullOrWhiteSpace(ev.RecordingUrl) && ev.Status == "Ended")
+            {
+                var access = await _storageService.GetReadAccessAsync(ev.RecordingUrl, ev.IsRecordingPrivate, cancellationToken: HttpContext.RequestAborted);
+                recordingUrl = access.Url;
+            }
+
             return Ok(new LiveEventDetailDto(
                 ev.Id, ev.Title, ev.Description, ev.StartsAt, ev.EndsAt,
                 ev.Status,
                 ev.Status is "Live" or "Scheduled" ? ev.JoinUrl : null,
-                ev.Status == "Ended" ? ev.RecordingUrl : null,
-                ev.AccessPolicy, ev.SeriesId, ev.IsPublished
+                recordingUrl,
+                ev.AccessPolicy, ev.SeriesId, ev.IsPublished, ev.IsRecordingPrivate
             ));
         }
 
@@ -79,7 +94,7 @@ namespace Yoga.Api.Controllers
             return Ok(new LiveEventDetailDto(
                 ev.Id, ev.Title, ev.Description, ev.StartsAt, ev.EndsAt,
                 ev.Status, ev.JoinUrl, ev.RecordingUrl,
-                ev.AccessPolicy, ev.SeriesId, ev.IsPublished
+                ev.AccessPolicy, ev.SeriesId, ev.IsPublished, ev.IsRecordingPrivate
             ));
         }
 
@@ -95,9 +110,18 @@ namespace Yoga.Api.Controllers
                 EndsAt = req.EndsAt,
                 JoinUrl = req.JoinUrl,
                 AccessPolicy = req.AccessPolicy,
-                SeriesId = req.SeriesId
+                SeriesId = req.SeriesId,
+                IsRecordingPrivate = req.IsRecordingPrivate
             };
             _context.LiveEvents.Add(ev);
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "live-event-created",
+                nameof(LiveEvent),
+                ev.Id,
+                $"Created live event '{ev.Title}'.",
+                new { ev.StartsAt, ev.EndsAt, ev.AccessPolicy, ev.SeriesId, ev.IsRecordingPrivate }));
             await _context.SaveChangesAsync();
             return Ok(new { ev.Id });
         }
@@ -119,6 +143,15 @@ namespace Yoga.Api.Controllers
             ev.AccessPolicy = req.AccessPolicy;
             ev.SeriesId = req.SeriesId;
             ev.IsPublished = req.IsPublished;
+            ev.IsRecordingPrivate = req.IsRecordingPrivate;
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "live-event-updated",
+                nameof(LiveEvent),
+                ev.Id,
+                $"Updated live event '{ev.Title}'.",
+                new { ev.Status, ev.AccessPolicy, ev.IsPublished, ev.StartsAt, ev.EndsAt, ev.SeriesId, ev.IsRecordingPrivate }));
             await _context.SaveChangesAsync();
             return Ok();
         }
@@ -129,6 +162,14 @@ namespace Yoga.Api.Controllers
         {
             var ev = await _context.LiveEvents.FindAsync(id);
             if (ev == null) return NotFound();
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "live-event-deleted",
+                nameof(LiveEvent),
+                ev.Id,
+                $"Deleted live event '{ev.Title}'.",
+                new { ev.Status, ev.AccessPolicy, ev.IsPublished, ev.StartsAt, ev.EndsAt }));
             _context.LiveEvents.Remove(ev);
             await _context.SaveChangesAsync();
             return NoContent();

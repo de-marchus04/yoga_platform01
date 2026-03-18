@@ -18,11 +18,13 @@ namespace Yoga.Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ITelegramService _telegramService;
+        private readonly IAuditTrailService _auditTrail;
 
-        public LeadsController(AppDbContext context, ITelegramService telegramService)
+        public LeadsController(AppDbContext context, ITelegramService telegramService, IAuditTrailService auditTrail)
         {
             _context = context;
             _telegramService = telegramService;
+            _auditTrail = auditTrail;
         }
 
         // POST: api/leads (Public - anyone can submit a lead)
@@ -86,6 +88,14 @@ namespace Yoga.Api.Controllers
             if (lead == null) return NotFound();
 
             lead.IsProcessed = processed;
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "lead-processed-flag-updated",
+                nameof(Lead),
+                lead.Id,
+                $"Updated processed flag for lead '{lead.Name}' to {processed}.",
+                new { lead.Status, lead.CustomerId, lead.CourseId, lead.ConsultationId, lead.RetreatId, processed }));
             await _context.SaveChangesAsync();
 
             return Ok(lead);
@@ -102,6 +112,14 @@ namespace Yoga.Api.Controllers
             if (status == "Успешно" || status == "Отказ") lead.IsProcessed = true;
             else lead.IsProcessed = false;
 
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "lead-status-updated",
+                nameof(Lead),
+                lead.Id,
+                $"Updated lead '{lead.Name}' status to '{status}'.",
+                new { lead.IsProcessed, lead.CustomerId, lead.CourseId, lead.ConsultationId, lead.RetreatId }));
             await _context.SaveChangesAsync();
             return Ok();
         }
@@ -114,6 +132,14 @@ namespace Yoga.Api.Controllers
             if (lead == null) return NotFound();
 
             lead.AdminNotes = notes;
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "lead-notes-updated",
+                nameof(Lead),
+                lead.Id,
+                $"Updated admin notes for lead '{lead.Name}'.",
+                new { noteLength = notes?.Length ?? 0, lead.Status, lead.CustomerId }));
             await _context.SaveChangesAsync();
             return Ok();
         }
@@ -156,6 +182,15 @@ namespace Yoga.Api.Controllers
             lead.Status = "Успешно";
             lead.IsProcessed = true;
 
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "customer-created-from-lead",
+                nameof(Customer),
+                customer.Id,
+                $"Created customer '{customer.Email}' from lead '{lead.Name}'.",
+                new { leadId = lead.Id, customer.FullName, customer.Email, customer.Phone, customer.Messenger }));
+
             await _context.SaveChangesAsync();
             return Ok(new { customerId = customer.Id });
         }
@@ -194,6 +229,25 @@ namespace Yoga.Api.Controllers
 
             // Link lead to customer if not already linked
             if (lead.CustomerId == null) lead.CustomerId = req.CustomerId;
+
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "access-granted-from-lead",
+                nameof(CustomerAccessGrant),
+                grant.Id,
+                $"Granted {grant.AccessType} access from lead '{lead.Name}' to customer {req.CustomerId}.",
+                new
+                {
+                    leadId = lead.Id,
+                    req.CustomerId,
+                    grant.AccessType,
+                    grant.CourseId,
+                    grant.ConsultationId,
+                    grant.RetreatId,
+                    grant.LiveEventId,
+                    grant.EndsAt
+                }));
 
             await _context.SaveChangesAsync();
             return Ok(new { grant.Id });
