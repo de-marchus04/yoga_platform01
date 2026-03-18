@@ -46,11 +46,11 @@ jobs:
         run: |
           mkdir -p publish/wwwroot/.vercel
           cat > publish/wwwroot/.vercel/project.json <<EOF
-          {"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}
+          {"orgId":"team_4ZeZHmzGdjhTB9NdH82pbzjN","projectId":"prj_xZU60Fn5Iud595WIGVXWZB9a0Xxr"}
           EOF
 
       - name: Deploy static publish to Vercel
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           cd publish/wwwroot
-          npx vercel deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
+          npx vercel deploy --prod --yes --scope="de-marchus04s-projects" --token="${{ secrets.VERCEL_TOKEN }}"
