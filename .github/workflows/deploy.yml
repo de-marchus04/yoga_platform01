@@ -53,4 +53,4 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           cd publish/wwwroot
-          npx vercel deploy --prod --yes --scope="de-marchus04s-projects" --token="${{ secrets.VERCEL_TOKEN }}"
+          npx vercel deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
