@@ -1,0 +1,80 @@
+name: Deploy Blazor Frontend
+
+on:
+  workflow_run:
+    workflows: [Build Blazor WASM]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: vercel-frontend-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Static Frontend To Vercel
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main'
+      )
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository for manual dispatch
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Setup .NET 8 for manual dispatch
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Download published frontend artifact
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: blazor-wasm-publish
+          path: publish/wwwroot
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build frontend for manual dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          dotnet restore Yoga.Client/Yoga.Client.csproj
+          dotnet publish Yoga.Client/Yoga.Client.csproj \
+            -c Release \
+            -o publish \
+            --nologo
+
+      - name: Prepare Vercel project linkage
+        run: |
+          mkdir -p publish/wwwroot/.vercel
+          cat > publish/wwwroot/.vercel/project.json <<'EOF'
+          {"orgId":"team_4ZeZHmzGdjhTB9NdH82pbzjN","projectId":"prj_xZU60Fn5Iud595WIGVXWZB9a0Xxr"}
+          EOF
+
+      - name: Verify static bundle
+        run: |
+          test -f publish/wwwroot/index.html
+          test -d publish/wwwroot/_framework
+
+      - name: Deploy static frontend to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          cd publish/wwwroot
+          npx vercel deploy --prod --yes --token="$VERCEL_TOKEN"

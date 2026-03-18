@@ -9,6 +9,21 @@ This guide describes the baseline deployment model for the first production rele
 - Runtime: Docker Compose.
 - Database: PostgreSQL.
 - Storage: S3-compatible object storage for growing media.
+- Public frontend hosting: Vercel static hosting from published Blazor output.
+
+## Final Deployment Model
+
+Production is split into two separate delivery paths:
+
+- API and database run on the main host through Docker Compose.
+- The Blazor frontend is published as static files and deployed to Vercel from `publish/wwwroot`.
+
+Important operating rule:
+
+- The Vercel project `yoga-life-enterprise` must stay disconnected from direct Git auto-deploy for this repository.
+- GitHub Actions builds the publish artifact first and then deploys that artifact to Vercel through a dedicated workflow.
+- The public alias must point to a static deploy created from `publish/wwwroot`, not to a root repository deploy.
+- Manual `vercel deploy` is a fallback procedure, not the primary release path.
 
 ## Required Secrets And Variables
 
@@ -42,10 +57,25 @@ Optional but recommended media values for production API environment:
 2. Copy the repository to the server.
 3. Create the production `.env` file.
 4. Confirm DNS points to the host.
-5. Start the stack:
+5. Start the API stack:
 
 ```bash
 docker compose up -d --build
+```
+
+1. Trigger the frontend deployment workflow by pushing `main`.
+
+Expected automation:
+
+- `Build Blazor WASM` creates the `publish/wwwroot` artifact.
+- `Deploy Blazor Frontend` downloads that artifact and publishes it to Vercel.
+
+1. If the automatic frontend deployment is unavailable, use the fallback manual procedure:
+
+```bash
+dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
+cd publish/wwwroot
+vercel deploy --prod --yes
 ```
 
 1. Verify:
@@ -61,12 +91,24 @@ git pull
 docker compose up -d --build
 ```
 
+Then push the updated `main` branch so GitHub Actions can deploy the frontend artifact automatically.
+
+If the deploy workflow is unavailable, use the manual fallback:
+
+```bash
+dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
+cd publish/wwwroot
+vercel deploy --prod --yes
+```
+
 After upgrade:
 
 1. Check API logs.
 2. Check client logs.
 3. Open admin login.
 4. Verify one customer cabinet flow.
+5. Verify the Vercel alias returns `200` for `/`, `/about`, `/contacts`, `/privacy`, `/terms`, and `/account/login`.
+6. Verify the `Deploy Blazor Frontend` workflow completed successfully.
 
 ## Rollback Procedure
 
@@ -92,3 +134,4 @@ After deployment, verify:
 5. Premium resource access.
 6. Live event watch flow.
 7. Audit page visibility.
+8. Public Vercel routes resolve without `404`.
