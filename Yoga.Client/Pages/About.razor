@@ -12,7 +12,7 @@
         <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.about.founders.eyebrow"]</p>
         <h1>@F("HeroTitle", Loc["page.about.h1"])</h1>
         <div class="section-divider" style="margin:2rem 0;"></div>
-        <p>@F("HeroSubtitle", "Yoga.Life Enterprise — это пространство, где встречаются традиция и современность, практика и трансформация.")</p>
+        <p>@F("HeroSubtitle", P("Сюда нужно добавить краткое позиционирование проекта: кто вы, для кого работаете и почему вам можно доверять уже с первого экрана.", "Сюди потрібно додати коротке позиціонування проєкту: хто ви, для кого працюєте і чому вам можна довіряти вже з першого екрана.", "Add a short positioning statement here: who you are, who you serve, and why visitors should trust you from the first screen."))</p>
     </div>
 </section>
 
@@ -36,13 +36,13 @@ else
             </div>
             <div class="story-grid reveal">
                 <div class="story-text">
-                    <span class="story-role">@F("Founder1Role", "Автор методик · Инструктор · 15+ лет практики")</span>
-                    <h2>@F("Founder1Name", "Ольга Шалетина")</h2>
-                    <p>@F("Founder1Text1", "Ольга начала путь йоги в 20 лет — и с тех пор не останавливалась. За 15+ лет практики и преподавания она разработала авторские программы оздоровления через дыхание, которые прошли более 300 студентов.")</p>
-                    <p>@F("Founder1Text2", "Специализация — пранаяма, йога-нидра и работа с хроническим стрессом. Её классы сочетают строгость традиции с теплотой живого присутствия.")</p>
+                    <span class="story-role">@F("Founder1Role", P("Укажите роль специалиста, чтобы посетитель сразу понял зону ответственности и профиль эксперта.", "Вкажіть роль спеціаліста, щоб відвідувач одразу зрозумів зону відповідальності та профіль експерта.", "Describe the expert role here so visitors immediately understand this person's responsibility and expertise."))</span>
+                    <h2>@F("Founder1Name", P("Имя основателя или ведущего эксперта", "Ім'я засновника або провідного експерта", "Name of the founder or lead expert"))</h2>
+                    <p>@F("Founder1Text1", P("Сюда нужен первый абзац биографии: опыт, квалификация, авторский подход и главный профессиональный акцент.", "Сюди потрібен перший абзац біографії: досвід, кваліфікація, авторський підхід і головний професійний акцент.", "Use this paragraph for the core biography: experience, credentials, methodology, and the main professional focus."))</p>
+                    <p>@F("Founder1Text2", P("Сюда нужен второй абзац биографии: какие результаты получает клиент, чем отличается метод и почему этому человеку можно доверить практику или сопровождение.", "Сюди потрібен другий абзац біографії: які результати отримує клієнт, чим відрізняється метод і чому цій людині можна довірити практику або супровід.", "Use this paragraph to explain client outcomes, what makes the method different, and why this expert is trustworthy."))</p>
                 </div>
                 <div class="story-photo">
-                    <img src="@F("Founder1ImageUrl", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder1Name", "Ольга Шалетина")" loading="lazy" decoding="async" />
+                    <img src="@F("Founder1ImageUrl", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder1Name", P("Фото первого эксперта", "Фото першого експерта", "Photo of the first expert"))" loading="lazy" decoding="async" />
                 </div>
             </div>
         </div>
@@ -53,13 +53,13 @@ else
         <div class="container">
             <div class="story-grid story-grid-reverse reveal">
                 <div class="story-text">
-                    <span class="story-role">@F("Founder2Role", "Учитель · Духовный наставник · 25+ лет опыта")</span>
-                    <h2>@F("Founder2Name", "Александр Украинцев")</h2>
-                    <p>@F("Founder2Text1", "Александр изучает йогу и ведическую философию более 25 лет. Он провёл свыше 40 ретритов в России, Европе и Азии, а его наставничество глубоко уходит корнями в традицию крийя-йоги.")</p>
-                    <p>@F("Founder2Text2", "Его подход — не набор техник, а целостный путь: от физического тела к самому тонкому. Каждый ретрит под его руководством становится точкой отсчёта новой жизни.")</p>
+                    <span class="story-role">@F("Founder2Role", P("Укажите вторую ключевую роль команды: наставник, терапевт, преподаватель или куратор программ.", "Вкажіть другу ключову роль команди: наставник, терапевт, викладач або куратор програм.", "Describe the second core team role here: mentor, therapist, teacher, or program curator."))</span>
+                    <h2>@F("Founder2Name", P("Имя второго эксперта или партнёра проекта", "Ім'я другого експерта або партнера проєкту", "Name of the second expert or project partner"))</h2>
+                    <p>@F("Founder2Text1", P("Сюда добавьте биографию второго эксперта: сколько лет в практике, в чём специализация и какие форматы он или она ведёт.", "Сюди додайте біографію другого експерта: скільки років у практиці, у чому спеціалізація і які формати він або вона веде.", "Add the second expert's background here: years of practice, specialization, and which formats they lead."))</p>
+                    <p>@F("Founder2Text2", P("Сюда добавьте аргумент доверия: чем этот человек усиливает проект и какую пользу клиент получает именно от его участия.", "Сюди додайте аргумент довіри: чим ця людина підсилює проєкт і яку користь клієнт отримує саме від її участі.", "Use this paragraph to explain why this person strengthens the project and what value clients get from their involvement."))</p>
                 </div>
                 <div class="story-photo">
-                    <img src="@F("Founder2ImageUrl", "https://images.unsplash.com/photo-1566753323558-f4e0952af115?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder2Name", "Александр Украинцев")" loading="lazy" decoding="async" />
+                    <img src="@F("Founder2ImageUrl", "https://images.unsplash.com/photo-1566753323558-f4e0952af115?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder2Name", P("Фото второго эксперта", "Фото другого експерта", "Photo of the second expert"))" loading="lazy" decoding="async" />
                 </div>
             </div>
         </div>
@@ -70,13 +70,13 @@ else
         <div class="container">
             <div class="story-grid reveal">
                 <div class="story-text">
-                    <span class="story-role">@F("Founder3Role", "Создатель платформы · Разработчик")</span>
-                    <h2>@F("Founder3Name", "Дмитрий Державин")</h2>
-                    <p>@F("Founder3Text1", "Дмитрий создал технологическую основу Yoga.Life Enterprise — систему, которая объединяет учителей и студентов со всего мира в единое пространство практики и роста.")</p>
-                    <p>@F("Founder3Text2", "Его видение: технологии должны служить духовному развитию, а не отвлекать от него. Платформа строится на принципах простоты, красоты и функциональности.")</p>
+                    <span class="story-role">@F("Founder3Role", P("Если нужно, опишите здесь третью роль: продюсер, управляющий партнёр, операционный директор или технический лидер.", "Якщо потрібно, опишіть тут третю роль: продюсер, керуючий партнер, операційний директор або технічний лідер.", "If needed, describe the third role here: producer, managing partner, operations lead, or technical lead."))</span>
+                    <h2>@F("Founder3Name", P("Имя третьего участника команды", "Ім'я третього учасника команди", "Name of the third team member"))</h2>
+                    <p>@F("Founder3Text1", P("Сюда добавьте, какую функцию этот человек закрывает в проекте и почему эта роль важна для качества сервиса и масштаба работы.", "Сюди додайте, яку функцію ця людина закриває в проєкті і чому ця роль важлива для якості сервісу та масштабу роботи.", "Explain what this person is responsible for and why their role matters for service quality and scale."))</p>
+                    <p>@F("Founder3Text2", P("Сюда добавьте короткий тезис о видении, стандартах работы или технологическом подходе, если это усиливает доверие к бренду.", "Сюди додайте коротку тезу про бачення, стандарти роботи або технологічний підхід, якщо це підсилює довіру до бренду.", "Use this paragraph for vision, operating standards, or technical approach if it strengthens trust in the brand."))</p>
                 </div>
                 <div class="story-photo">
-                    <img src="@F("Founder3ImageUrl", "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder3Name", "Дмитрий Державин")" loading="lazy" decoding="async" />
+                    <img src="@F("Founder3ImageUrl", "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80")" alt="@F("Founder3Name", P("Фото третьего участника команды", "Фото третього учасника команди", "Photo of the third team member"))" loading="lazy" decoding="async" />
                 </div>
             </div>
         </div>
@@ -93,18 +93,18 @@ else
             <div class="philosophy-grid">
                 <div class="philosophy-item reveal">
                     <span class="philosophy-item-num">01</span>
-                    <h3>@F("Phil1Title", "Присутствие")</h3>
-                    <p>@F("Phil1Text", "Каждая практика начинается с момента здесь и сейчас. Мы создаём пространство, где тело и ум обретают покой.")</p>
+                    <h3>@F("Phil1Title", P("Ценность или принцип №1", "Цінність або принцип №1", "Value or principle #1"))</h3>
+                    <p>@F("Phil1Text", P("Сформулируйте первый принцип бренда: какую базовую ценность получает клиент и что отличает ваш подход от обычного wellness-контента.", "Сформулюйте перший принцип бренду: яку базову цінність отримує клієнт і що відрізняє ваш підхід від звичайного wellness-контенту.", "Use this block to define your first brand principle: what core value the client gets and what makes your approach different from generic wellness content."))</p>
                 </div>
                 <div class="philosophy-item reveal reveal-d1">
                     <span class="philosophy-item-num">02</span>
-                    <h3>@F("Phil2Title", "Традиция")</h3>
-                    <p>@F("Phil2Text", "Наши методики уходят корнями в многовековые практики йоги, аюрведы и ведической философии.")</p>
+                    <h3>@F("Phil2Title", P("Ценность или принцип №2", "Цінність або принцип №2", "Value or principle #2"))</h3>
+                    <p>@F("Phil2Text", P("Здесь опишите второй принцип: методологию, глубину, традицию, научный подход или формат сопровождения, на котором строится продукт.", "Тут опишіть другий принцип: методологію, глибину, традицію, науковий підхід або формат супроводу, на якому будується продукт.", "Use this area for the second principle: methodology, depth, tradition, scientific approach, or support format behind the product."))</p>
                 </div>
                 <div class="philosophy-item reveal reveal-d2">
                     <span class="philosophy-item-num">03</span>
-                    <h3>@F("Phil3Title", "Трансформация")</h3>
-                    <p>@F("Phil3Text", "Мы не просто учим асанам — мы помогаем переосмыслить жизнь через осознанное движение, дыхание и тишину.")</p>
+                    <h3>@F("Phil3Title", P("Ценность или принцип №3", "Цінність або принцип №3", "Value or principle #3"))</h3>
+                    <p>@F("Phil3Text", P("Здесь зафиксируйте итоговую трансформацию: ради какого изменения человек приходит в проект и что должно остаться с ним после взаимодействия с брендом.", "Тут зафіксуйте підсумкову трансформацію: заради якої зміни людина приходить у проєкт і що має залишитися з нею після взаємодії з брендом.", "Describe the final transformation here: what change people come for and what should stay with them after engaging with the brand."))</p>
                 </div>
             </div>
         </div>
@@ -132,6 +132,13 @@ else
             return val;
         return fallback;
     }
+
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
 
     private async void Refresh()
     {

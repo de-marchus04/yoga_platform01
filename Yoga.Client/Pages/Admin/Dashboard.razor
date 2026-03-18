@@ -61,6 +61,64 @@ else
         </div>
     }
 
+    <div class="dashboard-section">
+        <div class="dashboard-section-header">
+            <h3>Сброс публичного контента</h3>
+        </div>
+
+        <p>Удаляет только публичный контент из БД и медиа-хранилища: курсы, консультации, ретриты, блог и переводы публичных страниц. Доступы клиентов, premium/live, админы и UI-переводы сохраняются.</p>
+
+        @if (resetPreview == null)
+        {
+            <div class="admin-loading">Подсчёт объектов для очистки...</div>
+        }
+        else
+        {
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-label">Курсы</div>
+                    <div class="stat-card-value">@resetPreview.Courses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Модули</div>
+                    <div class="stat-card-value">@resetPreview.CourseModules</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Консультации</div>
+                    <div class="stat-card-value">@resetPreview.Consultations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Ретриты</div>
+                    <div class="stat-card-value">@resetPreview.Retreats</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Блог</div>
+                    <div class="stat-card-value">@resetPreview.BlogPosts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Переводы страниц</div>
+                    <div class="stat-card-value">@resetPreview.SitePageTranslations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-label">Переводы сущностей</div>
+                    <div class="stat-card-value">@resetPreview.EntityTranslations</div>
+                </div>
+                <div class="stat-card stat-card-highlight">
+                    <div class="stat-card-label">Медиа</div>
+                    <div class="stat-card-value">@resetPreview.MediaFiles</div>
+                </div>
+            </div>
+        }
+
+        <div style="margin-top:16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <button class="btn-admin btn-admin-danger" @onclick="OpenResetModal" disabled="@isResetting">Удалить публичный контент</button>
+            @if (!string.IsNullOrWhiteSpace(resetStatus))
+            {
+                <span>@resetStatus</span>
+            }
+        </div>
+    </div>
+
     <!-- Recent leads -->
     <div class="dashboard-section">
         <div class="dashboard-section-header">
@@ -119,13 +177,33 @@ else
     </div>
 }
 
+@if (showResetModal && resetPreview != null)
+{
+    <div class="modal-backdrop" @onclick="CloseResetModal">
+        <div class="modal-card" @onclick:stopPropagation="true">
+            <h3>Удалить публичный контент?</h3>
+            <p>Будут удалены записи каталога и их медиа. Это действие не затрагивает клиентов, доступы, premium/live контент, администраторов и UI-переводы.</p>
+            <p>К удалению подготовлено: @resetPreview.Courses курсов, @resetPreview.Consultations консультаций, @resetPreview.Retreats ретритов, @resetPreview.BlogPosts материалов блога и @resetPreview.MediaFiles медиа-файлов.</p>
+            <div class="modal-actions">
+                <button class="btn-admin btn-admin-outline" @onclick="CloseResetModal" disabled="@isResetting">Отмена</button>
+                <button class="btn-admin btn-admin-danger" @onclick="ExecutePublicReset" disabled="@isResetting">@((isResetting ? "Удаление..." : "Подтвердить удаление"))</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private DashboardDto? dashboard;
+    private PublicContentResetPreviewDto? resetPreview;
     private System.Threading.Timer? refreshTimer;
+    private bool showResetModal;
+    private bool isResetting;
+    private string? resetStatus;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDashboard();
+        await LoadResetPreview();
 
         // Auto-refresh every 60 seconds
         refreshTimer = new System.Threading.Timer(async _ =>
@@ -133,6 +211,7 @@ else
             await InvokeAsync(async () =>
             {
                 await LoadDashboard();
+                await LoadResetPreview();
                 StateHasChanged();
             });
         }, null, TimeSpan.FromSeconds(60), TimeSpan.FromSeconds(60));
@@ -150,11 +229,69 @@ else
         }
     }
 
+    private async Task LoadResetPreview()
+    {
+        try
+        {
+            resetPreview = await Api.GetPublicContentResetPreviewAsync();
+        }
+        catch
+        {
+            resetPreview = null;
+        }
+    }
+
     private async Task MarkProcessed(Guid id)
     {
         var api = Api;
         await api.MarkLeadProcessedAsync(id, true);
         await LoadDashboard();
+    }
+
+    private void OpenResetModal()
+    {
+        resetStatus = null;
+        showResetModal = true;
+    }
+
+    private void CloseResetModal()
+    {
+        if (isResetting)
+            return;
+
+        showResetModal = false;
+    }
+
+    private async Task ExecutePublicReset()
+    {
+        if (isResetting)
+            return;
+
+        isResetting = true;
+        resetStatus = null;
+
+        try
+        {
+            var result = await Api.ResetPublicContentAsync();
+            if (result == null)
+            {
+                resetStatus = "Не удалось выполнить очистку публичного контента.";
+                return;
+            }
+
+            resetStatus = $"Очистка завершена: удалено {result.Courses} курсов, {result.Consultations} консультаций, {result.Retreats} ретритов, {result.BlogPosts} материалов блога и {result.MediaFiles} медиа.";
+            showResetModal = false;
+            await LoadDashboard();
+            await LoadResetPreview();
+        }
+        catch
+        {
+            resetStatus = "Во время очистки возникла ошибка.";
+        }
+        finally
+        {
+            isResetting = false;
+        }
     }
 
     public void Dispose()

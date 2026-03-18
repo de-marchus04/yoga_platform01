@@ -24,7 +24,11 @@
 else if (notFound)
 {
     <div style="min-height:65vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2rem; text-align:center;">
-        <p style="color:var(--text-muted);">@Loc["page.retreat.detail.not_found"]</p>
+        <div style="max-width:780px;">
+            <h1>@P("Страница ретрита очищена", "Сторінку ретриту очищено", "The retreat page has been cleared")</h1>
+            <div class="section-divider" style="margin:2rem auto;"></div>
+            <p style="color:var(--text-muted);">@P("Сюда нужно добавить полноценное описание ретрита: локацию, даты, формат участия, программу по дням, ключевые визуалы, социальное доказательство и CTA для отправки заявки.", "Сюди потрібно додати повноцінний опис ретриту: локацію, дати, формат участі, програму по днях, ключові візуали, соціальний доказ і CTA для відправки заявки.", "Use this page for the full retreat offer: location, dates, participation format, day-by-day program, key visuals, social proof, and an application CTA.")</p>
+        </div>
         <a href="/retreats/actual" class="btn btn-outline">← @Loc["page.retreat.detail.back"]</a>
     </div>
 }
@@ -282,6 +286,13 @@ else
         }
         ModalService.Show<LeadModal>(parameters);
     }
+
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
 
     public void Dispose() => Loc.OnLanguageChanged -= Refresh;
 }

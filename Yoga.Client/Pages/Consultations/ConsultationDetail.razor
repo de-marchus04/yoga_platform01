@@ -17,7 +17,10 @@ else if (item == null)
 {
     <section class="page-hero">
         <div class="container page-hero-content">
-            <h1>Консультация не найдена</h1>
+            <h1>@P("Карточка консультации очищена", "Картку консультації очищено", "The consultation page has been cleared")</h1>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            <p style="max-width:760px; color:var(--text-muted);">@P("Сюда нужно добавить оффер консультации: с каким запросом приходит клиент, как проходит сессия, в каком формате идёт работа, какой результат человек получает и почему стоит записаться именно к вам.", "Сюди потрібно додати оффер консультації: з яким запитом приходить клієнт, як проходить сесія, у якому форматі йде робота, який результат людина отримує і чому варто записатися саме до вас.", "Use this page for the consultation offer: what problem the client comes with, how the session works, which format is used, what result the person gets, and why they should book with you specifically.")</p>
+            <a href="/consultations" class="btn btn-outline" style="margin-top:1.5rem; display:inline-flex;">@P("Вернуться к каталогу консультаций", "Повернутися до каталогу консультацій", "Back to the consultations catalog")</a>
         </div>
     </section>
 }
@@ -217,5 +220,13 @@ else
         await LoadData();
         await InvokeAsync(StateHasChanged);
     }
+
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
+
     public void Dispose() => Loc.OnLanguageChanged -= Refresh;
 }

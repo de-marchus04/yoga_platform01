@@ -27,9 +27,19 @@
         {
             <div class="public-loading-state">Загружаем консультации</div>
         }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
+                <p style="margin-bottom:1rem;">@errorMessage</p>
+                <p>Сейчас вместо каталога нужно подключить публичный API и затем добавить консультации с кратким описанием, экспертной специализацией, изображением и CTA.</p>
+            </div>
+        }
         else if (!consultations.Any())
         {
-            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);">Консультации скоро появятся</div>
+            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
+                <p style="margin-bottom:1rem;">Раздел подготовлен под новое наполнение.</p>
+                <p>Сюда нужно добавить 3-6 консультаций: название направления, для кого подходит консультация, ожидаемый результат, короткую цитату-обещание и отдельное изображение для карточки.</p>
+            </div>
         }
         else
         {
@@ -54,6 +64,7 @@
 @code {
     private List<ConsultationDto> consultations = new();
     private bool loading = true;
+    private string? errorMessage;
     private SitePageDto? pageData;
 
     protected override async Task OnInitializedAsync()
@@ -78,8 +89,17 @@
     private async Task LoadAsync()
     {
         loading = true;
+        errorMessage = null;
         StateHasChanged();
-        consultations = await CatalogState.GetConsultationsAsync(Loc.CurrentLang) ?? new();
+        try
+        {
+            consultations = await CatalogState.GetConsultationsAsync(Loc.CurrentLang) ?? new();
+        }
+        catch
+        {
+            consultations = new();
+            errorMessage = "Каталог консультаций не загрузился, потому что публичный frontend сейчас не может получить данные из backend API.";
+        }
         loading = false;
     }
 

@@ -75,7 +75,12 @@ var host = builder.Build();
 // Pre-load translations before first render to avoid flash of translation keys
 var locService = host.Services.GetRequiredService<LocalizationService>();
 var jsRuntime = host.Services.GetRequiredService<Microsoft.JSInterop.IJSRuntime>();
-await locService.InitAsync(jsRuntime);
+var localizationInitTask = locService.InitAsync(jsRuntime);
+var localizationCompletedTask = await Task.WhenAny(localizationInitTask, Task.Delay(TimeSpan.FromSeconds(3)));
+if (localizationCompletedTask == localizationInitTask)
+{
+    await localizationInitTask;
+}
 
 await host.RunAsync();
 
@@ -83,6 +88,15 @@ static Uri ResolveApiBaseUri(WebAssemblyHostBuilder builder)
 {
     var config = builder.Configuration;
     var hostBaseUri = new Uri(builder.HostEnvironment.BaseAddress);
+    var publicBaseUrl = config["Api:PublicBaseUrl"];
+
+    if (!IsLocalHost(hostBaseUri) && !string.IsNullOrWhiteSpace(publicBaseUrl))
+    {
+        if (Uri.TryCreate(publicBaseUrl, UriKind.Absolute, out var publicUri))
+        {
+            return EnsureTrailingSlash(publicUri);
+        }
+    }
 
     var configuredBaseUrl = config["Api:BaseUrl"];
     if (!string.IsNullOrWhiteSpace(configuredBaseUrl))
@@ -117,6 +131,13 @@ static Uri ResolveApiBaseUri(WebAssemblyHostBuilder builder)
     }
 
     return EnsureTrailingSlash(hostBaseUri);
+}
+
+static bool IsLocalHost(Uri uri)
+{
+    return uri.IsLoopback
+        || string.Equals(uri.Host, "localhost", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(uri.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase);
 }
 
 static Uri EnsureTrailingSlash(Uri uri)

@@ -7,6 +7,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   VERCEL_ORG_ID: team_4ZeZHmzGdjhTB9NdH82pbzjN
   VERCEL_PROJECT_ID: prj_xZU60Fn5Iud595WIGVXWZB9a0Xxr
+  FRONTEND_PUBLIC_API_BASE_URL: ${{ vars.FRONTEND_PUBLIC_API_BASE_URL }}
 
 permissions:
   actions: read
@@ -43,6 +44,34 @@ jobs:
             -o publish \
             --nologo
 
+      - name: Validate public API URL
+        run: |
+          test -n "$FRONTEND_PUBLIC_API_BASE_URL" || {
+            echo "FRONTEND_PUBLIC_API_BASE_URL GitHub variable is not configured." >&2
+            exit 1
+          }
+
+          case "$FRONTEND_PUBLIC_API_BASE_URL" in
+            https://*) ;;
+            *)
+              echo "FRONTEND_PUBLIC_API_BASE_URL must be an absolute https URL." >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Inject public API URL into frontend runtime config
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import os
+
+          appsettings_path = Path("publish/wwwroot/appsettings.json")
+          data = json.loads(appsettings_path.read_text(encoding="utf-8"))
+          data.setdefault("Api", {})["PublicBaseUrl"] = os.environ["FRONTEND_PUBLIC_API_BASE_URL"].rstrip("/") + "/"
+          appsettings_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          PY
+
       - name: Prepare Vercel project linkage
         run: |
           mkdir -p publish/wwwroot/.vercel
@@ -54,6 +83,7 @@ jobs:
         run: |
           test -f publish/wwwroot/index.html
           test -d publish/wwwroot/_framework
+          grep -q '"PublicBaseUrl": "https://' publish/wwwroot/appsettings.json
 
       - name: Verify Vercel token access
         env:
@@ -62,8 +92,37 @@ jobs:
           npx vercel whoami --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
 
       - name: Deploy static frontend to Vercel
+        id: vercel_deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           cd publish/wwwroot
-          npx vercel deploy --prod --yes --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
+          deployment_url="$(npx vercel deploy --prod --yes --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN")"
+          echo "deployment_url=$deployment_url" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke check published frontend and API
+        env:
+          DEPLOYMENT_URL: ${{ steps.vercel_deploy.outputs.deployment_url }}
+        run: |
+          test -n "$DEPLOYMENT_URL" || {
+            echo "Deployment URL was not returned by Vercel deploy step." >&2
+            exit 1
+          }
+
+          case "$DEPLOYMENT_URL" in
+            https://*) ;;
+            *) DEPLOYMENT_URL="https://$DEPLOYMENT_URL" ;;
+          esac
+
+          echo "Smoke checking $DEPLOYMENT_URL"
+
+          for route in / /about /contacts /privacy /terms /account/login; do
+            curl --fail --silent --show-error --location "$DEPLOYMENT_URL$route" > /dev/null
+          done
+
+          appsettings_json="$(curl --fail --silent --show-error --location "$DEPLOYMENT_URL/appsettings.json")"
+          echo "$appsettings_json" | grep -q '"PublicBaseUrl": "https://'
+          echo "$appsettings_json" | grep -q '"PublicBaseUrl": "'$FRONTEND_PUBLIC_API_BASE_URL'/"'
+
+          curl --fail --silent --show-error --location "$FRONTEND_PUBLIC_API_BASE_URL/health/live" > /dev/null
+          curl --fail --silent --show-error --location "$FRONTEND_PUBLIC_API_BASE_URL/health/ready" > /dev/null

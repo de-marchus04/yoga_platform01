@@ -12,7 +12,7 @@
         <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.contacts.eyebrow"]</p>
         <h1>@F("HeroTitle", Loc["page.contacts.h1"])</h1>
         <div class="section-divider" style="margin:2rem 0;"></div>
-        <p>@F("HeroSubtitle", "Выберите удобный способ связи — мы отвечаем быстро.")</p>
+        <p>@F("HeroSubtitle", P("Сюда нужно добавить короткое пояснение: по каким вопросам к вам обращаются, как быстро вы отвечаете и какой канал связи предпочтителен.", "Сюди потрібно додати коротке пояснення: з якими питаннями до вас звертаються, як швидко ви відповідаєте і який канал зв'язку бажаний.", "Add a short explanation here: what people can contact you about, how quickly you respond, and which communication channel is preferred."))</p>
     </div>
 </section>
 
@@ -38,22 +38,22 @@ else
                     <span class="info-card-icon">✈</span>
                     <span class="info-card-label">Telegram</span>
                     <h3>Telegram</h3>
-                    <p>@F("TelegramDesc", "Самый быстрый способ связаться с нами. Отвечаем в течение часа.")</p>
-                    <a href="@F("TelegramUrl", "https://t.me/yogalife_enterprise")" target="_blank" rel="noopener">@F("TelegramHandle", "@yogalife_enterprise")</a>
+                    <p>@F("TelegramDesc", P("Добавьте сюда Telegram как основной канал для быстрых вопросов, первичного контакта и отправки коротких уточнений.", "Додайте сюди Telegram як основний канал для швидких питань, первинного контакту та коротких уточнень.", "Use this block for Telegram if it is your primary channel for quick questions, first contact, and short clarifications."))</p>
+                    <a href="@F("TelegramUrl", "#")" target="_blank" rel="noopener">@F("TelegramHandle", P("Укажите @username или t.me ссылку", "Вкажіть @username або t.me посилання", "Add the @username or t.me link"))</a>
                 </div>
                 <div class="info-card reveal reveal-d1">
                     <span class="info-card-icon">💬</span>
                     <span class="info-card-label">WhatsApp</span>
                     <h3>WhatsApp</h3>
-                    <p>@F("WhatsAppDesc", "Голосовые и текстовые сообщения. Удобно для развёрнутых вопросов.")</p>
-                    <a href="@F("WhatsAppUrl", "https://wa.me/79000000000")" target="_blank" rel="noopener">@F("WhatsAppPhone", "+7 (900) 000-00-00")</a>
+                    <p>@F("WhatsAppDesc", P("Добавьте сюда WhatsApp, если нужен удобный канал для голосовых сообщений, договорённостей и длинных вопросов клиента.", "Додайте сюди WhatsApp, якщо потрібен зручний канал для голосових повідомлень, домовленостей і довгих запитань клієнта.", "Use this block for WhatsApp if you want a convenient channel for voice notes, scheduling, and longer client questions."))</p>
+                    <a href="@F("WhatsAppUrl", "#")" target="_blank" rel="noopener">@F("WhatsAppPhone", P("Укажите номер в международном формате", "Вкажіть номер у міжнародному форматі", "Add the phone number in international format"))</a>
                 </div>
                 <div class="info-card reveal reveal-d2">
                     <span class="info-card-icon">📸</span>
                     <span class="info-card-label">Instagram</span>
                     <h3>Instagram</h3>
-                    <p>@F("InstagramDesc", "Следите за нашими практиками, ретритами и вдохновляющим контентом.")</p>
-                    <a href="@F("InstagramUrl", "https://instagram.com/yogalife_enterprise")" target="_blank" rel="noopener">@F("InstagramHandle", "@yogalife_enterprise")</a>
+                    <p>@F("InstagramDesc", P("Добавьте сюда Instagram, если эта площадка нужна как витрина бренда, доверительный визуальный архив и канал прогрева аудитории.", "Додайте сюди Instagram, якщо цей майданчик потрібен як вітрина бренду, візуальний архів довіри та канал прогріву аудиторії.", "Use this block for Instagram if it serves as your brand showcase, visual trust archive, and audience nurturing channel."))</p>
+                    <a href="@F("InstagramUrl", "#")" target="_blank" rel="noopener">@F("InstagramHandle", P("Укажите @username или ссылку на профиль", "Вкажіть @username або посилання на профіль", "Add the @username or profile link"))</a>
                 </div>
             </div>
         </div>
@@ -70,13 +70,13 @@ else
                 <a href="@F("TelegramUrl", "https://t.me/yogalife_enterprise")" class="social-link reveal" target="_blank" rel="noopener">
                     <span>✈</span> Telegram
                 </a>
-                <a href="@F("WhatsAppUrl", "https://wa.me/79000000000")" class="social-link reveal reveal-d1" target="_blank" rel="noopener">
+                <a href="@F("WhatsAppUrl", "#")" class="social-link reveal reveal-d1" target="_blank" rel="noopener">
                     <span>💬</span> WhatsApp
                 </a>
-                <a href="@F("InstagramUrl", "https://instagram.com/yogalife_enterprise")" class="social-link reveal reveal-d2" target="_blank" rel="noopener">
+                <a href="@F("InstagramUrl", "#")" class="social-link reveal reveal-d2" target="_blank" rel="noopener">
                     <span>📸</span> Instagram
                 </a>
-                <a href="@F("YouTubeUrl", "https://youtube.com/@yogalife_enterprise")" class="social-link reveal reveal-d3" target="_blank" rel="noopener">
+                <a href="@F("YouTubeUrl", "#")" class="social-link reveal reveal-d3" target="_blank" rel="noopener">
                     <span>▶</span> YouTube
                 </a>
             </div>
@@ -105,6 +105,13 @@ else
             return val;
         return fallback;
     }
+
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
 
     private async void Refresh()
     {

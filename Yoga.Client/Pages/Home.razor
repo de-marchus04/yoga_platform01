@@ -90,7 +90,10 @@
         }
         else if (!retreats.Any() && string.IsNullOrEmpty(errorMessage))
         {
-            <p style="text-align:center;">@Loc["page.home.retreats.empty"]</p>
+            <div style="text-align:center;color:var(--text-muted);max-width:760px;margin:0 auto;">
+                <p style="margin-bottom:1rem;">Раздел ретритов очищен и готов к новому наполнению.</p>
+                <p>Сюда нужно добавить активные программы с названием, локацией, датами, кратким описанием результата, ключевым визуалом и CTA для отправки заявки.</p>
+            </div>
         }
         else
         {
@@ -270,10 +273,11 @@
         try
         {
             retreats = await CatalogState.GetActiveRetreatsAsync(Loc.CurrentLang);
+            errorMessage = null;
         }
         catch (Exception ex)
         {
-            errorMessage = "Возникла проблема с подключением к серверу (Cross-Origin/SSL). Убедитесь, что API запущен и доступен.";
+            errorMessage = "Публичный сайт не смог получить данные из API. Укажите абсолютный production API URL для внешнего frontend-hosting и проверьте CORS/SSL на backend.";
             Console.WriteLine(ex.Message);
             retreats = new List<Yoga.Shared.DTOs.RetreatDto>();
         }

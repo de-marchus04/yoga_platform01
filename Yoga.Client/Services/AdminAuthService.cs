@@ -45,6 +45,18 @@ namespace Yoga.Client.Services
 
                 return (true, null);
             }
+            catch (HttpRequestException)
+            {
+                return (false, "Не удалось связаться с API администратора. Проверьте, что frontend развернут с корректным Api.PublicBaseUrl и что backend доступен по HTTPS.");
+            }
+            catch (TaskCanceledException)
+            {
+                return (false, "Запрос к API администратора превысил таймаут. Проверьте доступность backend и сетевые настройки.");
+            }
+            catch (JsonException)
+            {
+                return (false, "API администратора вернул некорректный ответ. Обычно это означает, что frontend обращается не к backend, а к HTML-странице или proxy-заглушке.");
+            }
             catch (Exception ex)
             {
                 return (false, ex.Message);

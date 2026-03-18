@@ -20,7 +20,10 @@ else if (course == null)
 {
     <section class="page-hero">
         <div class="container page-hero-content">
-            <h1>Курс не найден</h1>
+            <h1>@P("Карточка курса очищена", "Картку курсу очищено", "The course page has been cleared")</h1>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            <p style="max-width:760px; color:var(--text-muted);">@P("Сюда нужно добавить детальную программу курса: кому она подходит, какой результат обещает, как устроены модули, какой формат занятий и почему пользователь должен оставить заявку именно на этот продукт.", "Сюди потрібно додати детальну програму курсу: кому вона підходить, який результат обіцяє, як побудовані модулі, який формат занять і чому користувач має залишити заявку саме на цей продукт.", "Use this page for the full course offer: who it is for, what result it promises, how the modules are structured, what the format is, and why the user should apply for this specific product.")</p>
+            <a href="/courses" class="btn btn-outline" style="margin-top:1.5rem; display:inline-flex;">@P("Вернуться к каталогу курсов", "Повернутися до каталогу курсів", "Back to the course catalog")</a>
         </div>
     </section>
 }
@@ -239,5 +242,13 @@ else
         await LoadCourse();
         await InvokeAsync(StateHasChanged);
     }
+
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
+
     public void Dispose() => Loc.OnLanguageChanged -= Refresh;
 }

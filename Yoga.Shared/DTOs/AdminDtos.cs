@@ -34,6 +34,29 @@ namespace Yoga.Shared.DTOs
 
     public record ActivityDayDto(DateTime Date, int Count);
 
+    public record PublicContentResetPreviewDto(
+        int Courses,
+        int CourseModules,
+        int Consultations,
+        int Retreats,
+        int BlogPosts,
+        int SitePageTranslations,
+        int EntityTranslations,
+        int MediaFiles
+    );
+
+    public record PublicContentResetResultDto(
+        int Courses,
+        int CourseModules,
+        int Consultations,
+        int Retreats,
+        int BlogPosts,
+        int SitePageTranslations,
+        int EntityTranslations,
+        int MediaFiles,
+        DateTime ExecutedAt
+    );
+
     // Admin user management
     public record AdminUserDto(
         Guid Id,

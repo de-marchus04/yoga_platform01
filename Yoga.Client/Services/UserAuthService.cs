@@ -45,7 +45,22 @@ namespace Yoga.Client.Services
 
                 return (true, null);
             }
-            catch (Exception ex) { return (false, ex.Message); }
+            catch (HttpRequestException)
+            {
+                return (false, "Сервис входа временно недоступен. Публичный frontend не может связаться с customer API. Проверьте production API URL, CORS и SSL.");
+            }
+            catch (TaskCanceledException)
+            {
+                return (false, "Сервис входа не ответил вовремя. Проверьте доступность backend API.");
+            }
+            catch (JsonException)
+            {
+                return (false, "Сервис входа вернул некорректный ответ. Проверьте маршрутизацию frontend к backend API.");
+            }
+            catch (Exception)
+            {
+                return (false, "Во время входа произошла непредвиденная ошибка.");
+            }
         }
 
         public async Task LogoutAsync()

@@ -1,16 +1,33 @@
 ﻿<CascadingAuthenticationState>
-<Router AppAssembly="@typeof(App).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
-    </Found>
-    <NotFound>
-        <PageTitle>Not found</PageTitle>
+<ErrorBoundary>
+    <ChildContent>
+        <Router AppAssembly="@typeof(App).Assembly">
+            <Found Context="routeData">
+                <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+                <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+            </Found>
+            <NotFound>
+                <PageTitle>Not found</PageTitle>
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <p role="alert">Sorry, there's nothing at this address.</p>
+                </LayoutView>
+            </NotFound>
+        </Router>
+    </ChildContent>
+    <ErrorContent>
         <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
+            <section style="padding:8rem 0;">
+                <div class="container" style="text-align:center; max-width: 780px;">
+                    <p class="section-eyebrow">Application Error</p>
+                    <h1>Страница временно недоступна</h1>
+                    <div class="section-divider" style="margin:2rem auto;"></div>
+                    <p style="color:var(--text-muted);">Интерфейс столкнулся с необработанной ошибкой. Обновите страницу. Если проблема повторяется, проверьте подключение публичного сайта к API и настройки production CORS.</p>
+                    <a class="btn btn-outline" href="/" style="margin-top:1.5rem; display:inline-flex;">Вернуться на главную</a>
+                </div>
+            </section>
         </LayoutView>
-    </NotFound>
-</Router>
+    </ErrorContent>
+</ErrorBoundary>
 <Yoga.Client.Components.GlobalModalContainer />
 <Yoga.Client.Components.ToastContainer />
 </CascadingAuthenticationState>

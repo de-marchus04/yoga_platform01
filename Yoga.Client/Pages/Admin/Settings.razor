@@ -55,6 +55,32 @@
         }
     </div>
 
+    <div class="settings-section">
+        <h2>Смена пароля</h2>
+        <div class="form-card" style="max-width:640px;">
+            <div class="admin-form-group">
+                <label>Текущий пароль</label>
+                <input class="admin-input" type="password" @bind="currentPassword" autocomplete="current-password" />
+            </div>
+            <div class="admin-form-group">
+                <label>Новый пароль</label>
+                <input class="admin-input" type="password" @bind="newOwnPassword" autocomplete="new-password" />
+            </div>
+            <div class="admin-form-group">
+                <label>Подтверждение нового пароля</label>
+                <input class="admin-input" type="password" @bind="confirmOwnPassword" autocomplete="new-password" />
+            </div>
+            <p class="admin-text-muted" style="margin-top:-4px;">Минимум 12 символов. Не используйте bootstrap-пароль на production.</p>
+            @if (!string.IsNullOrEmpty(passwordError))
+            {
+                <div class="form-error">@passwordError</div>
+            }
+            <div class="form-actions">
+                <button class="btn-admin btn-admin-primary" @onclick="ChangeOwnPassword" disabled="@passwordChanging">@(passwordChanging ? "Сохранение..." : "Сменить пароль")</button>
+            </div>
+        </div>
+    </div>
+
     @if (showCreate)
     {
         <div class="modal-backdrop" @onclick="() => showCreate = false">
@@ -117,6 +143,11 @@
     private string? newDisplayName;
     private string? newEmail;
     private string? createError;
+    private string currentPassword = "";
+    private string newOwnPassword = "";
+    private string confirmOwnPassword = "";
+    private string? passwordError;
+    private bool passwordChanging;
     private AdminUserDto? deleteUserTarget;
     private string? toast;
     private string toastType = "";
@@ -159,6 +190,44 @@
     }
 
     private void ConfirmDeleteUser(AdminUserDto u) => deleteUserTarget = u;
+
+    private async Task ChangeOwnPassword()
+    {
+        passwordError = null;
+
+        if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newOwnPassword) || string.IsNullOrWhiteSpace(confirmOwnPassword))
+        {
+            passwordError = "Заполните все поля для смены пароля";
+            return;
+        }
+
+        if (newOwnPassword.Length < 12)
+        {
+            passwordError = "Новый пароль должен содержать минимум 12 символов";
+            return;
+        }
+
+        if (newOwnPassword != confirmOwnPassword)
+        {
+            passwordError = "Подтверждение пароля не совпадает";
+            return;
+        }
+
+        passwordChanging = true;
+        var (success, error) = await Api.ChangeAdminPasswordAsync(new ChangePasswordRequest(currentPassword, newOwnPassword));
+        passwordChanging = false;
+
+        if (!success)
+        {
+            passwordError = error ?? "Не удалось сменить пароль";
+            return;
+        }
+
+        currentPassword = "";
+        newOwnPassword = "";
+        confirmOwnPassword = "";
+        ShowToast("Пароль обновлён", "success");
+    }
 
     private async Task ExecuteDeleteUser()
     {

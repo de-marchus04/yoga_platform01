@@ -69,6 +69,7 @@ builder.Services.AddProblemDetails(options =>
 // Services
 builder.Services.AddHttpClient<ITelegramService, TelegramService>();
 builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
+builder.Services.AddScoped<PublicContentResetService>();
 builder.Services.AddScoped<LocalFileStorageService>();
 builder.Services.AddScoped<S3FileStorageService>();
 builder.Services.AddScoped<IFileStorageService>(sp =>

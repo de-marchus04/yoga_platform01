@@ -5,6 +5,8 @@ namespace Yoga.Client.Services;
 
 public class LocalizationService
 {
+    private static readonly TimeSpan ApiTranslationsTimeout = TimeSpan.FromSeconds(2);
+
     private readonly HttpClient _http;
     private readonly HttpClient _apiHttp;
     private Dictionary<string, string> _translations = new();
@@ -47,7 +49,8 @@ public class LocalizationService
         // Try loading from API first (PostgreSQL-backed translations)
         try
         {
-            var dict = await _apiHttp.GetFromJsonAsync<Dictionary<string, string>>($"api/translations/ui/{lang}");
+            using var cts = new CancellationTokenSource(ApiTranslationsTimeout);
+            var dict = await _apiHttp.GetFromJsonAsync<Dictionary<string, string>>($"api/translations/ui/{lang}", cts.Token);
             if (dict != null && dict.Count > 0)
             {
                 _translations = dict;
@@ -56,7 +59,7 @@ public class LocalizationService
         }
         catch
         {
-            // API unavailable — fall back to static JSON
+            // API unavailable or too slow — fall back to static JSON immediately.
         }
 
         // Fallback: load from static JSON files

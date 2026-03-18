@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
+using Yoga.Api.Services;
 using Yoga.Shared.DTOs;
 using Yoga.Shared.Models;
 
@@ -13,10 +14,12 @@ namespace Yoga.Api.Controllers
     public class AdminUsersController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IAuditTrailService _auditTrailService;
 
-        public AdminUsersController(AppDbContext context)
+        public AdminUsersController(AppDbContext context, IAuditTrailService auditTrailService)
         {
             _context = context;
+            _auditTrailService = auditTrailService;
         }
 
         [HttpGet]
@@ -46,10 +49,54 @@ namespace Yoga.Api.Controllers
             };
 
             _context.AdminUsers.Add(user);
+            _context.AdminAuditLogs.Add(_auditTrailService.CreateEntry(
+                User,
+                HttpContext,
+                "admin-user-created",
+                nameof(AdminUser),
+                user.Id,
+                $"Admin user '{user.Username}' created.",
+                new { user.Username, user.DisplayName, user.Email }));
             await _context.SaveChangesAsync();
 
             return Created($"api/admin/users/{user.Id}",
                 new AdminUserDto(user.Id, user.Username, user.DisplayName, user.Email, user.CreatedAt, user.LastLoginAt));
+        }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var adminIdValue = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+
+            if (!Guid.TryParse(adminIdValue, out var adminId))
+                return Unauthorized(new { message = "Admin identity is invalid" });
+
+            var user = await _context.AdminUsers.FirstOrDefaultAsync(u => u.Id == adminId);
+            if (user == null)
+                return Unauthorized(new { message = "Admin user not found" });
+
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+                return BadRequest(new { message = "Current password is incorrect" });
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 12)
+                return BadRequest(new { message = "New password must contain at least 12 characters" });
+
+            if (request.NewPassword == request.CurrentPassword)
+                return BadRequest(new { message = "New password must differ from the current password" });
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            _context.AdminAuditLogs.Add(_auditTrailService.CreateEntry(
+                User,
+                HttpContext,
+                "admin-password-changed",
+                nameof(AdminUser),
+                user.Id,
+                $"Password changed for admin '{user.Username}'.",
+                new { user.Username }));
+
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         [HttpDelete("{id:guid}")]
@@ -64,6 +111,14 @@ namespace Yoga.Api.Controllers
             if (user == null) return NotFound();
 
             _context.AdminUsers.Remove(user);
+            _context.AdminAuditLogs.Add(_auditTrailService.CreateEntry(
+                User,
+                HttpContext,
+                "admin-user-deleted",
+                nameof(AdminUser),
+                user.Id,
+                $"Admin user '{user.Username}' deleted.",
+                new { user.Username, user.DisplayName, user.Email }));
             await _context.SaveChangesAsync();
 
             return NoContent();

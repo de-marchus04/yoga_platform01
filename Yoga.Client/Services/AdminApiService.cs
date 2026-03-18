@@ -19,6 +19,20 @@ namespace Yoga.Client.Services
             return await _http.GetFromJsonAsync<DashboardDto>("api/admin/dashboard");
         }
 
+        public async Task<PublicContentResetPreviewDto?> GetPublicContentResetPreviewAsync()
+        {
+            return await _http.GetFromJsonAsync<PublicContentResetPreviewDto>("api/admin/content/public-reset-preview");
+        }
+
+        public async Task<PublicContentResetResultDto?> ResetPublicContentAsync()
+        {
+            var response = await _http.PostAsync("api/admin/content/reset-public", null);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            return await response.Content.ReadFromJsonAsync<PublicContentResetResultDto>();
+        }
+
         // Leads
         public async Task<PaginatedResult<LeadSummaryDto>?> GetLeadsAsync(int page = 1, int pageSize = 20, string? filter = null)
         {
@@ -198,6 +212,25 @@ namespace Yoga.Client.Services
         public async Task<HttpResponseMessage> CreateAdminUserAsync(CreateAdminUserRequest request)
         {
             return await _http.PostAsJsonAsync("api/admin/users", request);
+        }
+
+        public async Task<(bool Success, string? Error)> ChangeAdminPasswordAsync(ChangePasswordRequest request)
+        {
+            var response = await _http.PostAsJsonAsync("api/admin/users/change-password", request);
+            if (response.IsSuccessStatusCode)
+                return (true, null);
+
+            try
+            {
+                var payload = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                if (payload.TryGetProperty("message", out var message))
+                    return (false, message.GetString());
+            }
+            catch
+            {
+            }
+
+            return (false, $"Ошибка: {response.StatusCode}");
         }
 
         public async Task<bool> DeleteAdminUserAsync(Guid id)

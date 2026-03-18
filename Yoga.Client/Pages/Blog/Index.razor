@@ -12,7 +12,7 @@
         <p class="section-eyebrow" style="color:var(--accent);">@F("Eyebrow", Loc["page.blog.eyebrow"])</p>
         <h1>@F("H1", Loc["page.blog.h1"])</h1>
         <div class="section-divider" style="margin:2rem 0;"></div>
-        <p>@F("Intro", "Статьи, видео и фотографии о практике, ретритах и жизни сообщества.")</p>
+        <p>@F("Intro", P("Сюда нужно добавить редакционное описание блога: о чём вы пишете, какую пользу читатель получает и почему этот раздел усиливает доверие к проекту.", "Сюди потрібно додати редакційний опис блогу: про що ви пишете, яку користь отримує читач і чому цей розділ підсилює довіру до проєкту.", "Add an editorial description here: what you publish, what value readers get, and why this section builds trust in the project."))</p>
     </div>
 </section>
 
@@ -30,7 +30,7 @@
                 <div class="category-link-body">
                     <span class="category-link-eyebrow">@Loc["page.blog.articles.eyebrow"]</span>
                     <h3>@Loc["nav.blog.articles"]</h3>
-                    <p>@Loc["page.blog.articles.intro"]</p>
+                    <p>@P("Здесь нужен архив экспертных статей с пользой, кейсами и объяснением подхода.", "Тут потрібен архів експертних статей з користю, кейсами та поясненням підходу.", "Use this category for expert articles, case studies, and clear explanations of your methodology.")</p>
                     <span class="category-link-cta">@Loc["page.blog.readmore"]</span>
                 </div>
             </a>
@@ -40,7 +40,7 @@
                 <div class="category-link-body">
                     <span class="category-link-eyebrow">@Loc["page.blog.videos.eyebrow"]</span>
                     <h3>@Loc["nav.blog.videos"]</h3>
-                    <p>@Loc["page.blog.videos.intro"]</p>
+                    <p>@P("Здесь нужен видео-контент: практики, обращения, фрагменты программ и материалы для прогрева аудитории.", "Тут потрібен відеоконтент: практики, звернення, фрагменти програм і матеріали для прогріву аудиторії.", "Use this category for videos: practices, founder messages, program previews, and audience warm-up content.")</p>
                     <span class="category-link-cta">@Loc["page.blog.readmore"]</span>
                 </div>
             </a>
@@ -50,7 +50,7 @@
                 <div class="category-link-body">
                     <span class="category-link-eyebrow">@Loc["page.blog.photos.eyebrow"]</span>
                     <h3>@Loc["nav.blog.photos"]</h3>
-                    <p>@Loc["page.blog.photos.intro"]</p>
+                    <p>@P("Здесь нужна фотогалерея атмосферы: команда, занятия, ретриты, пространство и визуальные подтверждения реального продукта.", "Тут потрібна фотогалерея атмосфери: команда, заняття, ретрити, простір і візуальні підтвердження реального продукту.", "Use this category for atmosphere-driven photos: team, sessions, retreats, locations, and visual proof of the real product.")</p>
                     <span class="category-link-cta">@Loc["page.blog.readmore"]</span>
                 </div>
             </a>
@@ -79,6 +79,13 @@
             return val;
         return fallback;
     }
+
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
 
     private async void Refresh()
     {

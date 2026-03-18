@@ -2,6 +2,7 @@
 @layout MainLayout
 @inject AdminAuthService Auth
 @inject NavigationManager Nav
+@inject IConfiguration Config
 
 <PageTitle>Вход — Yoga.Life Admin</PageTitle>
 
@@ -9,6 +10,12 @@
     <div class="login-card">
         <div class="login-brand">YOGA · LIFE</div>
         <h2>Панель управления</h2>
+        <p class="login-subtitle">Вход для администраторов. Если сайт открыт на Vercel, эта страница требует рабочий внешний API, а не локальный адрес.</p>
+
+        @if (!string.IsNullOrEmpty(deploymentWarning))
+        {
+            <div class="login-error">@deploymentWarning</div>
+        }
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
@@ -36,6 +43,7 @@
 @code {
     private LoginModel loginModel = new();
     private string? errorMessage;
+    private string? deploymentWarning;
     private bool isLoading;
 
     private class LoginModel
@@ -60,5 +68,30 @@
         }
 
         isLoading = false;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!Uri.TryCreate(Nav.Uri, UriKind.Absolute, out var currentUri))
+        {
+            return;
+        }
+
+        var publicBaseUrl = Config["Api:PublicBaseUrl"];
+        Uri? apiUri = null;
+        var isLocalHost = currentUri.IsLoopback
+            || string.Equals(currentUri.Host, "localhost", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(currentUri.Host, "127.0.0.1", StringComparison.OrdinalIgnoreCase);
+
+        if (!isLocalHost && !Uri.TryCreate(publicBaseUrl, UriKind.Absolute, out apiUri))
+        {
+            deploymentWarning = "Этот deploy не содержит корректный внешний Api.PublicBaseUrl. Логин не заработает, пока frontend не будет перевыпущен с реальным HTTPS-адресом backend API.";
+            return;
+        }
+
+        if (!isLocalHost && apiUri is not null && !string.Equals(apiUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+        {
+            deploymentWarning = "Текущий Api.PublicBaseUrl не использует HTTPS. Для Vercel-hosted frontend это приведет к сбоям авторизации и блокировке mixed content.";
+        }
     }
 }

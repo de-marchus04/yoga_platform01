@@ -26,6 +26,13 @@ Important operating rule:
 - Manual `vercel deploy` is a fallback procedure, not the primary release path.
 - Fully automatic push-triggered Vercel deployment should only be enabled after the repository secret `VERCEL_TOKEN` is replaced with a token that has access to the `de-marchus04's projects` team.
 
+Frontend runtime rule:
+
+- The static frontend must be deployed with a real absolute backend URL injected into `publish/wwwroot/appsettings.json` as `Api.PublicBaseUrl`.
+- The repository GitHub Actions variable `FRONTEND_PUBLIC_API_BASE_URL` is the source of truth for that value in the Vercel deploy workflow.
+- Use an absolute HTTPS origin like `https://api.example.com`.
+- Do not leave `Api.PublicBaseUrl` empty when the frontend is hosted on Vercel or any host different from the API.
+
 ## Required Secrets And Variables
 
 Create a real `.env` file on the server based on [.env.example](../.env.example).
@@ -41,6 +48,10 @@ Minimum required values:
 - `APP_ORIGIN`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
+
+Required GitHub Actions variable for frontend deploy:
+
+- `FRONTEND_PUBLIC_API_BASE_URL=https://your-public-api-origin`
 
 Optional but recommended media values for production API environment:
 
@@ -69,12 +80,21 @@ docker compose up -d --build
 Current GitHub Actions flow:
 
 - `Build Blazor WASM` creates the `publish/wwwroot` artifact.
-- `Deploy Blazor Frontend` rebuilds the frontend and publishes it to Vercel without using a local terminal session.
+- `Deploy Blazor Frontend` rebuilds the frontend, injects `FRONTEND_PUBLIC_API_BASE_URL` into the published runtime config, and publishes the static bundle to Vercel without using a local terminal session.
 
 1. If the automatic frontend deployment is unavailable, use the fallback manual procedure:
 
 ```bash
 dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+appsettings_path = Path('publish/wwwroot/appsettings.json')
+data = json.loads(appsettings_path.read_text(encoding='utf-8'))
+data.setdefault('Api', {})['PublicBaseUrl'] = 'https://your-public-api-origin/'
+appsettings_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+PY
 cd publish/wwwroot
 vercel deploy --prod --yes
 ```
@@ -98,6 +118,15 @@ If the deploy workflow is unavailable, use the manual fallback:
 
 ```bash
 dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+appsettings_path = Path('publish/wwwroot/appsettings.json')
+data = json.loads(appsettings_path.read_text(encoding='utf-8'))
+data.setdefault('Api', {})['PublicBaseUrl'] = 'https://your-public-api-origin/'
+appsettings_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+PY
 cd publish/wwwroot
 vercel deploy --prod --yes
 ```
@@ -109,7 +138,8 @@ After upgrade:
 3. Open admin login.
 4. Verify one customer cabinet flow.
 5. Verify the Vercel alias returns `200` for `/`, `/about`, `/contacts`, `/privacy`, `/terms`, and `/account/login`.
-6. Verify the `Deploy Blazor Frontend` workflow completed successfully.
+6. Open the published `appsettings.json` and confirm `Api.PublicBaseUrl` points to the production API origin.
+7. Verify the `Deploy Blazor Frontend` workflow completed successfully.
 
 ## Rollback Procedure
 
