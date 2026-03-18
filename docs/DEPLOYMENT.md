@@ -48,7 +48,7 @@ Optional but recommended media values for production API environment:
 docker compose up -d --build
 ```
 
-6. Verify:
+1. Verify:
    - frontend loads from the public domain
    - `/api/*` routes resolve through nginx
    - `/health/live` returns healthy

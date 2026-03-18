@@ -1,4 +1,4 @@
-name: Deploy Blazor WASM to Vercel
+name: Build Blazor WASM
 
 on:
   push:
@@ -29,11 +29,9 @@ jobs:
             -o publish \
             --nologo
 
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
+      - name: Archive publish output
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./publish/wwwroot
-          vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+          name: blazor-wasm-publish
+          path: publish/wwwroot
