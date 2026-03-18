@@ -35,9 +35,11 @@ services:
       - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER:-YogaEnterpriseApi}
       - JwtSettings__Audience=${JWT_AUDIENCE:-YogaEnterpriseClient}
+      - JwtSettings__ExpiryMinutes=${JWT_EXPIRY_MINUTES:-1440}
       - TelegramSettings__BotToken=${TELEGRAM_BOT_TOKEN:-}
       - TelegramSettings__ChatId=${TELEGRAM_CHAT_ID:-}
       - Security__AllowedOrigins__0=${APP_ORIGIN:-http://localhost}
+      - Security__AllowedOrigins__1=${APP_ORIGIN_WWW:-}
     restart: always
 
   client:
