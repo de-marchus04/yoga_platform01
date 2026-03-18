@@ -18,7 +18,7 @@ Use this checklist before declaring the platform production-ready.
 - `/health/ready` is healthy.
 - API and client logs show no startup failures.
 - `Build Blazor WASM` succeeds on `main`.
-- `Deploy Blazor Frontend` succeeds on `main`.
+- `Deploy Blazor Frontend` succeeds when started from GitHub Actions.
 - Vercel alias returns `200` for `/`, `/about`, `/contacts`, `/privacy`, `/terms`, and `/account/login`.
 - Vercel Git auto-deploy remains disconnected for the public frontend project.
 

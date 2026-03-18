@@ -21,9 +21,10 @@ Production is split into two separate delivery paths:
 Important operating rule:
 
 - The Vercel project `yoga-life-enterprise` must stay disconnected from direct Git auto-deploy for this repository.
-- GitHub Actions builds the publish artifact first and then deploys that artifact to Vercel through a dedicated workflow.
+- GitHub Actions builds the publish artifact automatically, and frontend deployment is executed through a dedicated GitHub Actions workflow.
 - The public alias must point to a static deploy created from `publish/wwwroot`, not to a root repository deploy.
 - Manual `vercel deploy` is a fallback procedure, not the primary release path.
+- Fully automatic push-triggered Vercel deployment should only be enabled after the repository secret `VERCEL_TOKEN` is replaced with a token that has access to the `de-marchus04's projects` team.
 
 ## Required Secrets And Variables
 
@@ -63,12 +64,12 @@ Optional but recommended media values for production API environment:
 docker compose up -d --build
 ```
 
-1. Trigger the frontend deployment workflow by pushing `main`.
+1. Trigger the frontend deployment workflow from the GitHub Actions tab.
 
-Expected automation:
+Current GitHub Actions flow:
 
 - `Build Blazor WASM` creates the `publish/wwwroot` artifact.
-- `Deploy Blazor Frontend` downloads that artifact and publishes it to Vercel.
+- `Deploy Blazor Frontend` rebuilds the frontend and publishes it to Vercel without using a local terminal session.
 
 1. If the automatic frontend deployment is unavailable, use the fallback manual procedure:
 
@@ -91,7 +92,7 @@ git pull
 docker compose up -d --build
 ```
 
-Then push the updated `main` branch so GitHub Actions can deploy the frontend artifact automatically.
+Then run `Deploy Blazor Frontend` from the GitHub Actions tab to publish the frontend without using a local terminal.
 
 If the deploy workflow is unavailable, use the manual fallback:
 
