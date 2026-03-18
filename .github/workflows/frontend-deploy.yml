@@ -6,6 +6,11 @@ on:
     types: [completed]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  VERCEL_ORG_ID: team_4ZeZHmzGdjhTB9NdH82pbzjN
+  VERCEL_PROJECT_ID: prj_xZU60Fn5Iud595WIGVXWZB9a0Xxr
+
 permissions:
   actions: read
   contents: read
@@ -72,9 +77,15 @@ jobs:
           test -f publish/wwwroot/index.html
           test -d publish/wwwroot/_framework
 
+      - name: Verify Vercel token access
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          npx vercel whoami --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
+
       - name: Deploy static frontend to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           cd publish/wwwroot
-          npx vercel deploy --prod --yes --token="$VERCEL_TOKEN"
+          npx vercel deploy --prod --yes --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
