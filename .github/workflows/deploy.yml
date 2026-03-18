@@ -1,4 +1,4 @@
-name: Build Blazor WASM
+name: Build And Deploy Blazor WASM
 
 on:
   push:
@@ -13,6 +13,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
@@ -35,3 +40,17 @@ jobs:
         with:
           name: blazor-wasm-publish
           path: publish/wwwroot
+
+      - name: Prepare Vercel project linkage
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p publish/wwwroot/.vercel
+          cat > publish/wwwroot/.vercel/project.json <<EOF
+          {"orgId":"${{ secrets.VERCEL_ORG_ID }}","projectId":"${{ secrets.VERCEL_PROJECT_ID }}"}
+          EOF
+
+      - name: Deploy static publish to Vercel
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          cd publish/wwwroot
+          npx vercel deploy --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"

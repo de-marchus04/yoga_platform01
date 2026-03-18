@@ -2,7 +2,7 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/((?!_framework|css|js|images|fonts|sample-data|i18n|favicon\\.png|icon-192\\.png|robots\\.txt|sitemap\\.xml|app\\.css).*)",
+      "source": "/((?!_framework|css|js|images|fonts|sample-data|i18n|favicon\\.png|icon-192\\.png|robots\\.txt|sitemap\\.xml|app\\.css|appsettings\\.json|appsettings\\.Development\\.json|Yoga\\.Client\\.styles\\.css).*)",
       "destination": "/index.html"
     }
   ],

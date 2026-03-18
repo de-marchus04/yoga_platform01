@@ -72,3 +72,4 @@ docker-compose.override.yml
 
 # Blazor WebAssembly publish output (генерируется при деплое)
 publish/
+.vercel
