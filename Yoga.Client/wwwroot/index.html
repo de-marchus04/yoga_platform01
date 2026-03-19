@@ -103,6 +103,16 @@
             document.body.style.overflow = locks.size > 0 ? 'hidden' : '';
         };
 
+        /* Auto-release menu scroll lock when viewport returns to desktop width */
+        window.addEventListener('resize', function () {
+            if (window.innerWidth > 1180 && window.__ylScrollLocks && window.__ylScrollLocks.has('menu')) {
+                window.__ylScrollLocks.delete('menu');
+                if (window.__ylScrollLocks.size === 0) {
+                    document.body.style.overflow = '';
+                }
+            }
+        });
+
         window.downloadTextFile = function (filename, content) {
             var blob = new Blob([content], { type: 'text/calendar;charset=utf-8;' });
             var url = URL.createObjectURL(blob);
