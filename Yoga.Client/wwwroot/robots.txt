@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://yoga-life.ru/sitemap.xml
+Sitemap: https://www.medisha.space/sitemap.xml

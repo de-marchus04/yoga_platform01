@@ -1,0 +1,142 @@
+@page "/yagyas/{Id:guid}"
+@inject LocalizationService Loc
+@inject ApiService ApiService
+@implements IDisposable
+
+@if (item == null)
+{
+    <PageTitle>@Loc["page.yagya.detail.loading"]</PageTitle>
+}
+else
+{
+    <PageTitle>@item.Title</PageTitle>
+}
+
+@if (loading)
+{
+    <section class="section"><div class="container"><p>@Loc["page.yagya.detail.loading"]</p></div></section>
+}
+else if (item == null)
+{
+    <section class="section"><div class="container"><p>@Loc["page.yagya.detail.not_found"]</p></div></section>
+}
+else
+{
+    <section class="page-hero page-hero-detail">
+        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrWhiteSpace(item.ImageUrl) ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=1600&q=80" : item.ImageUrl)');"></div>
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
+            <a href="/yagyas" class="back-link">← @Loc["page.yagya.detail.back"]</a>
+            <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.yagyas.eyebrow"]</p>
+            <h1>@item.Title</h1>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            <p>📍 @item.Location</p>
+            <p>🗓 @item.StartDate.ToString("dd MMM yyyy") — @item.EndDate.ToString("dd MMM yyyy")</p>
+            @if (!string.IsNullOrWhiteSpace(item.PriceLabel))
+            {
+                <p>@item.PriceLabel</p>
+            }
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container split-section">
+            <div>
+                <p class="section-eyebrow">@Loc["page.yagya.detail.about_eyebrow"]</p>
+                <h2>@Loc["page.yagya.detail.about_h2"]</h2>
+                <p>@item.Description</p>
+            </div>
+            <div>
+                <p class="section-eyebrow">@Loc["page.yagya.detail.program_eyebrow"]</p>
+                <h2>@Loc["page.yagya.detail.program_h2"]</h2>
+                <p>@(string.IsNullOrWhiteSpace(item.Program) ? item.Description : item.Program)</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" style="padding-top:0;">
+        <div class="container detail-cta-card">
+            <h3>@Loc["page.yagya.detail.booking_h3"]</h3>
+            <button class="btn btn-primary" @onclick="() => OpenModal(item.Title)">@Loc["page.yagyas.card.cta"]</button>
+        </div>
+    </section>
+
+    @if (related.Any())
+    {
+        <section class="section" style="padding-top:0;">
+            <div class="container">
+                <p class="section-eyebrow">@Loc["page.yagya.detail.other_eyebrow"]</p>
+                <h2>@Loc["page.yagya.detail.other_h2"]</h2>
+                <div class="retreats-grid">
+                    @foreach (var other in related)
+                    {
+                        <div class="retreat-card reveal">
+                            <div class="card-img-wrapper">
+                                <img src="@(string.IsNullOrWhiteSpace(other.ImageUrl) ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=600&q=80" : other.ImageUrl)" alt="@other.Title" class="card-img" loading="lazy" decoding="async" />
+                            </div>
+                            <div class="card-content">
+                                <h3>@other.Title</h3>
+                                <p class="location">📍 @other.Location</p>
+                                <p class="dates">🗓 @other.StartDate.ToString("dd MMM yyyy") — @other.EndDate.ToString("dd MMM yyyy")</p>
+                                <a href="/yagyas/@other.Id" class="btn btn-outline" style="width:100%; text-align:center;">@Loc["page.yagya.detail.other_cta"]</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private YagyaDto? item;
+    private List<YagyaDto> related = new();
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        try
+        {
+            item = await ApiService.GetYagyaByIdAsync(Id, Loc.CurrentLang);
+            var all = await CatalogState.GetActiveYagyasAsync(Loc.CurrentLang, true);
+            related = all.Where(x => x.Id != Id).Take(3).ToList();
+        }
+        catch
+        {
+            item = null;
+            related = new();
+        }
+
+        loading = false;
+    }
+
+    private async void Refresh()
+    {
+        await LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenModal(string title)
+    {
+        ModalService.Show<LeadModal>(new Dictionary<string, object>
+        {
+            { "ContextTitle", title }
+        });
+    }
+
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+}

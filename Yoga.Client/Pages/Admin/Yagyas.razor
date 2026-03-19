@@ -1,0 +1,153 @@
+@page "/admin/yagyas"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+@implements IDisposable
+
+<PageTitle>Ягьи — Админ</PageTitle>
+
+<div class="retreats-page">
+    <div class="page-header">
+        <h1>Ягьи</h1>
+        <button class="btn-admin btn-admin-primary" @onclick="CreateNew">+ Добавить ягью</button>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else if (items.Count == 0)
+    {
+        <div class="admin-empty">Ягьи не найдены</div>
+    }
+    else
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Локация</th>
+                        <th>Даты</th>
+                        <th>Цена</th>
+                        <th>Статус</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>@item.Title</td>
+                            <td>@item.Location</td>
+                            <td class="nowrap">@item.StartDate.ToString("dd.MM.yy") — @item.EndDate.ToString("dd.MM.yy")</td>
+                            <td>@(item.PriceLabel ?? "—")</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge badge-success">Активна</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-muted">Неактивна</span>
+                                }
+                            </td>
+                            <td class="actions-cell">
+                                <button class="btn-admin btn-admin-sm btn-admin-outline" @onclick="() => Edit(item.Id)">✎</button>
+                                <button class="btn-admin btn-admin-sm btn-admin-danger" @onclick="() => ConfirmDelete(item)">✕</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (deleteTarget != null)
+    {
+        <div class="modal-backdrop" @onclick="CancelDelete">
+            <div class="modal-card" @onclick:stopPropagation="true">
+                <h3>Удалить ягью?</h3>
+                <p>Ягья «@deleteTarget.Title» будет удалена вместе со всеми переводами и медиа.</p>
+                <div class="modal-actions">
+                    <button class="btn-admin btn-admin-outline" @onclick="CancelDelete">Отмена</button>
+                    <button class="btn-admin btn-admin-danger" @onclick="ExecuteDelete">Удалить</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(toast))
+    {
+        <div class="admin-toast @toastType">@toast</div>
+    }
+</div>
+
+@code {
+    private List<Yagya> items = new();
+    private bool loading = true;
+    private Yagya? deleteTarget;
+    private string? toast;
+    private string toastType = string.Empty;
+    private System.Threading.Timer? toastTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        try
+        {
+            items = await Api.GetAllYagyasAsync();
+        }
+        catch
+        {
+            items = new();
+        }
+
+        loading = false;
+    }
+
+    private void CreateNew() => Nav.NavigateTo("/admin/yagyas/new");
+    private void Edit(Guid id) => Nav.NavigateTo($"/admin/yagyas/{id}/edit");
+    private void ConfirmDelete(Yagya item) => deleteTarget = item;
+    private void CancelDelete() => deleteTarget = null;
+
+    private async Task ExecuteDelete()
+    {
+        if (deleteTarget == null)
+        {
+            return;
+        }
+
+        var ok = await Api.DeleteYagyaAsync(deleteTarget.Id);
+        deleteTarget = null;
+        if (ok)
+        {
+            ShowToast("Ягья удалена", "success");
+            await LoadData();
+        }
+        else
+        {
+            ShowToast("Ошибка при удалении", "error");
+        }
+    }
+
+    private void ShowToast(string message, string type)
+    {
+        toast = message;
+        toastType = type;
+        StateHasChanged();
+        toastTimer?.Dispose();
+        toastTimer = new System.Threading.Timer(_ =>
+        {
+            toast = null;
+            InvokeAsync(StateHasChanged);
+        }, null, 3000, System.Threading.Timeout.Infinite);
+    }
+
+    public void Dispose() => toastTimer?.Dispose();
+}

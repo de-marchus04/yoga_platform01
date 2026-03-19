@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using Yoga.Shared.DTOs;
 using Yoga.Shared.Models;
 
@@ -84,6 +85,27 @@ namespace Yoga.Client.Services
         public async Task<bool> DeleteRetreatAsync(Guid id)
         {
             var response = await _http.DeleteAsync($"api/retreats/{id}");
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<List<Yagya>> GetAllYagyasAsync()
+        {
+            return await _http.GetFromJsonAsync<List<Yagya>>("api/yagyas/all") ?? new();
+        }
+
+        public async Task<HttpResponseMessage> CreateYagyaAsync(Yagya yagya)
+        {
+            return await _http.PostAsJsonAsync("api/yagyas", yagya);
+        }
+
+        public async Task<HttpResponseMessage> UpdateYagyaAsync(Guid id, Yagya yagya)
+        {
+            return await _http.PutAsJsonAsync($"api/yagyas/{id}", yagya);
+        }
+
+        public async Task<bool> DeleteYagyaAsync(Guid id)
+        {
+            var response = await _http.DeleteAsync($"api/yagyas/{id}");
             return response.IsSuccessStatusCode;
         }
 
@@ -183,12 +205,13 @@ namespace Yoga.Client.Services
             return await _http.GetFromJsonAsync<List<MediaFile>>(url) ?? new();
         }
 
-        public async Task<MediaFile?> UploadMediaAsync(MultipartFormDataContent content)
+        public async Task<(MediaFile? File, string? Error)> UploadMediaAsync(MultipartFormDataContent content)
         {
             var response = await _http.PostAsync("api/media/upload", content);
             if (response.IsSuccessStatusCode)
-                return await response.Content.ReadFromJsonAsync<MediaFile>();
-            return null;
+                return (await response.Content.ReadFromJsonAsync<MediaFile>(), null);
+
+            return (null, await ReadErrorMessageAsync(response));
         }
 
         public async Task<bool> UpdateMediaAsync(MediaFile media)
@@ -197,10 +220,40 @@ namespace Yoga.Client.Services
             return response.IsSuccessStatusCode;
         }
 
-        public async Task<bool> DeleteMediaAsync(Guid id)
+        public async Task<(bool Success, string? Error)> DeleteMediaAsync(Guid id)
         {
             var response = await _http.DeleteAsync($"api/media/{id}");
-            return response.IsSuccessStatusCode;
+            if (response.IsSuccessStatusCode)
+                return (true, null);
+
+            return (false, await ReadErrorMessageAsync(response));
+        }
+
+        private static async Task<string?> ReadErrorMessageAsync(HttpResponseMessage response)
+        {
+            try
+            {
+                var contentType = response.Content.Headers.ContentType?.MediaType;
+                if (string.Equals(contentType, "application/json", StringComparison.OrdinalIgnoreCase))
+                {
+                    var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+                    if (payload.ValueKind == JsonValueKind.Object)
+                    {
+                        if (payload.TryGetProperty("message", out var message))
+                            return message.GetString();
+
+                        if (payload.TryGetProperty("title", out var title))
+                            return title.GetString();
+                    }
+                }
+
+                var text = await response.Content.ReadAsStringAsync();
+                return string.IsNullOrWhiteSpace(text) ? $"Ошибка: {response.StatusCode}" : text;
+            }
+            catch
+            {
+                return $"Ошибка: {response.StatusCode}";
+            }
         }
 
         // Admin users

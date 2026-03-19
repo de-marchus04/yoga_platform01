@@ -1,0 +1,260 @@
+@page "/admin/media"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Медиатека — Админ</PageTitle>
+
+<div class="leads-page">
+    <div class="page-header">
+        <h1>Медиатека</h1>
+        <span class="total-count">@summaryText</span>
+    </div>
+
+    <div class="form-card" style="margin-bottom:1rem;">
+        <div class="form-row">
+            <div class="admin-form-group">
+                <label>Поиск</label>
+                <input class="admin-input" @bind="searchTerm" placeholder="Имя, alt, URL или тип сущности" />
+            </div>
+            <div class="admin-form-group">
+                <label>Тип файла</label>
+                <select class="admin-input" @bind="kindFilter">
+                    <option value="all">Все</option>
+                    <option value="image">Изображения</option>
+                    <option value="video">Видео</option>
+                    <option value="audio">Аудио</option>
+                    <option value="document">Документы</option>
+                </select>
+            </div>
+            <div class="admin-form-group">
+                <label>Сущность</label>
+                <input class="admin-input" @bind="entityTypeFilter" placeholder="Например: SitePage, BlogPost" />
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn-admin btn-admin-outline" @onclick="ReloadAsync" disabled="@(loading || deleting)">Обновить</button>
+        </div>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="form-error">@error</div>
+    }
+    else if (VisibleMedia.Count == 0)
+    {
+        <div class="admin-empty">Файлы не найдены</div>
+    }
+    else
+    {
+        <div class="media-library-grid">
+            @foreach (var file in VisibleMedia)
+            {
+                <article class="media-library-card">
+                    <div class="media-library-preview">
+                        @if (IsImage(file.Url))
+                        {
+                            <img src="@GetFullUrl(file.Url)" alt="@file.Alt" loading="lazy" />
+                        }
+                        else if (IsVideo(file.Url))
+                        {
+                            <video src="@GetFullUrl(file.Url)" muted preload="metadata"></video>
+                        }
+                        else
+                        {
+                            <div class="media-library-file-icon">@FileIcon(file.Url)</div>
+                        }
+                    </div>
+
+                    <div class="media-library-body">
+                        <div class="media-library-title">@DisplayName(file)</div>
+                        <div class="media-library-meta">Тип: @GetKindLabel(file.Url)</div>
+                        <div class="media-library-meta">Сущность: @GetEntityLabel(file)</div>
+                        <div class="media-library-meta">Entity ID: @(file.EntityId == Guid.Empty ? "-" : file.EntityId.ToString())</div>
+                        <div class="media-library-meta">Загружено: @GetUploadedAtLabel(file)</div>
+                        <div class="media-library-meta">URL: @file.Url</div>
+
+                        <div class="media-library-actions">
+                            <button type="button" class="btn-admin btn-admin-outline" @onclick="() => CopyUrlAsync(file)">Копировать URL</button>
+                            <button type="button" class="btn-admin btn-admin-danger" @onclick="() => DeleteAsync(file)" disabled="@deleting">Удалить</button>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Yoga.Shared.Models.MediaFile> files = new();
+    private Dictionary<Guid, DateTime> uploadedAtByMediaId = new();
+    private bool loading = true;
+    private bool deleting;
+    private string? error;
+    private string searchTerm = string.Empty;
+    private string kindFilter = "all";
+    private string entityTypeFilter = string.Empty;
+
+    private IReadOnlyList<Yoga.Shared.Models.MediaFile> VisibleMedia => files
+        .Where(MatchesKind)
+        .Where(MatchesSearch)
+        .Where(MatchesEntityType)
+        .OrderByDescending(GetUploadedAt)
+        .ThenBy(file => DisplayName(file), StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    private string summaryText => loading ? string.Empty : $"Файлов: {VisibleMedia.Count}";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        loading = true;
+        error = null;
+
+        try
+        {
+            files = await Api.GetAllMediaAsync();
+            var auditLogs = await Api.GetAuditLogsAsync(page: 1, pageSize: 500, action: "media-uploaded", entityType: nameof(Yoga.Shared.Models.MediaFile));
+            uploadedAtByMediaId = auditLogs?.Items
+                .Where(item => item.EntityId.HasValue)
+                .GroupBy(item => item.EntityId!.Value)
+                .ToDictionary(group => group.Key, group => group.Max(item => item.CreatedAt))
+                ?? new Dictionary<Guid, DateTime>();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            files = new();
+            uploadedAtByMediaId = new();
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task DeleteAsync(Yoga.Shared.Models.MediaFile file)
+    {
+        if (deleting)
+            return;
+
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"Удалить файл '{DisplayName(file)}'?");
+        if (!confirmed)
+            return;
+
+        deleting = true;
+        error = null;
+
+        var (success, deleteError) = await Api.DeleteMediaAsync(file.Id);
+        if (success)
+        {
+            files.RemoveAll(item => item.Id == file.Id);
+            uploadedAtByMediaId.Remove(file.Id);
+        }
+        else
+        {
+            error = string.IsNullOrWhiteSpace(deleteError) ? "Не удалось удалить файл." : deleteError;
+        }
+
+        deleting = false;
+    }
+
+    private async Task CopyUrlAsync(Yoga.Shared.Models.MediaFile file)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", GetFullUrl(file.Url));
+    }
+
+    private string GetFullUrl(string url)
+    {
+        if (url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            return url;
+
+        var baseUri = Nav.BaseUri.TrimEnd('/').Replace(":5190", ":5293");
+        return baseUri + url;
+    }
+
+    private bool MatchesKind(Yoga.Shared.Models.MediaFile file) => kindFilter switch
+    {
+        "image" => IsImage(file.Url),
+        "video" => IsVideo(file.Url),
+        "audio" => IsAudio(file.Url),
+        "document" => IsDocument(file.Url),
+        _ => true
+    };
+
+    private bool MatchesSearch(Yoga.Shared.Models.MediaFile file)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return true;
+
+        var needle = searchTerm.Trim();
+        return DisplayName(file).Contains(needle, StringComparison.OrdinalIgnoreCase)
+            || file.Url.Contains(needle, StringComparison.OrdinalIgnoreCase)
+            || file.EntityType.Contains(needle, StringComparison.OrdinalIgnoreCase)
+            || (file.Alt?.Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private bool MatchesEntityType(Yoga.Shared.Models.MediaFile file)
+    {
+        if (string.IsNullOrWhiteSpace(entityTypeFilter))
+            return true;
+
+        return file.EntityType.Contains(entityTypeFilter.Trim(), StringComparison.OrdinalIgnoreCase);
+    }
+
+    private DateTime GetUploadedAt(Yoga.Shared.Models.MediaFile file) =>
+        uploadedAtByMediaId.TryGetValue(file.Id, out var uploadedAt) ? uploadedAt : DateTime.MinValue;
+
+    private string GetUploadedAtLabel(Yoga.Shared.Models.MediaFile file) =>
+        uploadedAtByMediaId.TryGetValue(file.Id, out var uploadedAt)
+            ? uploadedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+            : "нет данных";
+
+    private static string GetEntityLabel(Yoga.Shared.Models.MediaFile file) =>
+        string.IsNullOrWhiteSpace(file.EntityType) ? "Общее" : file.EntityType;
+
+    private static bool IsImage(string url) =>
+        url.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".gif", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".svg", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsVideo(string url) =>
+        url.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".webm", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".mov", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsAudio(string url) =>
+        url.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".m4a", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".aac", StringComparison.OrdinalIgnoreCase) ||
+        url.EndsWith(".ogg", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsDocument(string url) =>
+        url.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+
+    private static string FileIcon(string url) =>
+        IsAudio(url) ? "🎧" : IsDocument(url) ? "📄" : "📦";
+
+    private static string GetKindLabel(string url) =>
+        IsImage(url) ? "Изображение" :
+        IsVideo(url) ? "Видео" :
+        IsAudio(url) ? "Аудио" :
+        IsDocument(url) ? "Документ" : "Файл";
+
+    private static string DisplayName(Yoga.Shared.Models.MediaFile file) =>
+        !string.IsNullOrWhiteSpace(file.Alt) ? file.Alt : Path.GetFileName(file.Url);
+}

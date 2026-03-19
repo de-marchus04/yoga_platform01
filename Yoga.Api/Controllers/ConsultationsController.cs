@@ -58,6 +58,8 @@ namespace Yoga.Api.Controllers
         [HttpGet("{slug}")]
         public async Task<ActionResult<ConsultationDto>> GetConsultation(string slug, [FromQuery] string lang = "ru")
         {
+            slug = ResolveConsultationSlug(slug);
+
             var item = await _context.Consultations
                 .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
 
@@ -80,6 +82,12 @@ namespace Yoga.Api.Controllers
 
             return Ok(dto);
         }
+
+        private static string ResolveConsultationSlug(string slug) => slug.Trim().ToLowerInvariant() switch
+        {
+            "for-teenagers" => "ayurveda",
+            _ => slug.Trim().ToLowerInvariant()
+        };
 
         [Authorize(Roles = "SuperAdmin")]
         [HttpPost]

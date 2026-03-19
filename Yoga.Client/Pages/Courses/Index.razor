@@ -41,9 +41,9 @@
                 {
                     var course = c;
                     var revealClass = i == 1 ? "reveal-d1" : i == 2 ? "reveal-d2" : "";
-                    <ProductCard Url="@($"/courses/{course.Slug}")"
+                    <ProductCard Url="@($"/courses/{CanonicalCourseSlug(course.Slug)}")"
                                  ImageUrl="@course.ImageUrl"
-                                 Title="@course.Title"
+                                 Title="@DisplayCourseTitle(course)"
                                  Eyebrow="@course.Eyebrow"
                                  Description="@course.Subtitle"
                                  CtaText="@F("CardCta", Loc["page.courses.card.cta"])"
@@ -77,6 +77,23 @@
             return val;
         return fallback;
     }
+
+    private static string CanonicalCourseSlug(string slug) => slug switch
+    {
+        "pranayama" => "pranavidya",
+        _ => slug
+    };
+
+    private string DisplayCourseTitle(CourseDto course) => CanonicalCourseSlug(course.Slug) switch
+    {
+        "pranavidya" => Loc.CurrentLang switch
+        {
+            "en" => "Pranavidya",
+            "uk" => "Пранавід'я",
+            _ => "Пранавидья"
+        },
+        _ => course.Title
+    };
 
     private async Task LoadAsync()
     {

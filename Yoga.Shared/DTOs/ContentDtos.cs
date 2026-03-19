@@ -82,4 +82,16 @@ namespace Yoga.Shared.DTOs
         string? PriceLabel,
         string? Program
     );
+
+    public record YagyaDto(
+        Guid Id,
+        string Title,
+        string Description,
+        string Location,
+        DateTime StartDate,
+        DateTime EndDate,
+        string? ImageUrl,
+        string? PriceLabel,
+        string? Program
+    );
 }

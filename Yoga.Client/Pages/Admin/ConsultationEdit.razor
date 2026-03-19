@@ -45,6 +45,20 @@
                 </label>
             </div>
 
+            <div class="admin-form-group">
+                <label>Трансляция для авто-доступа</label>
+                <InputSelect class="admin-input" @bind-Value="model.LiveEventId">
+                    <option value="">Без авто-доступа</option>
+                    @foreach (var liveEvent in liveEvents.OrderByDescending(item => item.StartsAt))
+                    {
+                        <option value="@liveEvent.Id">@LiveEventLabel(liveEvent)</option>
+                    }
+                </InputSelect>
+                <div class="admin-text-muted" style="margin-top:0.35rem;">
+                    При успешной обработке онлайн-заявки доступ к выбранной трансляции будет выдан автоматически.
+                </div>
+            </div>
+
             @if (!string.IsNullOrEmpty(error))
             {
                 <div class="form-error">@error</div>
@@ -81,12 +95,15 @@
     private static readonly string[] consultationFields = { "Title", "Subtitle", "Eyebrow", "Description", "Quote", "Benefits", "ImageUrl", "Duration", "Format", "LanguageOffered", "PriceLabel", "ForWhom", "CtaHeading", "CtaText" };
 
     private Consultation model = new();
+    private List<LiveEventDto> liveEvents = new();
     private bool loading;
     private bool saving;
     private string? error;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadLiveEvents();
+
         if (!IsNew)
         {
             loading = true;
@@ -99,6 +116,18 @@
             }
             catch { error = "Ошибка загрузки"; }
             loading = false;
+        }
+    }
+
+    private async Task LoadLiveEvents()
+    {
+        try
+        {
+            liveEvents = await Api.GetAllLiveEventsAsync();
+        }
+        catch
+        {
+            liveEvents = new();
         }
     }
 
@@ -131,4 +160,7 @@
     }
 
     private void Cancel() => Nav.NavigateTo("/admin/consultations");
+
+    private static string LiveEventLabel(LiveEventDto liveEvent) =>
+        $"{liveEvent.StartsAt:dd.MM.yyyy HH:mm} — {liveEvent.Title}";
 }

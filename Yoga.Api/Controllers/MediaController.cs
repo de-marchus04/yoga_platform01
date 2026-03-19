@@ -23,11 +23,13 @@ namespace Yoga.Api.Controllers
 
         private readonly AppDbContext _context;
         private readonly IFileStorageService _storageService;
+        private readonly IAuditTrailService _auditTrail;
 
-        public MediaController(AppDbContext context, IFileStorageService storageService)
+        public MediaController(AppDbContext context, IFileStorageService storageService, IAuditTrailService auditTrail)
         {
             _context = context;
             _storageService = storageService;
+            _auditTrail = auditTrail;
         }
 
         [HttpGet]
@@ -65,6 +67,22 @@ namespace Yoga.Api.Controllers
             };
 
             _context.MediaFiles.Add(media);
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "media-uploaded",
+                nameof(MediaFile),
+                media.Id,
+                $"Uploaded media file '{file.FileName}'",
+                new
+                {
+                    media.Url,
+                    media.EntityType,
+                    media.EntityId,
+                    OriginalFileName = file.FileName,
+                    file.ContentType,
+                    file.Length
+                }));
             await _context.SaveChangesAsync();
 
             return Ok(media);
@@ -81,6 +99,22 @@ namespace Yoga.Api.Controllers
             media.EntityId = updated.EntityId;
             media.SortOrder = updated.SortOrder;
 
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "media-updated",
+                nameof(MediaFile),
+                media.Id,
+                $"Updated media file '{media.Alt ?? media.Url}'",
+                new
+                {
+                    media.Url,
+                    media.EntityType,
+                    media.EntityId,
+                    media.SortOrder,
+                    media.Alt
+                }));
+
             await _context.SaveChangesAsync();
             return Ok(media);
         }
@@ -93,6 +127,21 @@ namespace Yoga.Api.Controllers
 
             await _storageService.DeleteAsync(media.Url, HttpContext.RequestAborted);
 
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "media-deleted",
+                nameof(MediaFile),
+                media.Id,
+                $"Deleted media file '{media.Alt ?? media.Url}'",
+                new
+                {
+                    media.Url,
+                    media.EntityType,
+                    media.EntityId,
+                    media.SortOrder,
+                    media.Alt
+                }));
             _context.MediaFiles.Remove(media);
             await _context.SaveChangesAsync();
 

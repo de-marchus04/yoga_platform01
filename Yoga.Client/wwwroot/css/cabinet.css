@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
-   YOGA LIFE — PERSONAL CABINET STYLES
-   Light, minimal, editorial
+    SHAKTI.ASHRAM — PERSONAL CABINET STYLES
+    Light, minimal, editorial
 ═══════════════════════════════════════════ */
 
 /* ── Reset & Variables ─────────────────── */
@@ -72,10 +72,11 @@
     font-style: italic;
 }
 .cab-brand-label {
-    font-size: 0.7rem;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--cab-muted);
+    font-family: var(--cab-font-serif);
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    color: var(--cab-accent);
+    font-style: italic;
 }
 
 /* User card */

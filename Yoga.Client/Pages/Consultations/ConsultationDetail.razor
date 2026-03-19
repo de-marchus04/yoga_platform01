@@ -1,9 +1,10 @@
 @page "/consultations/{Slug}"
 @inject ApiService Api
 @inject LocalizationService Loc
+@inject NavigationManager Nav
 @implements IDisposable
 
-<PageTitle>@(item?.Title ?? Loc["nav.consultations"])</PageTitle>
+<PageTitle>@(DisplayConsultationTitle() ?? Loc["nav.consultations"])</PageTitle>
 
 @if (loading)
 {
@@ -46,7 +47,7 @@ else
                 }
             </div>
 
-            <h1>@item.Title</h1>
+            <h1>@DisplayConsultationTitle()</h1>
             <div class="section-divider" style="margin:2rem 0;"></div>
             @if (!string.IsNullOrEmpty(item.Subtitle))
             {
@@ -195,14 +196,55 @@ else
 
     private async Task LoadData()
     {
+        var requestedSlug = NormalizeSlug(Slug);
+        var canonicalSlug = CanonicalConsultationSlug(requestedSlug);
+        if (!string.Equals(requestedSlug, canonicalSlug, StringComparison.Ordinal))
+        {
+            Nav.NavigateTo($"/consultations/{canonicalSlug}", replace: true);
+            return;
+        }
+
         loading = true;
         try
         {
-            item = await Api.GetConsultationAsync(Slug, Loc.CurrentLang);
+            item = await Api.GetConsultationAsync(ApiConsultationSlug(canonicalSlug), Loc.CurrentLang);
         }
         catch { item = null; }
         loading = false;
     }
+
+    private string? DisplayConsultationTitle()
+    {
+        if (item is null)
+        {
+            return null;
+        }
+
+        return CanonicalConsultationSlug(NormalizeSlug(item.Slug)) == "for-teenagers"
+            ? ConsultationDisplayLabel()
+            : item.Title;
+    }
+
+    private static string NormalizeSlug(string? slug) => slug?.Trim().ToLowerInvariant() ?? string.Empty;
+
+    private static string CanonicalConsultationSlug(string slug) => slug switch
+    {
+        "ayurveda" => "for-teenagers",
+        _ => slug
+    };
+
+    private static string ApiConsultationSlug(string slug) => slug switch
+    {
+        "for-teenagers" => "ayurveda",
+        _ => slug
+    };
+
+    private string ConsultationDisplayLabel() => Loc.CurrentLang switch
+    {
+        "en" => "For Teenagers",
+        "uk" => "Для підлітків",
+        _ => "Для подростков"
+    };
 
     private void OpenModal()
     {

@@ -88,31 +88,32 @@
 @code {
     private record SecDef(string Key, string Name, List<(string Label, string Url)> Links);
 
-    private static readonly List<SecDef> SectionDefs = new()
-    {
-        new("courses", "Курсы", new() {
-            ("Пранаяма", "/courses/pranayama"),
-            ("Медитация", "/courses/meditation"),
-            ("Йога", "/courses/yoga")
-        }),
-        new("consultations", "Консультации", new() {
-            ("Энергетика", "/consultations/energy"),
-            ("Аюрведа", "/consultations/ayurveda"),
-            ("Духовность", "/consultations/spirituality")
-        }),
-        new("retreats", "Ретриты", new() {
-            ("Актуальные", "/retreats/actual"),
-            ("Предстоящие", "/retreats/upcoming"),
-            ("Прошедшие", "/retreats/past")
-        }),
-    };
-
     private List<BlogPostDto> posts = new();
     private bool loading = true;
     private string activeSection = "";
 
     private IEnumerable<SecDef> VisibleSections =>
         string.IsNullOrEmpty(activeSection) ? SectionDefs : SectionDefs.Where(s => s.Key == activeSection);
+
+    private List<SecDef> SectionDefs => new()
+    {
+        new("courses", SectionName("courses"), new()
+        {
+            (CourseLabel(), "/courses/pranavidya"),
+            (Loc["nav.courses.meditation"], "/courses/meditation"),
+            (Loc["nav.courses.yoga"], "/courses/yoga")
+        }),
+        new("consultations", SectionName("consultations"), new()
+        {
+            (Loc["nav.consultations.energy"], "/consultations/energy"),
+            (ConsultationLabel(), "/consultations/for-teenagers"),
+            (Loc["nav.consultations.spirituality"], "/consultations/spirituality")
+        }),
+        new("retreats", SectionName("retreats"), new()
+        {
+            (Loc["nav.retreats.actual"], "/retreats/actual")
+        }),
+    };
 
     private List<BlogPostDto> GetPostsForSection(string key) =>
         posts.Where(p => p.Sections.Any(s => s.Equals(key, StringComparison.OrdinalIgnoreCase))).ToList();
@@ -133,6 +134,28 @@
         }
         return url;
     }
+
+    private string SectionName(string key) => key switch
+    {
+        "courses" => Loc["nav.courses"],
+        "consultations" => Loc["nav.consultations"],
+        "retreats" => Loc["nav.retreats"],
+        _ => key
+    };
+
+    private string CourseLabel() => Loc.CurrentLang switch
+    {
+        "en" => "Pranavidya",
+        "uk" => "Пранавід'я",
+        _ => "Пранавидья"
+    };
+
+    private string ConsultationLabel() => Loc.CurrentLang switch
+    {
+        "en" => "For Teenagers",
+        "uk" => "Для підлітків",
+        _ => "Для подростков"
+    };
 
     protected override async Task OnInitializedAsync()
     {

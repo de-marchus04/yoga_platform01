@@ -48,9 +48,9 @@
                 {
                     var cons = c;
                     var revealClass = i == 1 ? "reveal-d1" : i == 2 ? "reveal-d2" : "";
-                    <ProductCard Url="@($"/consultations/{cons.Slug}")"
+                    <ProductCard Url="@($"/consultations/{CanonicalConsultationSlug(cons.Slug)}")"
                                  ImageUrl="@cons.ImageUrl"
-                                 Title="@cons.Title"
+                                 Title="@DisplayConsultationTitle(cons)"
                                  Eyebrow="@cons.Eyebrow"
                                  Description="@cons.Quote"
                                  CtaText="@F("CardCta", Loc["page.consultations.card.cta"])"
@@ -85,6 +85,23 @@
             return val;
         return fallback;
     }
+
+    private static string CanonicalConsultationSlug(string slug) => slug switch
+    {
+        "ayurveda" => "for-teenagers",
+        _ => slug
+    };
+
+    private string DisplayConsultationTitle(ConsultationDto consultation) => CanonicalConsultationSlug(consultation.Slug) switch
+    {
+        "for-teenagers" => Loc.CurrentLang switch
+        {
+            "en" => "For Teenagers",
+            "uk" => "Для підлітків",
+            _ => "Для подростков"
+        },
+        _ => consultation.Title
+    };
 
     private async Task LoadAsync()
     {

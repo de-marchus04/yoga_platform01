@@ -10,6 +10,8 @@ namespace Yoga.Shared.Models
         public bool IsOnline { get; set; } = false;
         public bool IsOffline { get; set; } = false;
         
+        public Guid? LiveEventId { get; set; }
+
         public ICollection<CourseModule> Modules { get; set; } = new List<CourseModule>();
     }
 }

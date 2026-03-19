@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
 using Yoga.Api.Services;
 using Yoga.Shared.DTOs;
+using System.Security.Claims;
 using Yoga.Shared.Models;
 
 namespace Yoga.Api.Controllers
@@ -112,6 +113,8 @@ namespace Yoga.Api.Controllers
             if (status == "Успешно" || status == "Отказ") lead.IsProcessed = true;
             else lead.IsProcessed = false;
 
+            await EnsureAutomaticLiveEventGrantAsync(lead);
+
             _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
                 User,
                 HttpContext,
@@ -182,6 +185,8 @@ namespace Yoga.Api.Controllers
             lead.Status = "Успешно";
             lead.IsProcessed = true;
 
+            await EnsureAutomaticLiveEventGrantAsync(lead);
+
             _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
                 User,
                 HttpContext,
@@ -251,6 +256,97 @@ namespace Yoga.Api.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(new { grant.Id });
+        }
+
+        private async Task EnsureAutomaticLiveEventGrantAsync(Lead lead)
+        {
+            if (!string.Equals(lead.Status, "Успешно", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if (lead.CustomerId is not Guid customerId)
+                return;
+
+            if (!IsOnlineTarget(lead.TargetFormat))
+                return;
+
+            var liveEventId = await ResolveLiveEventIdAsync(lead);
+            if (liveEventId is not Guid targetLiveEventId)
+                return;
+
+            var alreadyGranted = await _context.CustomerAccessGrants.AnyAsync(grant =>
+                grant.CustomerId == customerId
+                && grant.Status == "Active"
+                && grant.AccessType == AccessType.LiveEvent
+                && grant.LiveEventId == targetLiveEventId);
+
+            if (alreadyGranted)
+                return;
+
+            var grant = new CustomerAccessGrant
+            {
+                CustomerId = customerId,
+                AccessType = AccessType.LiveEvent,
+                LiveEventId = targetLiveEventId,
+                SourceLeadId = lead.Id,
+                GrantedByAdminId = GetAdminId(),
+                Notes = "Auto-granted from approved online lead"
+            };
+
+            _context.CustomerAccessGrants.Add(grant);
+            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
+                User,
+                HttpContext,
+                "access-grant-created-auto",
+                nameof(CustomerAccessGrant),
+                grant.Id,
+                $"Automatically granted live event access for approved online lead '{lead.Name}'.",
+                new
+                {
+                    lead.Id,
+                    lead.CourseId,
+                    lead.ConsultationId,
+                    lead.TargetFormat,
+                    grant.CustomerId,
+                    grant.LiveEventId,
+                    grant.AccessType
+                }));
+        }
+
+        private async Task<Guid?> ResolveLiveEventIdAsync(Lead lead)
+        {
+            if (lead.CourseId is Guid courseId)
+            {
+                return await _context.Courses
+                    .Where(course => course.Id == courseId && course.IsActive && course.IsOnline)
+                    .Select(course => course.LiveEventId)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (lead.ConsultationId is Guid consultationId)
+            {
+                return await _context.Consultations
+                    .Where(item => item.Id == consultationId && item.IsActive && item.IsOnline)
+                    .Select(item => item.LiveEventId)
+                    .FirstOrDefaultAsync();
+            }
+
+            return null;
+        }
+
+        private static bool IsOnlineTarget(string? targetFormat)
+        {
+            if (string.IsNullOrWhiteSpace(targetFormat))
+                return false;
+
+            return string.Equals(targetFormat.Trim(), "Online", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(targetFormat.Trim(), "Онлайн", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private Guid? GetAdminId()
+        {
+            var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                      ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+            return Guid.TryParse(sub, out var id) ? id : null;
         }
     }
 }

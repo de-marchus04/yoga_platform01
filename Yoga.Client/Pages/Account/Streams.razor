@@ -194,13 +194,13 @@ else
     {
         var dtStart = ev.StartsAt.ToUniversalTime().ToString("yyyyMMddTHHmmssZ");
         var dtEnd = (ev.EndsAt?.ToUniversalTime() ?? ev.StartsAt.AddHours(1).ToUniversalTime()).ToString("yyyyMMddTHHmmssZ");
-        var uid = ev.Id.ToString("N") + "@yoga.life";
+        var uid = ev.Id.ToString("N") + "@shakti.ashram";
         var desc = (ev.Description ?? "").Replace("\r\n", "\\n").Replace("\n", "\\n").Replace(",", "\\,").Replace(";", "\\;");
         var title = ev.Title.Replace(",", "\\,").Replace(";", "\\;");
         var content = string.Join("\r\n",
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
-            "PRODID:-//Yoga.Life//Cabinet//RU",
+            "PRODID:-//shakti.ashram//Cabinet//RU",
             "CALSCALE:GREGORIAN",
             "METHOD:PUBLISH",
             "BEGIN:VEVENT",
@@ -211,6 +211,6 @@ else
             $"DESCRIPTION:{desc}",
             "END:VEVENT",
             "END:VCALENDAR");
-        await JS.InvokeVoidAsync("downloadTextFile", $"yoga-{ev.Id:N}.ics", content);
+        await JS.InvokeVoidAsync("downloadTextFile", $"shakti-ashram-{ev.Id:N}.ics", content);
     }
 }

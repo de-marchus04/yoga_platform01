@@ -69,6 +69,29 @@ namespace Yoga.Client.Services
             return await GetSafeAsync<RetreatDto>($"api/retreats/{id}?lang={lang}");
         }
 
+        public async Task<List<YagyaDto>> GetActiveYagyasAsync(string lang = "ru")
+        {
+            var result = await GetSafeAsync<List<YagyaDto>>($"api/yagyas?lang={lang}");
+            return result ?? new List<YagyaDto>();
+        }
+
+        public async Task<List<YagyaDto>> GetUpcomingYagyasAsync(string lang = "ru")
+        {
+            var result = await GetSafeAsync<List<YagyaDto>>($"api/yagyas/upcoming?lang={lang}");
+            return result ?? new List<YagyaDto>();
+        }
+
+        public async Task<List<YagyaDto>> GetPastYagyasAsync(string lang = "ru")
+        {
+            var result = await GetSafeAsync<List<YagyaDto>>($"api/yagyas/past?lang={lang}");
+            return result ?? new List<YagyaDto>();
+        }
+
+        public async Task<YagyaDto?> GetYagyaByIdAsync(Guid id, string lang = "ru")
+        {
+            return await GetSafeAsync<YagyaDto>($"api/yagyas/{id}?lang={lang}");
+        }
+
         // Leads
         public async Task<bool> SubmitLeadAsync(Lead lead)
         {

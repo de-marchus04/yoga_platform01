@@ -8,6 +8,7 @@
 .admin-shell {
     --a-bg: #FAFAF7;
     --a-surface: #FFFFFF;
+    --a-card: #FFFFFF;
     --a-sidebar: #1A1A1A;
     --a-text: #1A1A1A;
     --a-text-secondary: #666666;
@@ -58,7 +59,8 @@
     font-family: var(--a-font-serif);
     font-size: 1.1rem;
     font-weight: 400;
-    letter-spacing: 3px;
+    letter-spacing: 1px;
+    font-style: italic;
     color: var(--a-accent);
     white-space: nowrap;
     flex: 1;
@@ -67,6 +69,7 @@
     font-family: var(--a-font-serif);
     font-size: 1.4rem;
     font-weight: 400;
+    font-style: italic;
     color: var(--a-accent);
     flex: 1;
     text-align: center;
@@ -733,21 +736,26 @@
 .admin-shell .media-picker-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(17, 17, 17, 0.74);
+    backdrop-filter: blur(2px);
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1.5rem;
 }
 .admin-shell .media-picker-modal {
     background: var(--a-card);
+    border: 1px solid rgba(0,0,0,0.08);
     border-radius: 12px;
     width: 90%;
     max-width: 800px;
-    max-height: 80vh;
+    min-height: 520px;
+    max-height: min(88vh, 920px);
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    opacity: 1;
 }
 .admin-shell .media-picker-header {
     display: flex;
@@ -760,6 +768,19 @@
     margin: 0;
     color: var(--a-text);
 }
+.admin-shell .media-picker-subtitle {
+    margin-top: 0.35rem;
+    font-size: 0.84rem;
+}
+.admin-shell .media-picker-toolbar {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.9rem 1.25rem 0;
+}
+.admin-shell .media-picker-search {
+    flex: 1;
+}
 .admin-shell .media-picker-body {
     padding: 1rem 1.25rem;
     overflow-y: auto;
@@ -767,24 +788,80 @@
 }
 .admin-shell .media-picker-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
 }
-.admin-shell .media-picker-item {
-    border: 2px solid transparent;
-    border-radius: 8px;
+.admin-shell .media-picker-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--a-border);
+    border-radius: 14px;
     overflow: hidden;
-    cursor: pointer;
-    transition: border-color 0.2s;
-    aspect-ratio: 1;
+    box-shadow: 0 8px 24px rgba(17, 17, 17, 0.06);
 }
-.admin-shell .media-picker-item:hover {
+.admin-shell .media-picker-card:hover {
     border-color: var(--a-accent);
 }
-.admin-shell .media-picker-item img {
+.admin-shell .media-picker-preview {
+    position: relative;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: #f4ede3;
+    cursor: pointer;
+    width: 100%;
+    aspect-ratio: 1.2;
+}
+.admin-shell .media-picker-preview img,
+.admin-shell .media-picker-preview video {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+.admin-shell .media-picker-file-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    color: var(--a-text-secondary);
+}
+.admin-shell .media-picker-kind-badge {
+    position: absolute;
+    right: 0.6rem;
+    bottom: 0.6rem;
+    background: rgba(26, 26, 26, 0.82);
+    color: #fff;
+    font-size: 0.74rem;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+}
+.admin-shell .media-picker-card-body {
+    padding: 0.85rem 0.9rem 0.5rem;
+}
+.admin-shell .media-picker-card-title {
+    font-weight: 600;
+    color: var(--a-text);
+    margin-bottom: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.admin-shell .media-picker-card-meta {
+    color: var(--a-text-secondary);
+    font-size: 0.78rem;
+    margin-bottom: 0.2rem;
+    word-break: break-word;
+}
+.admin-shell .media-picker-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0 0.9rem 0.9rem;
+}
+.admin-shell .media-picker-card-actions .btn-admin {
+    flex: 1;
 }
 .admin-shell .media-picker-footer {
     display: flex;
@@ -813,5 +890,85 @@
     border-radius: 6px;
     padding: 0.4rem 0.6rem;
     font-size: 0.85rem;
+}
+.admin-shell .media-picker-message {
+    margin: 0.75rem 1.25rem 1.25rem;
+}
+
+.admin-shell .media-library-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+}
+.admin-shell .media-library-card {
+    background: var(--a-surface);
+    border: 1px solid var(--a-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(17, 17, 17, 0.04);
+}
+.admin-shell .media-library-preview {
+    background: #f4ede3;
+    aspect-ratio: 1.25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.admin-shell .media-library-preview img,
+.admin-shell .media-library-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.admin-shell .media-library-file-icon {
+    font-size: 2.6rem;
+    color: var(--a-text-secondary);
+}
+.admin-shell .media-library-body {
+    padding: 1rem;
+}
+.admin-shell .media-library-title {
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    word-break: break-word;
+}
+.admin-shell .media-library-meta {
+    color: var(--a-text-secondary);
+    font-size: 0.82rem;
+    margin-bottom: 0.22rem;
+    word-break: break-word;
+}
+.admin-shell .media-library-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+}
+.admin-shell .media-library-actions .btn-admin {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .admin-shell .media-picker-overlay {
+        padding: 0.75rem;
+    }
+
+    .admin-shell .media-picker-modal {
+        width: 100%;
+        min-height: auto;
+        max-height: 92vh;
+    }
+
+    .admin-shell .media-picker-toolbar,
+    .admin-shell .media-picker-footer,
+    .admin-shell .media-picker-card-actions,
+    .admin-shell .media-library-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-shell .media-picker-grid,
+    .admin-shell .media-library-grid {
+        grid-template-columns: 1fr;
+    }
 }
 .admin-richtext-wrapper { background: #fff; border: 1px solid #ddd; border-radius: 4px; } .ql-editor { min-height: 200px; font-family: inherit; font-size: 1rem; }

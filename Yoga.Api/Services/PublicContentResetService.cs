@@ -8,7 +8,7 @@ namespace Yoga.Api.Services
 {
     public class PublicContentResetService
     {
-        private static readonly string[] PublicSitePageSlugs = ["home", "about", "contacts", "courses", "consultations", "blog", "retreats"];
+        private static readonly string[] PublicSitePageSlugs = ["home", "about", "contacts", "courses", "consultations", "blog", "retreats", "yagyas"];
 
         private readonly AppDbContext _context;
         private readonly IFileStorageService _storageService;

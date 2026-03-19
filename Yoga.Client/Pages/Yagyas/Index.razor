@@ -1,0 +1,151 @@
+@page "/yagyas"
+@inject LocalizationService Loc
+@inject ApiService ApiService
+@implements IDisposable
+
+<PageTitle>@Loc["page.yagyas.title"]</PageTitle>
+
+<section class="page-hero">
+    <div class="page-hero-bg" style="background-image: url('@F("HeroImageUrl", "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=1600&q=80")');"></div>
+    <div class="page-hero-overlay"></div>
+    <div class="container page-hero-content">
+        <p class="section-eyebrow" style="color:var(--accent);">@F("Eyebrow", Loc["page.yagyas.eyebrow"])</p>
+        <h1>@F("H1", Loc["page.yagyas.h1"])</h1>
+        <div class="section-divider" style="margin:2rem 0;"></div>
+        <p>@F("Intro", Loc["page.yagyas.intro"])</p>
+    </div>
+</section>
+
+<section class="retreats-section">
+    <div class="container">
+        @if (items == null)
+        {
+            <p style="text-align:center; padding:4rem 0; color:var(--text-muted); letter-spacing:2px; font-size:0.8rem; text-transform:uppercase;"><em>@Loc["page.yagyas.loading"]</em></p>
+        }
+        else if (!items.Any())
+        {
+            <div class="empty-state">
+                <p>@Loc["page.yagyas.empty"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="retreats-grid">
+                @foreach (var item in items)
+                {
+                    @Card(item, false, true)
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private List<YagyaDto>? items;
+    private SitePageDto? pageData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await Task.WhenAll(LoadData(), LoadPage());
+    }
+
+    private async Task LoadData()
+    {
+        try { items = await CatalogState.GetActiveYagyasAsync(Loc.CurrentLang); }
+        catch { items = new(); }
+    }
+
+    private async Task LoadPage()
+    {
+        try { pageData = await ApiService.GetSitePageAsync("yagyas", Loc.CurrentLang); }
+        catch { pageData = null; }
+    }
+
+    private string F(string field, string fallback = "")
+    {
+        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrEmpty(val))
+            return val;
+        return fallback;
+    }
+
+    private RenderFragment Card(YagyaDto item, bool isPast, bool hasCta) => builder =>
+    {
+        var image = string.IsNullOrWhiteSpace(item.ImageUrl)
+            ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=600&q=80"
+            : item.ImageUrl;
+        var seq = 0;
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class", "retreat-card reveal");
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class", "card-img-wrapper");
+        builder.OpenElement(seq++, "img");
+        builder.AddAttribute(seq++, "src", image);
+        builder.AddAttribute(seq++, "alt", item.Title);
+        builder.AddAttribute(seq++, "class", "card-img");
+        builder.AddAttribute(seq++, "loading", "lazy");
+        builder.AddAttribute(seq++, "decoding", "async");
+        builder.CloseElement();
+        builder.CloseElement();
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class", "card-content");
+        builder.OpenElement(seq++, "h3");
+        builder.AddContent(seq++, item.Title);
+        builder.CloseElement();
+        builder.OpenElement(seq++, "p");
+        builder.AddAttribute(seq++, "class", "location");
+        builder.AddContent(seq++, $"📍 {item.Location}");
+        builder.CloseElement();
+        builder.OpenElement(seq++, "p");
+        builder.AddAttribute(seq++, "class", "dates");
+        builder.AddContent(seq++, $"🗓 {item.StartDate:dd MMM yyyy} — {item.EndDate:dd MMM yyyy}");
+        builder.CloseElement();
+        if (!string.IsNullOrWhiteSpace(item.PriceLabel))
+        {
+            builder.OpenElement(seq++, "p");
+            builder.AddAttribute(seq++, "class", "dates");
+            builder.AddContent(seq++, item.PriceLabel);
+            builder.CloseElement();
+        }
+        builder.OpenElement(seq++, "p");
+        builder.AddAttribute(seq++, "class", "description");
+        builder.AddContent(seq++, item.Description);
+        builder.CloseElement();
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "class", "retreat-card-actions");
+        builder.OpenElement(seq++, "a");
+        builder.AddAttribute(seq++, "href", $"/yagyas/{item.Id}");
+        builder.AddAttribute(seq++, "class", "btn btn-outline");
+        builder.AddAttribute(seq++, "style", "width:100%; text-align:center;");
+        builder.AddContent(seq++, Loc["page.yagya.card.detail"]);
+        builder.CloseElement();
+        if (hasCta)
+        {
+            builder.OpenElement(seq++, "button");
+            builder.AddAttribute(seq++, "class", "btn btn-outline btn-sm");
+            builder.AddAttribute(seq++, "style", "width:100%;");
+            builder.AddAttribute(seq++, "onclick", EventCallback.Factory.Create(this, () => OpenModal(item.Title)));
+            builder.AddContent(seq++, isPast ? Loc["page.yagya.past.cta"] : Loc["page.yagyas.card.cta"]);
+            builder.CloseElement();
+        }
+        builder.CloseElement();
+        builder.CloseElement();
+        builder.CloseElement();
+    };
+
+    private async void Refresh()
+    {
+        await Task.WhenAll(LoadData(), LoadPage());
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenModal(string title)
+    {
+        ModalService.Show<LeadModal>(new Dictionary<string, object>
+        {
+            { "ContextTitle", title }
+        });
+    }
+
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+}

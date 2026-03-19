@@ -71,6 +71,8 @@ namespace Yoga.Api.Controllers
         [HttpGet("{slug}")]
         public async Task<ActionResult<CourseDto>> GetCourse(string slug, [FromQuery] string lang = "ru")
         {
+            slug = ResolveCourseSlug(slug);
+
             var course = await _context.Courses
                 .Include(c => c.Modules.OrderBy(m => m.SortOrder))
                 .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
@@ -106,6 +108,12 @@ namespace Yoga.Api.Controllers
 
             return Ok(dto);
         }
+
+        private static string ResolveCourseSlug(string slug) => slug.Trim().ToLowerInvariant() switch
+        {
+            "pranavidya" => "pranayama",
+            _ => slug.Trim().ToLowerInvariant()
+        };
 
         /// <summary>
         /// POST /api/courses — create a new course (admin).

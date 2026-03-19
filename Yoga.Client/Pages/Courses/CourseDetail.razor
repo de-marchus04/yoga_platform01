@@ -1,9 +1,10 @@
 @page "/courses/{Slug}"
 @inject ApiService Api
 @inject LocalizationService Loc
+@inject NavigationManager Nav
 @implements IDisposable
 
-<PageTitle>@(course?.Title ?? Loc["nav.courses"])</PageTitle>
+<PageTitle>@(DisplayCourseTitle() ?? Loc["nav.courses"])</PageTitle>
 
 @if (loading)
 {
@@ -47,7 +48,7 @@ else
                     <span class="format-badge format-badge-offline">Офлайн</span>
                 }
             </div>
-            <h1>@course.Title</h1>
+            <h1>@DisplayCourseTitle()</h1>
             <div class="section-divider" style="margin:2rem 0;"></div>
             @if (!string.IsNullOrEmpty(course.Subtitle))
             {
@@ -217,14 +218,55 @@ else
 
     private async Task LoadCourse()
     {
+        var requestedSlug = NormalizeSlug(Slug);
+        var canonicalSlug = CanonicalCourseSlug(requestedSlug);
+        if (!string.Equals(requestedSlug, canonicalSlug, StringComparison.Ordinal))
+        {
+            Nav.NavigateTo($"/courses/{canonicalSlug}", replace: true);
+            return;
+        }
+
         loading = true;
         try
         {
-            course = await Api.GetCourseAsync(Slug, Loc.CurrentLang);
+            course = await Api.GetCourseAsync(ApiCourseSlug(canonicalSlug), Loc.CurrentLang);
         }
         catch { course = null; }
         loading = false;
     }
+
+    private string? DisplayCourseTitle()
+    {
+        if (course is null)
+        {
+            return null;
+        }
+
+        return CanonicalCourseSlug(NormalizeSlug(course.Slug)) == "pranavidya"
+            ? CourseDisplayLabel()
+            : course.Title;
+    }
+
+    private static string NormalizeSlug(string? slug) => slug?.Trim().ToLowerInvariant() ?? string.Empty;
+
+    private static string CanonicalCourseSlug(string slug) => slug switch
+    {
+        "pranayama" => "pranavidya",
+        _ => slug
+    };
+
+    private static string ApiCourseSlug(string slug) => slug switch
+    {
+        "pranavidya" => "pranayama",
+        _ => slug
+    };
+
+    private string CourseDisplayLabel() => Loc.CurrentLang switch
+    {
+        "en" => "Pranavidya",
+        "uk" => "Пранавід'я",
+        _ => "Пранавидья"
+    };
 
     private void OpenModal()
     {

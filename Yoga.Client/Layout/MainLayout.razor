@@ -8,7 +8,26 @@
     <header class="app-header">
         <div class="container d-flex align-items-center justify-content-between">
             <div class="logo">
-                <a href="/">Yoga.Life</a>
+                <a href="/" aria-label="shakti.ashram">
+                    <span class="brand-lockup">
+                        <span class="brand-mark" aria-hidden="true">
+                            <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" focusable="false">
+                                <circle cx="32" cy="32" r="28.5" />
+                                <path d="M32 13.5c4.9 6.2 7.4 11.9 7.4 17.1 0 6.1-2.5 11.1-7.4 15.2-4.9-4.1-7.4-9.1-7.4-15.2 0-5.2 2.5-10.9 7.4-17.1Z" />
+                                <path d="M24.2 24.1c-6 1.2-10.1 4.7-12.5 10.5 6.8.3 12.2 2.8 16.3 7.6" />
+                                <path d="M39.8 24.1c6 1.2 10.1 4.7 12.5 10.5-6.8.3-12.2 2.8-16.3 7.6" />
+                                <path d="M20.2 33.2c-4.6 1.1-7.9 4-9.8 8.6 5.4.1 9.8 1.9 13.1 5.3" />
+                                <path d="M43.8 33.2c4.6 1.1 7.9 4 9.8 8.6-5.4.1-9.8 1.9-13.1 5.3" />
+                                <path d="M21.4 49.6c3.3-2.9 6.9-4.3 10.6-4.3 3.8 0 7.3 1.4 10.6 4.3" />
+                                <path d="M28.8 54.2c.9-2.3 2-3.9 3.2-4.8 1.2.9 2.3 2.5 3.2 4.8" />
+                                <path d="M32 22.1c1.7 1.4 2.5 3.2 2.5 5.3S33.7 31.3 32 32.7c-1.7-1.4-2.5-3.2-2.5-5.3s.8-3.9 2.5-5.3Z" />
+                            </svg>
+                        </span>
+                        <span class="brand-wordmark brand-wordmark-header">
+                            <span class="brand-prefix">sha</span><span class="brand-rest">kti.ashram</span>
+                        </span>
+                    </span>
+                </a>
             </div>
             <nav class="main-nav">
                 <ul class="nav-menu">
@@ -27,7 +46,7 @@
                             </button>
                         </div>
                         <ul id="desktop-submenu-courses" class="dropdown-menu">
-                            <li><a href="/courses/pranayama">@Loc["nav.courses.pranayama"]</a></li>
+                            <li><a href="/courses/pranavidya">@CourseSubmenuLabel()</a></li>
                             <li><a href="/courses/meditation">@Loc["nav.courses.meditation"]</a></li>
                             <li><a href="/courses/yoga">@Loc["nav.courses.yoga"]</a></li>
                         </ul>
@@ -47,7 +66,7 @@
                         </div>
                         <ul id="desktop-submenu-consultations" class="dropdown-menu">
                             <li><a href="/consultations/energy">@Loc["nav.consultations.energy"]</a></li>
-                            <li><a href="/consultations/ayurveda">@Loc["nav.consultations.ayurveda"]</a></li>
+                            <li><a href="/consultations/for-teenagers">@ConsultationSubmenuLabel()</a></li>
                             <li><a href="/consultations/spirituality">@Loc["nav.consultations.spirituality"]</a></li>
                         </ul>
                     </li>
@@ -66,8 +85,24 @@
                         </div>
                         <ul id="desktop-submenu-retreats" class="dropdown-menu">
                             <li><a href="/retreats/actual">@Loc["nav.retreats.actual"]</a></li>
-                            <li><a href="/retreats/upcoming">@Loc["nav.retreats.upcoming"]</a></li>
-                            <li><a href="/retreats/past">@Loc["nav.retreats.past"]</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="dropdown @(openDropdown == "yagyas" ? "open" : "")" @onmouseenter='() => OpenDropdown("yagyas")' @onmouseleave="CloseDropdown">
+                        <div class="dropdown-trigger">
+                            <a href="/yagyas" class="dropdown-link">@Loc["nav.yagyas"]</a>
+                            <button type="button"
+                                    class="dropdown-toggle"
+                                    aria-label="Подменю ягий"
+                                    aria-expanded="@(openDropdown == "yagyas")"
+                                    aria-controls="desktop-submenu-yagyas"
+                                    @onclick='() => ToggleDropdown("yagyas")'>
+                                <span aria-hidden="true">▾</span>
+                            </button>
+                        </div>
+                        <ul id="desktop-submenu-yagyas" class="dropdown-menu">
+                            <li><a href="/yagyas/upcoming">@Loc["nav.yagyas.upcoming"]</a></li>
+                            <li><a href="/yagyas/past">@Loc["nav.yagyas.past"]</a></li>
                         </ul>
                     </li>
 
@@ -124,17 +159,18 @@
         <ul class="mobile-nav-menu">
             <li><a href="/" @onclick="CloseMenu">@Loc["nav.home"]</a></li>
             <li class="mobile-section-label">@Loc["nav.courses"]</li>
-            <li><a href="/courses/pranayama" @onclick="CloseMenu">@Loc["nav.courses.pranayama"]</a></li>
+            <li><a href="/courses/pranavidya" @onclick="CloseMenu">@CourseSubmenuLabel()</a></li>
             <li><a href="/courses/meditation" @onclick="CloseMenu">@Loc["nav.courses.meditation"]</a></li>
             <li><a href="/courses/yoga" @onclick="CloseMenu">@Loc["nav.courses.yoga"]</a></li>
             <li class="mobile-section-label">@Loc["nav.consultations"]</li>
             <li><a href="/consultations/energy" @onclick="CloseMenu">@Loc["nav.consultations.energy"]</a></li>
-            <li><a href="/consultations/ayurveda" @onclick="CloseMenu">@Loc["nav.consultations.ayurveda"]</a></li>
+            <li><a href="/consultations/for-teenagers" @onclick="CloseMenu">@ConsultationSubmenuLabel()</a></li>
             <li><a href="/consultations/spirituality" @onclick="CloseMenu">@Loc["nav.consultations.spirituality"]</a></li>
             <li class="mobile-section-label">@Loc["nav.retreats"]</li>
             <li><a href="/retreats/actual" @onclick="CloseMenu">@Loc["nav.retreats.actual"]</a></li>
-            <li><a href="/retreats/upcoming" @onclick="CloseMenu">@Loc["nav.retreats.upcoming"]</a></li>
-            <li><a href="/retreats/past" @onclick="CloseMenu">@Loc["nav.retreats.past"]</a></li>
+            <li class="mobile-section-label">@Loc["nav.yagyas"]</li>
+            <li><a href="/yagyas/upcoming" @onclick="CloseMenu">@Loc["nav.yagyas.upcoming"]</a></li>
+            <li><a href="/yagyas/past" @onclick="CloseMenu">@Loc["nav.yagyas.past"]</a></li>
             <li class="mobile-section-label">@Loc["nav.blog"]</li>
             <li><a href="/blog/articles" @onclick="CloseMenu">@Loc["nav.blog.articles"]</a></li>
             <li><a href="/blog/videos" @onclick="CloseMenu">@Loc["nav.blog.videos"]</a></li>
@@ -166,7 +202,13 @@
 
     <footer class="app-footer">
         <div class="container">
-            <p>@Loc["footer.copy"]</p>
+            <p class="footer-copy">
+                <span>© 2026 </span>
+                <span class="brand-wordmark footer-brand" aria-label="shakti.ashram">
+                    <span class="brand-prefix">sha</span><span class="brand-rest">kti.ashram</span>
+                </span>
+                <span>. @FooterTagline()</span>
+            </p>
             <div class="footer-legal-links">
                 <a href="/privacy">Политика конфиденциальности</a>
                 <a href="/terms">Условия использования</a>
@@ -216,6 +258,27 @@
     }
 
     private Task SetBodyScrollLockAsync(bool locked) => JS.InvokeVoidAsync("ylToggleBodyScroll", "menu", locked).AsTask();
+
+    private string FooterTagline() => Loc.CurrentLang switch
+    {
+        "en" => "A return to origins.",
+        "uk" => "Повернення до витоків.",
+        _ => "Возврат к истокам."
+    };
+
+    private string CourseSubmenuLabel() => Loc.CurrentLang switch
+    {
+        "en" => "Pranavidya",
+        "uk" => "Пранавід'я",
+        _ => "Пранавидья"
+    };
+
+    private string ConsultationSubmenuLabel() => Loc.CurrentLang switch
+    {
+        "en" => "For Teenagers",
+        "uk" => "Для підлітків",
+        _ => "Для подростков"
+    };
 
     public void Dispose()
     {

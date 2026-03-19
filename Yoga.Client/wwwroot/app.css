@@ -74,6 +74,29 @@ a:hover {
   color: var(--accent);
 }
 
+.brand-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+  font-style: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+.brand-wordmark .brand-prefix {
+  display: inline-block;
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 1.4px;
+  text-underline-offset: 0.14em;
+}
+
+.brand-wordmark .brand-rest {
+  display: inline-block;
+}
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,

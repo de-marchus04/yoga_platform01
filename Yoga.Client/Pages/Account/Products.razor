@@ -97,7 +97,9 @@ else
 
     private string ProductName(AccessGrantDto g) => g.AccessType switch
     {
+        "Course" when CanonicalCourseSlug(g.CourseSlug ?? string.Empty) == "pranavidya" => "Пранавидья",
         "Course" => g.CourseName ?? "Курс",
+        "Consultation" when CanonicalConsultationSlug(g.ConsultationSlug ?? string.Empty) == "for-teenagers" => "Для подростков",
         "Consultation" => g.ConsultationName ?? "Консультация",
         "Retreat" => g.RetreatTitle ?? "Ретрит",
         "LiveEvent" => g.LiveEventTitle ?? "Трансляция",
@@ -107,10 +109,22 @@ else
 
     private string? ProductLink(AccessGrantDto g) => g.AccessType switch
     {
-        "Course" when g.CourseSlug != null => $"/courses/{g.CourseSlug}",
-        "Consultation" when g.ConsultationSlug != null => $"/consultations/{g.ConsultationSlug}",
+        "Course" when g.CourseSlug != null => $"/courses/{CanonicalCourseSlug(g.CourseSlug)}",
+        "Consultation" when g.ConsultationSlug != null => $"/consultations/{CanonicalConsultationSlug(g.ConsultationSlug)}",
         "Retreat" when g.RetreatId.HasValue => $"/retreats/{g.RetreatId}",
         _ => null
+    };
+
+    private static string CanonicalCourseSlug(string slug) => slug switch
+    {
+        "pranayama" => "pranavidya",
+        _ => slug
+    };
+
+    private static string CanonicalConsultationSlug(string slug) => slug switch
+    {
+        "ayurveda" => "for-teenagers",
+        _ => slug
     };
 
     private string StatusLabel(string status) => status switch

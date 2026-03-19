@@ -1,0 +1,197 @@
+@page "/admin/yagyas/new"
+@page "/admin/yagyas/{Id:guid}/edit"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>@(IsNew ? "Новая ягья" : "Редактирование ягьи") — Админ</PageTitle>
+
+<div class="edit-page">
+    <div class="page-header">
+        <h1>@(IsNew ? "Новая ягья" : "Редактирование ягьи")</h1>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else
+    {
+        <div class="form-card">
+            <h3 class="section-title">Метаданные</h3>
+            <div class="admin-form-group">
+                <label>Название (основное)</label>
+                <input class="admin-input" @bind="model.Title" placeholder="Название ягьи" />
+            </div>
+
+            <div class="admin-form-group">
+                <label>Локация</label>
+                <input class="admin-input" @bind="model.Location" placeholder="Город, Страна или Online" />
+            </div>
+
+            <div class="form-row">
+                <div class="admin-form-group">
+                    <label>Дата начала</label>
+                    <input class="admin-input" type="date" @bind="model.StartDate" />
+                </div>
+                <div class="admin-form-group">
+                    <label>Дата окончания</label>
+                    <input class="admin-input" type="date" @bind="model.EndDate" />
+                </div>
+            </div>
+
+            <div class="admin-form-group">
+                <label>Цена</label>
+                <input class="admin-input" @bind="model.PriceLabel" placeholder="по запросу / donation / от €150" />
+            </div>
+
+            <div class="admin-form-group">
+                <label>URL изображения</label>
+                <div style="display:flex; gap:0.5rem;">
+                    <input class="admin-input" style="flex:1" @bind="model.ImageUrl" placeholder="https://..." />
+                    <button type="button" class="btn-admin btn-admin-outline" @onclick="() => showMediaPicker = true">📁</button>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(model.ImageUrl))
+            {
+                <div class="image-preview">
+                    <img src="@model.ImageUrl" alt="Preview" />
+                </div>
+            }
+
+            <div class="admin-form-group checkbox-group">
+                <label>
+                    <input type="checkbox" @bind="model.IsActive" />
+                    Активна (видна на сайте)
+                </label>
+            </div>
+
+            @if (!string.IsNullOrEmpty(error))
+            {
+                <div class="form-error">@error</div>
+            }
+
+            <div class="form-actions">
+                <button class="btn-admin btn-admin-outline" @onclick="Cancel">Отмена</button>
+                <button class="btn-admin btn-admin-primary" disabled="@saving" @onclick="Save">
+                    @(saving ? "Сохранение..." : "Сохранить метаданные")
+                </button>
+            </div>
+        </div>
+
+        @if (!IsNew)
+        {
+            <Yoga.Client.Components.Admin.TranslationEditor
+                EntityType="Yagya"
+                EntityId="model.Id"
+                Fields="yagyaFields" />
+        }
+        else
+        {
+            <div class="form-card" style="margin-top:1.5rem;">
+                <p class="admin-text-muted">Сначала сохраните ягью, чтобы редактировать переводы контента.</p>
+            </div>
+        }
+    }
+</div>
+
+@if (showMediaPicker)
+{
+    <Yoga.Client.Components.Admin.MediaPicker
+        EntityType="Yagya"
+        OnSelected="OnMediaSelected"
+        OnClose="() => showMediaPicker = false" />
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private bool showMediaPicker;
+    private bool IsNew => Id == null;
+    private static readonly string[] yagyaFields = { "Title", "Description", "Location", "PriceLabel", "Program" };
+    private Yagya model = new() { StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(1) };
+    private bool loading;
+    private bool saving;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew)
+        {
+            loading = true;
+            try
+            {
+                var items = await Api.GetAllYagyasAsync();
+                var found = items.FirstOrDefault(item => item.Id == Id);
+                if (found != null)
+                {
+                    model = found;
+                }
+                else
+                {
+                    error = "Ягья не найдена";
+                }
+            }
+            catch
+            {
+                error = "Ошибка загрузки";
+            }
+
+            loading = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        if (string.IsNullOrWhiteSpace(model.Title))
+        {
+            error = "Название обязательно";
+            return;
+        }
+
+        saving = true;
+        error = null;
+
+        try
+        {
+            var response = IsNew
+                ? await Api.CreateYagyaAsync(model)
+                : await Api.UpdateYagyaAsync(model.Id, model);
+
+            if (response.IsSuccessStatusCode)
+            {
+                if (IsNew)
+                {
+                    var created = await response.Content.ReadFromJsonAsync<Yagya>();
+                    if (created != null)
+                    {
+                        Nav.NavigateTo($"/admin/yagyas/{created.Id}/edit");
+                    }
+                    else
+                    {
+                        Nav.NavigateTo("/admin/yagyas");
+                    }
+                }
+            }
+            else
+            {
+                error = $"Ошибка сервера: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Ошибка: {ex.Message}";
+        }
+
+        saving = false;
+    }
+
+    private void Cancel() => Nav.NavigateTo("/admin/yagyas");
+
+    private void OnMediaSelected(string url)
+    {
+        model.ImageUrl = url;
+        showMediaPicker = false;
+    }
+}

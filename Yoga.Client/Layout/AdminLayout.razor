@@ -12,11 +12,15 @@
                 <div class="sidebar-header">
                     @if (!sidebarCollapsed)
                     {
-                        <span class="sidebar-brand">YOGA · LIFE</span>
+                        <span class="sidebar-brand" aria-label="shakti.ashram">
+                            <span class="brand-wordmark">
+                                <span class="brand-prefix">sha</span><span class="brand-rest">kti.ashram</span>
+                            </span>
+                        </span>
                     }
                     else
                     {
-                        <span class="sidebar-brand-icon">Y</span>
+                        <span class="sidebar-brand-icon">S</span>
                     }
                     <button class="collapse-btn" @onclick="ToggleSidebar" title="@(sidebarCollapsed ? "Развернуть" : "Свернуть")">
                         @if (sidebarCollapsed)
@@ -47,6 +51,10 @@
                         <span class="nav-icon">⛰</span>
                         @if (!sidebarCollapsed) { <span class="nav-label">Ретриты</span> }
                     </a>
+                    <a href="/admin/yagyas" class="nav-item @IsActive("/admin/yagyas")" @onclick="CloseMobile">
+                        <span class="nav-icon">🔥</span>
+                        @if (!sidebarCollapsed) { <span class="nav-label">Ягьи</span> }
+                    </a>
                     <a href="/admin/courses" class="nav-item @IsActive("/admin/courses")" @onclick="CloseMobile">
                         <span class="nav-icon">📖</span>
                         @if (!sidebarCollapsed) { <span class="nav-label">Курсы</span> }
@@ -59,7 +67,10 @@
                         <span class="nav-icon">✎</span>
                         @if (!sidebarCollapsed) { <span class="nav-label">Блог</span> }
                     </a>
-                    <!-- Убрали дублирующееся меню 'Страницы', 'Переводы' и 'Медиа' -->
+                    <a href="/admin/media" class="nav-item @IsActive("/admin/media")" @onclick="CloseMobile">
+                        <span class="nav-icon">🖼</span>
+                        @if (!sidebarCollapsed) { <span class="nav-label">Медиатека</span> }
+                    </a>
                     <a href="/admin/clients" class="nav-item @IsActive("/admin/clients")" @onclick="CloseMobile">
                         <span class="nav-icon">👤</span>
                         @if (!sidebarCollapsed) { <span class="nav-label">Клиенты</span> }

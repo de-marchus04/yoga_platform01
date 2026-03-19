@@ -13,6 +13,7 @@ namespace Yoga.Api.Data
 
         public DbSet<Lead> Leads { get; set; }
         public DbSet<Retreat> Retreats { get; set; }
+        public DbSet<Yagya> Yagyas { get; set; }
         public DbSet<AdminUser> AdminUsers { get; set; }
         public DbSet<Translation> Translations { get; set; }
         public DbSet<MediaFile> MediaFiles { get; set; }
@@ -38,6 +39,7 @@ namespace Yoga.Api.Data
             // Any specific configurations, e.g.
             modelBuilder.Entity<Lead>().HasKey(l => l.Id);
             modelBuilder.Entity<Retreat>().HasKey(r => r.Id);
+            modelBuilder.Entity<Yagya>().HasKey(y => y.Id);
             modelBuilder.Entity<AdminUser>().HasKey(a => a.Id);
 
             // Translations unique index
@@ -155,6 +157,7 @@ namespace Yoga.Api.Data
             var pageConsultations = Guid.Parse("44444444-4444-4444-4444-444444444405");
             var pageBlog = Guid.Parse("44444444-4444-4444-4444-444444444406");
             var pageRetreats = Guid.Parse("44444444-4444-4444-4444-444444444407");
+            var pageYagyas = Guid.Parse("44444444-4444-4444-4444-444444444408");
             modelBuilder.Entity<SitePage>().HasData(
                 new SitePage { Id = pageAbout, Slug = "about" },
                 new SitePage { Id = pageContacts, Slug = "contacts" },
@@ -162,7 +165,8 @@ namespace Yoga.Api.Data
                 new SitePage { Id = pageCourses, Slug = "courses" },
                 new SitePage { Id = pageConsultations, Slug = "consultations" },
                 new SitePage { Id = pageBlog, Slug = "blog" },
-                new SitePage { Id = pageRetreats, Slug = "retreats" }
+                new SitePage { Id = pageRetreats, Slug = "retreats" },
+                new SitePage { Id = pageYagyas, Slug = "yagyas" }
             );
 
             // ==== Seed UiTranslations ====
@@ -188,17 +192,20 @@ namespace Yoga.Api.Data
             // Navigation
             Add("nav.home", "Главная", "Home", "Головна");
             Add("nav.courses", "Курсы", "Courses", "Курси");
-            Add("nav.courses.pranayama", "Пранаяма", "Pranayama", "Пранаяма");
+            Add("nav.courses.pranayama", "Пранавидья", "Pranavidya", "Пранавід'я");
             Add("nav.courses.meditation", "Медитация", "Meditation", "Медитація");
             Add("nav.courses.yoga", "Йога", "Yoga", "Йога");
             Add("nav.consultations", "Консультации", "Consultations", "Консультації");
             Add("nav.consultations.energy", "Энергетика", "Energetics", "Енергетика");
-            Add("nav.consultations.ayurveda", "Аюрведа", "Ayurveda", "Аюрведа");
+            Add("nav.consultations.ayurveda", "Для подростков", "For Teenagers", "Для підлітків");
             Add("nav.consultations.spirituality", "Духовность", "Spirituality", "Духовність");
             Add("nav.retreats", "Ретриты", "Retreats", "Ретрити");
             Add("nav.retreats.actual", "Актуальные", "Current", "Актуальні");
             Add("nav.retreats.upcoming", "Предстоящие", "Upcoming", "Майбутні");
             Add("nav.retreats.past", "Прошедшие", "Past", "Минулі");
+            Add("nav.yagyas", "Ягьи", "Yagyas", "Яг'ї");
+            Add("nav.yagyas.upcoming", "Предстоящие", "Upcoming", "Майбутні");
+            Add("nav.yagyas.past", "Прошедшие", "Past", "Минулі");
             Add("nav.blog", "Блог", "Blog", "Блог");
             Add("nav.blog.articles", "Статьи", "Articles", "Статті");
             Add("nav.blog.videos", "Видео", "Videos", "Відео");
@@ -299,8 +306,8 @@ namespace Yoga.Api.Data
             Add("page.courses.title", "Курсы | Yoga.Life", "Courses | Yoga.Life", "Курси | Yoga.Life");
             Add("page.courses.h1", "Курсы", "Courses", "Курси");
             Add("page.courses.sub", "Выберите направление.", "Choose a direction.", "Оберіть напрямок.");
-            Add("page.courses.pranayama.title", "Пранаяма | Yoga.Life", "Pranayama | Yoga.Life", "Пранаяма | Yoga.Life");
-            Add("page.courses.pranayama.h1", "Пранаяма", "Pranayama", "Пранаяма");
+            Add("page.courses.pranayama.title", "Пранавидья | Yoga.Life", "Pranavidya | Yoga.Life", "Пранавід'я | Yoga.Life");
+            Add("page.courses.pranayama.h1", "Пранавидья", "Pranavidya", "Пранавід'я");
             Add("page.courses.meditation.title", "Медитация | Yoga.Life", "Meditation | Yoga.Life", "Медитація | Yoga.Life");
             Add("page.courses.meditation.h1", "Медитация", "Meditation", "Медитація");
             Add("page.courses.yoga.title", "Йога | Yoga.Life", "Yoga | Yoga.Life", "Йога | Yoga.Life");
@@ -311,8 +318,8 @@ namespace Yoga.Api.Data
             Add("page.consultations.h1", "Консультации", "Consultations", "Консультації");
             Add("page.consultations.energy.title", "Энергетика | Yoga.Life", "Energetics | Yoga.Life", "Енергетика | Yoga.Life");
             Add("page.consultations.energy.h1", "Энергетика", "Energetics", "Енергетика");
-            Add("page.consultations.ayurveda.title", "Аюрведа | Yoga.Life", "Ayurveda | Yoga.Life", "Аюрведа | Yoga.Life");
-            Add("page.consultations.ayurveda.h1", "Аюрведа", "Ayurveda", "Аюрведа");
+            Add("page.consultations.ayurveda.title", "Для подростков | Yoga.Life", "For Teenagers | Yoga.Life", "Для підлітків | Yoga.Life");
+            Add("page.consultations.ayurveda.h1", "Для подростков", "For Teenagers", "Для підлітків");
             Add("page.consultations.spirituality.title", "Духовность | Yoga.Life", "Spirituality | Yoga.Life", "Духовність | Yoga.Life");
             Add("page.consultations.spirituality.h1", "Духовность", "Spirituality", "Духовність");
 
@@ -323,6 +330,28 @@ namespace Yoga.Api.Data
             Add("page.retreats.upcoming.h1", "Предстоящие ретриты", "Upcoming Retreats", "Майбутні ретрити");
             Add("page.retreats.past.title", "Прошедшие ретриты | Yoga.Life", "Past Retreats | Yoga.Life", "Минулі ретрити | Yoga.Life");
             Add("page.retreats.past.h1", "Прошедшие ретриты", "Past Retreats", "Минулі ретрити");
+            Add("page.yagyas.title", "Ягьи | Yoga.Life", "Yagyas | Yoga.Life", "Яг'ї | Yoga.Life");
+            Add("page.yagyas.h1", "Ягьи", "Yagyas", "Яг'ї");
+            Add("page.yagyas.eyebrow", "Огненные практики", "Fire ceremonies", "Вогняні практики");
+            Add("page.yagyas.intro", "Предстоящие и прошедшие ягьи с описанием намерения, формата участия и ключевых дат.", "Upcoming and past yagyas with the intention, format and key dates.", "Майбутні та минулі яг'ї з описом наміру, формату участі та ключових дат.");
+            Add("page.yagyas.upcoming.title", "Предстоящие ягьи | Yoga.Life", "Upcoming Yagyas | Yoga.Life", "Майбутні яг'ї | Yoga.Life");
+            Add("page.yagyas.upcoming.h1", "Предстоящие ягьи", "Upcoming Yagyas", "Майбутні яг'ї");
+            Add("page.yagyas.upcoming.intro", "Ближайшие церемонии, к которым можно присоединиться сейчас.", "The next ceremonies you can join now.", "Найближчі церемонії, до яких можна долучитися зараз.");
+            Add("page.yagyas.past.title", "Прошедшие ягьи | Yoga.Life", "Past Yagyas | Yoga.Life", "Минулі яг'ї | Yoga.Life");
+            Add("page.yagyas.past.h1", "Прошедшие ягьи", "Past Yagyas", "Минулі яг'ї");
+            Add("page.yagyas.past.intro", "Архив проведённых ягий с программой, местом и основным фокусом церемонии.", "Archive of completed yagyas with program, location and ceremony focus.", "Архів проведених яг'ї з програмою, локацією та головним фокусом церемонії.");
+            Add("page.yagyas.empty", "Ягьи пока не опубликованы.", "No yagyas have been published yet.", "Яг'ї ще не опубліковані.");
+            Add("page.yagyas.card.cta", "Оставить заявку", "Send request", "Залишити заявку");
+            Add("page.yagya.detail.loading", "Загрузка...", "Loading...", "Завантаження...");
+            Add("page.yagya.detail.back", "Все ягьи", "All yagyas", "Усі яг'ї");
+            Add("page.yagya.detail.about_eyebrow", "О церемонии", "About the ceremony", "Про церемонію");
+            Add("page.yagya.detail.about_h2", "Описание и намерение", "Description and intention", "Опис і намір");
+            Add("page.yagya.detail.program_eyebrow", "Программа", "Program", "Програма");
+            Add("page.yagya.detail.program_h2", "Как проходит ягья", "How the yagya unfolds", "Як проходить яг'я");
+            Add("page.yagya.detail.booking_h3", "Присоединиться к ягье", "Join the yagya", "Долучитися до яг'ї");
+            Add("page.yagya.detail.other_eyebrow", "Другие ягьи", "Other yagyas", "Інші яг'ї");
+            Add("page.yagya.detail.other_h2", "Смотрите также", "See also", "Дивіться також");
+            Add("page.yagya.detail.other_cta", "Подробнее →", "Learn more →", "Детальніше →");
 
             // Blog
             Add("page.blog.title", "Блог | Yoga.Life", "Blog | Yoga.Life", "Блог | Yoga.Life");
