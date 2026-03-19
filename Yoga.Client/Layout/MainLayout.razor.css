@@ -16,10 +16,17 @@ main {
 .app-header {
     background-color: var(--white);
     border-bottom: 1px solid var(--divider);
-    padding: 1.8rem 0;
+    padding: 1.2rem 0;
     position: sticky;
     top: 0;
     z-index: 100;
+}
+
+.app-header .container {
+    display: grid;
+    grid-template-columns: max-content 1fr max-content;
+    align-items: center;
+    column-gap: 2rem;
 }
 
 .d-flex {
@@ -42,12 +49,14 @@ main {
 .main-nav {
     display: flex;
     align-items: center;
+    justify-content: center;
+    min-width: 0;
 }
 
 /* Logo */
 .logo a {
     font-family: var(--font-serif);
-    font-size: 1.36rem;
+    font-size: 1.5rem;
     font-weight: 400;
     font-style: italic;
     color: var(--charcoal);
@@ -60,13 +69,13 @@ main {
 .brand-lockup {
     display: inline-flex;
     align-items: center;
-    gap: 0.82rem;
+    gap: 1rem;
     color: inherit;
 }
 
 .brand-mark {
-    width: 2.85rem;
-    height: 2.85rem;
+    width: 3.2rem;
+    height: 3.2rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -105,21 +114,26 @@ main {
     padding: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
 .nav-menu > li {
     position: relative;
-    margin-left: 2.5rem;
+    margin-left: 2rem;
     display: flex;
     align-items: center;
+}
+
+.nav-menu > li:first-child {
+    margin-left: 0;
 }
 
 .nav-menu > li > a,
 .dropdown-link {
     font-family: var(--font-sans);
-    font-size: 0.77rem;
+    font-size: 0.82rem;
     font-weight: 400;
-    letter-spacing: 2.5px;
+    letter-spacing: 2.2px;
     text-transform: uppercase;
     color: var(--charcoal);
     padding: 0.4rem 0;
@@ -241,10 +255,11 @@ main {
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    justify-content: flex-end;
+    gap: 1.1rem;
     border-left: 1px solid var(--divider);
-    padding-left: 2rem;
-    margin-left: 2rem;
+    padding-left: 1.4rem;
+    margin-left: 0;
     flex-shrink: 0;
 }
 
@@ -266,7 +281,7 @@ main {
     background: none;
     border: none;
     font-family: var(--font-sans);
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     font-weight: 400;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -340,8 +355,8 @@ main {
 .theme-toggle {
     background: none;
     border: 1px solid var(--divider);
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -551,6 +566,7 @@ main {
     }
 
     .app-header .container {
+        display: flex;
         min-height: var(--mobile-header-height);
         gap: 1rem;
     }

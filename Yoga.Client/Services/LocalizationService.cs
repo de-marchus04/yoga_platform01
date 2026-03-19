@@ -46,6 +46,17 @@ public class LocalizationService
 
     private async Task LoadAsync(string lang)
     {
+        Dictionary<string, string> staticTranslations;
+
+        try
+        {
+            staticTranslations = await _http.GetFromJsonAsync<Dictionary<string, string>>($"i18n/{lang}.json") ?? new();
+        }
+        catch
+        {
+            staticTranslations = new();
+        }
+
         // Try loading from API first (PostgreSQL-backed translations)
         try
         {
@@ -53,7 +64,12 @@ public class LocalizationService
             var dict = await _apiHttp.GetFromJsonAsync<Dictionary<string, string>>($"api/translations/ui/{lang}", cts.Token);
             if (dict != null && dict.Count > 0)
             {
-                _translations = dict;
+                _translations = new Dictionary<string, string>(staticTranslations);
+                foreach (var entry in dict)
+                {
+                    _translations[entry.Key] = entry.Value;
+                }
+
                 return;
             }
         }
@@ -62,15 +78,6 @@ public class LocalizationService
             // API unavailable or too slow — fall back to static JSON immediately.
         }
 
-        // Fallback: load from static JSON files
-        try
-        {
-            var dict = await _http.GetFromJsonAsync<Dictionary<string, string>>($"i18n/{lang}.json");
-            _translations = dict ?? new();
-        }
-        catch
-        {
-            _translations = new();
-        }
+        _translations = staticTranslations;
     }
 }

@@ -40,46 +40,7 @@
 
     <div id="cursor-dot" aria-hidden="true"></div>
 
-    <script>
-        window.__ylAssetVersion = '20260319-1605';
-
-        (function () {
-            var originalFetch = window.fetch && window.fetch.bind(window);
-            if (!originalFetch) {
-                return;
-            }
-
-            window.fetch = function (resource, init) {
-                try {
-                    var requestUrl = typeof resource === 'string'
-                        ? resource
-                        : resource && resource.url
-                            ? resource.url
-                            : null;
-
-                    if (requestUrl) {
-                        var url = new URL(requestUrl, window.location.href);
-                        var isFrameworkAsset = url.origin === window.location.origin
-                            && (url.pathname.indexOf('/_framework/') === 0
-                                || url.pathname === '/appsettings.json'
-                                || url.pathname === '/appsettings.Development.json');
-
-                        if (isFrameworkAsset) {
-                            url.searchParams.set('v', window.__ylAssetVersion);
-                            resource = resource instanceof Request
-                                ? new Request(url.toString(), resource)
-                                : url.toString();
-                        }
-                    }
-                } catch {
-                }
-
-                return originalFetch(resource, init);
-            };
-        })();
-    </script>
-
-    <script src="_framework/blazor.webassembly.js?v=20260319-1605"></script>
+    <script src="_framework/blazor.webassembly.js"></script>
     <script>
         // ─── Custom Cursor (lerp lag, skip touch devices) ─────────────────────
         (function () {
