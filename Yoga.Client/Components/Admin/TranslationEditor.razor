@@ -4,7 +4,7 @@
 @if (EntityId != Guid.Empty)
 {
     <div class="translation-editor-component">
-        <h3 class="section-title">Контент (переводы)</h3>
+        <h3 class="section-title">@SectionTitle</h3>
 
         @if (loadingTranslations)
         {
@@ -85,6 +85,7 @@
     [Parameter] public Guid EntityId { get; set; }
     [Parameter] public string[] Fields { get; set; } = Array.Empty<string>();
     [Parameter] public string[] LongFields { get; set; } = new[] { "Description", "Content", "Program", "Benefits", "ForWhom", "Excerpt", "Quote" };
+    [Parameter] public string SectionTitle { get; set; } = "Контент (переводы)";
 
     private static readonly string[] Languages = { "ru", "en", "uk" };
     private string currentLang = "ru";

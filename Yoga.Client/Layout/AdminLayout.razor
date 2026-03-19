@@ -35,17 +35,9 @@
                         <span class="nav-icon">▦</span>
                         @if (!sidebarCollapsed) { <span class="nav-label">Dashboard</span> }
                     </a>
-                    <a href="/admin/pages/home/edit" class="nav-item @IsActive("/admin/pages/home/edit")" @onclick="CloseMobile">
+                    <a href="/admin/pages" class="nav-item @IsActive("/admin/pages")" @onclick="CloseMobile">
                         <span class="nav-icon">⌂</span>
-                        @if (!sidebarCollapsed) { <span class="nav-label">Главная страница</span> }
-                    </a>
-                    <a href="/admin/pages/about/edit" class="nav-item @IsActive("/admin/pages/about/edit")" @onclick="CloseMobile">
-                        <span class="nav-icon">ℹ</span>
-                        @if (!sidebarCollapsed) { <span class="nav-label">О нас</span> }
-                    </a>
-                    <a href="/admin/pages/contacts/edit" class="nav-item @IsActive("/admin/pages/contacts/edit")" @onclick="CloseMobile">
-                        <span class="nav-icon">☎</span>
-                        @if (!sidebarCollapsed) { <span class="nav-label">Контакты</span> }
+                        @if (!sidebarCollapsed) { <span class="nav-label">Страницы</span> }
                     </a>
                     <a href="/admin/leads" class="nav-item @IsActive("/admin/leads")" @onclick="CloseMobile">
                         <span class="nav-icon">✉</span>

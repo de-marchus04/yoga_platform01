@@ -1,0 +1,93 @@
+@page "/admin/pages"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+
+<PageTitle>Страницы — Админ</PageTitle>
+
+<div class="leads-page">
+    <div class="page-header">
+        <h1>Страницы</h1>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else if (pages.Count == 0)
+    {
+        <div class="admin-empty">Страницы не найдены</div>
+    }
+    else
+    {
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Страница</th>
+                        <th>Slug</th>
+                        <th>Редактор</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sitePage in orderedPages)
+                    {
+                        <tr>
+                            <td>@GetPageLabel(sitePage.Slug)</td>
+                            <td>@sitePage.Slug</td>
+                            <td>
+                                <a class="btn-admin btn-admin-outline btn-admin-sm" href="@GetEditorUrl(sitePage.Slug)">Открыть</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<SitePage> pages = new();
+    private bool loading = true;
+
+    private IEnumerable<SitePage> orderedPages => pages
+        .OrderBy(page => GetSortOrder(page.Slug))
+        .ThenBy(page => page.Slug, StringComparer.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            pages = await Api.GetAllSitePagesAsync();
+        }
+        catch
+        {
+            pages = new();
+        }
+
+        loading = false;
+    }
+
+    private static string GetEditorUrl(string slug) => string.Equals(slug, "home", StringComparison.OrdinalIgnoreCase)
+        ? "/admin/pages/home"
+        : $"/admin/pages/{slug}/edit";
+
+    private static string GetPageLabel(string slug) => slug switch
+    {
+        "home" => "Главная",
+        "about" => "О нас",
+        "contacts" => "Контакты",
+        "courses" => "Курсы",
+        "consultations" => "Консультации",
+        "blog" => "Блог",
+        "retreats" => "Ретриты",
+        _ => slug
+    };
+
+    private static int GetSortOrder(string slug) => slug switch
+    {
+        "home" => 0,
+        "about" => 1,
+        "contacts" => 2,
+        _ => 100
+    };
+}

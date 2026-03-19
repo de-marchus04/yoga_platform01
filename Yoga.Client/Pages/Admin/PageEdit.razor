@@ -45,14 +45,29 @@
     private SitePage? sitePage;
     private bool loading = true;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
+        loading = true;
+        sitePage = null;
+
+        var normalizedSlug = (Slug ?? string.Empty).Trim();
+
+        if (string.Equals(normalizedSlug, "home", StringComparison.OrdinalIgnoreCase))
+        {
+            Nav.NavigateTo("/admin/pages/home", replace: true);
+            return;
+        }
+
         try
         {
             var all = await Api.GetAllSitePagesAsync();
-            sitePage = all.FirstOrDefault(p => p.Slug == Slug);
+            sitePage = all.FirstOrDefault(p => string.Equals(p.Slug, normalizedSlug, StringComparison.OrdinalIgnoreCase));
         }
-        catch { }
+        catch
+        {
+            sitePage = null;
+        }
+
         loading = false;
     }
 

@@ -1,0 +1,134 @@
+@page "/admin/pages/home"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>Главная страница — Админ</PageTitle>
+
+<div class="edit-page">
+    <div class="page-header">
+        <h1>Главная страница</h1>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else if (sitePage == null)
+    {
+        <div class="form-error">Страница home не найдена</div>
+    }
+    else
+    {
+        <div class="form-card">
+            <h3 class="section-title">Информация</h3>
+            <div class="admin-form-group">
+                <label>Slug</label>
+                <input class="admin-input" value="@sitePage.Slug" disabled />
+            </div>
+        </div>
+
+        <Yoga.Client.Components.Admin.TranslationEditor
+            EntityType="SitePage"
+            EntityId="sitePage.Id"
+            SectionTitle="Hero"
+            Fields="HeroFields" />
+
+        <Yoga.Client.Components.Admin.TranslationEditor
+            EntityType="SitePage"
+            EntityId="sitePage.Id"
+            SectionTitle="Статистика"
+            Fields="StatsFields" />
+
+        <Yoga.Client.Components.Admin.TranslationEditor
+            EntityType="SitePage"
+            EntityId="sitePage.Id"
+            SectionTitle="Направления"
+            Fields="DirectionFields" />
+
+        <Yoga.Client.Components.Admin.TranslationEditor
+            EntityType="SitePage"
+            EntityId="sitePage.Id"
+            SectionTitle="Цитата"
+            Fields="QuoteFields" />
+
+        <Yoga.Client.Components.Admin.TranslationEditor
+            EntityType="SitePage"
+            EntityId="sitePage.Id"
+            SectionTitle="Форматы"
+            Fields="FormatFields" />
+
+        <Yoga.Client.Components.Admin.TranslationEditor
+            EntityType="SitePage"
+            EntityId="sitePage.Id"
+            SectionTitle="Отзывы"
+            Fields="ReviewFields" />
+
+        <Yoga.Client.Components.Admin.TranslationEditor
+            EntityType="SitePage"
+            EntityId="sitePage.Id"
+            SectionTitle="SEO и дополнительный контент"
+            Fields="SeoFields" />
+    }
+
+    <div class="form-actions" style="margin-top:1rem;">
+        <button class="btn-admin btn-admin-outline" @onclick="GoBack">← Назад к списку</button>
+    </div>
+</div>
+
+@code {
+    private static readonly string[] HeroFields =
+    {
+        "HeroTitle", "HeroSubtitle", "HeroEyebrow", "HeroText", "HeroImage"
+    };
+
+    private static readonly string[] StatsFields =
+    {
+        "Stats1Label", "Stats1Value", "Stats2Label", "Stats2Value", "Stats3Label", "Stats3Value", "Stats4Label", "Stats4Value"
+    };
+
+    private static readonly string[] DirectionFields =
+    {
+        "Dir1Title", "Dir1Text", "Dir1LinkText", "Dir2Title", "Dir2Text", "Dir2LinkText", "Dir3Title", "Dir3Text", "Dir3LinkText"
+    };
+
+    private static readonly string[] QuoteFields =
+    {
+        "QuoteText", "QuoteAuthor"
+    };
+
+    private static readonly string[] FormatFields =
+    {
+        "Format1Title", "Format1Text", "Format1Cta", "Format1Image", "Format2Title", "Format2Text", "Format2Cta", "Format2Image"
+    };
+
+    private static readonly string[] ReviewFields =
+    {
+        "Review1Quote", "Review1Author", "Review1Program", "Review2Quote", "Review2Author", "Review2Program", "Review3Quote", "Review3Author", "Review3Program"
+    };
+
+    private static readonly string[] SeoFields =
+    {
+        "MetaTitle", "MetaDescription", "Content"
+    };
+
+    private SitePage? sitePage;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var all = await Api.GetAllSitePagesAsync();
+            sitePage = all.FirstOrDefault(page => string.Equals(page.Slug, "home", StringComparison.OrdinalIgnoreCase));
+        }
+        catch
+        {
+            sitePage = null;
+        }
+
+        loading = false;
+    }
+
+    private void GoBack() => Nav.NavigateTo("/admin/pages");
+}
