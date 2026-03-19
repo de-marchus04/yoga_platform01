@@ -83,7 +83,6 @@
     object-position: center;
     display: block;
     filter: brightness(0.96) saturate(0.9);
-    animation: kenBurns 18s ease-in-out infinite alternate;
 }
 
 /* Responsive hero */

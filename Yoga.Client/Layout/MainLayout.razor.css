@@ -27,6 +27,7 @@ main {
     grid-template-columns: max-content minmax(0, 1fr) max-content;
     align-items: center;
     column-gap: 2rem;
+    max-width: 1600px;
 }
 
 .d-flex {
@@ -115,7 +116,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
+    gap: 1.4rem;
 }
 
 .nav-menu > li {
