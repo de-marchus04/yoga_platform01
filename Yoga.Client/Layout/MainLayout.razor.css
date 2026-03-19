@@ -497,6 +497,17 @@ main {
     }
 }
 
+/* Hide mobile drawer & backdrop on desktop so resize doesn't leave it open */
+@media (min-width: 1181px) {
+    .mobile-nav,
+    .mobile-nav.open {
+        display: none !important;
+    }
+    .mobile-backdrop {
+        display: none !important;
+    }
+}
+
 /* ===================================================
    MOBILE NAV DRAWER
    =================================================== */
