@@ -24,7 +24,7 @@ main {
 
 .app-header .container {
     display: grid;
-    grid-template-columns: max-content 1fr max-content;
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
     align-items: center;
     column-gap: 2rem;
 }
@@ -115,17 +115,13 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 2rem;
 }
 
 .nav-menu > li {
     position: relative;
-    margin-left: 2rem;
     display: flex;
     align-items: center;
-}
-
-.nav-menu > li:first-child {
-    margin-left: 0;
 }
 
 .nav-menu > li > a,
@@ -435,6 +431,67 @@ main {
     color: var(--accent);
 }
 
+@media (max-width: 1380px) {
+    .app-header {
+        padding: 1rem 0;
+    }
+
+    .app-header .container {
+        column-gap: 1.25rem;
+    }
+
+    .logo a {
+        font-size: 1.28rem;
+    }
+
+    .brand-lockup {
+        gap: 0.75rem;
+    }
+
+    .brand-mark {
+        width: 2.7rem;
+        height: 2.7rem;
+    }
+
+    .nav-menu {
+        gap: 1.2rem;
+    }
+
+    .nav-menu > li > a,
+    .dropdown-link {
+        font-size: 0.74rem;
+        letter-spacing: 1.6px;
+    }
+
+    .dropdown-trigger {
+        gap: 0.15rem;
+    }
+
+    .header-controls {
+        gap: 0.8rem;
+        padding-left: 1rem;
+    }
+
+    .header-account {
+        display: none;
+    }
+
+    .lang-switcher {
+        gap: 0.2rem;
+    }
+
+    .lang-btn {
+        font-size: 0.68rem;
+        letter-spacing: 1.4px;
+        padding: 0.2rem 0.05rem;
+    }
+
+    .theme-toggle {
+        width: 40px;
+        height: 40px;
+    }
+}
+
 /* ===================================================
    MOBILE NAV DRAWER
    =================================================== */
@@ -560,7 +617,7 @@ main {
 /* ===================================================
    RESPONSIVE — mobile breakpoint
    =================================================== */
-@media (max-width: 900px) {
+@media (max-width: 1180px) {
     .app-header {
         padding: 0;
     }
