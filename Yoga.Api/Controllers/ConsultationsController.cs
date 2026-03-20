@@ -41,7 +41,7 @@ namespace Yoga.Api.Controllers
 
                 var benefits = F("Benefits").Split('|', StringSplitOptions.RemoveEmptyEntries);
                 var forWhom = F("ForWhom").Split('|', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(x => { var parts = x.Split("~", 2); return new ForWhomItem(parts.ElementAtOrDefault(0) ?? "", parts.ElementAtOrDefault(1) ?? ""); })
+                    .Select(x => { var parts = x.Split("~", 3); return new ForWhomItem(parts.ElementAtOrDefault(0) ?? "", parts.ElementAtOrDefault(1) ?? "", parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]) ? parts[2] : null); })
                     .ToArray();
 
                 return new ConsultationDto(c.Id, c.Slug, c.IsOnline, c.IsOffline, F("Title"), F("Subtitle"), F("Eyebrow"), F("Description"),
@@ -73,7 +73,7 @@ namespace Yoga.Api.Controllers
 
             var benefits = F("Benefits").Split('|', StringSplitOptions.RemoveEmptyEntries);
             var forWhom = F("ForWhom").Split('|', StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => { var parts = x.Split("~", 2); return new ForWhomItem(parts.ElementAtOrDefault(0) ?? "", parts.ElementAtOrDefault(1) ?? ""); })
+                .Select(x => { var parts = x.Split("~", 3); return new ForWhomItem(parts.ElementAtOrDefault(0) ?? "", parts.ElementAtOrDefault(1) ?? "", parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2]) ? parts[2] : null); })
                 .ToArray();
 
             var dto = new ConsultationDto(item.Id, item.Slug, item.IsOnline, item.IsOffline, F("Title"), F("Subtitle"), F("Eyebrow"), F("Description"),

@@ -5,7 +5,8 @@ namespace Yoga.Shared.DTOs
         Text,
         TextArea,
         RichText,
-        Image
+        Image,
+        ForWhom
     }
 
     public record ContentField(

@@ -94,30 +94,6 @@ else
         </section>
     }
 
-    @if (HasPresImage2 || GoalBenefit != null)
-    {
-        <section class="course-showcase">
-            <div class="container">
-                <div class="showcase-layout">
-                    @if (HasPresImage2)
-                    {
-                        <div class="showcase-photo reveal">
-                            <img src="@Img(course.PresentationImage2Url)" alt="" loading="lazy" />
-                        </div>
-                    }
-                    @if (GoalBenefit != null)
-                    {
-                        <div class="showcase-goal reveal reveal-d1">
-                            <span class="showcase-goal-icon">🎯</span>
-                            <h3>@P("Цель курса", "Мета курсу", "Course Goal")</h3>
-                            <p>@GoalBenefit</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </section>
-    }
-
     <section class="overview-section">
         <div class="container">
             <div class="section-header reveal">
@@ -292,6 +268,30 @@ else
         </section>
     }
 
+    @if (HasPresImage2 || GoalBenefit != null)
+    {
+        <section class="course-showcase">
+            <div class="container">
+                <div class="showcase-layout">
+                    @if (HasPresImage2)
+                    {
+                        <div class="showcase-photo reveal">
+                            <img src="@Img(course.PresentationImage2Url)" alt="" loading="lazy" />
+                        </div>
+                    }
+                    @if (GoalBenefit != null)
+                    {
+                        <div class="showcase-goal reveal reveal-d1">
+                            <span class="showcase-goal-icon">🎯</span>
+                            <h3>@P("Цель курса", "Мета курсу", "Course Goal")</h3>
+                            <p>@GoalBenefit</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
     @if (course.ForWhom.Length > 0)
     {
         <section class="for-whom-section">
@@ -301,14 +301,36 @@ else
                     <h2>@Loc["section.forwhom.h2"]</h2>
                     <div class="section-divider"></div>
                 </div>
-                <div class="for-whom-grid for-whom-count-@(course.ForWhom.Length)">
+                <div class="for-whom-list">
                     @{ int fwIdx = 0; }
                     @foreach (var fw in course.ForWhom)
                     {
                         var delayClass = fwIdx switch { 1 => "reveal-d1", 2 => "reveal-d2", _ => "" };
-                        <div class="for-whom-card reveal @delayClass">
-                            <h3>@fw.Title</h3>
-                            <p>@fw.Text</p>
+                        var hasImg = !string.IsNullOrEmpty(fw.ImageUrl);
+                        <div class="for-whom-item @(hasImg ? "has-photo" : "") reveal @delayClass">
+                            @if (hasImg)
+                            {
+                                <div class="for-whom-photo">
+                                    <img src="@Img(fw.ImageUrl)" alt="" loading="lazy" />
+                                </div>
+                            }
+                            <div class="for-whom-content">
+                                <h3>@fw.Title</h3>
+                                @{ var fwLines = SplitForWhomText(fw.Text); }
+                                @if (fwLines.Count > 1)
+                                {
+                                    <ul>
+                                        @foreach (var line in fwLines)
+                                        {
+                                            <li>@line</li>
+                                        }
+                                    </ul>
+                                }
+                                else if (fwLines.Count == 1)
+                                {
+                                    <p>@fwLines[0]</p>
+                                }
+                            </div>
                         </div>
                         fwIdx++;
                     }
@@ -522,6 +544,23 @@ else
 
     private static string CleanEmpty(string html)
         => Regex.Replace(html.Trim(), @"<p>\s*(<br\s*/?>)?\s*</p>", "").Trim();
+
+    private static List<string> SplitForWhomText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return new();
+        // Split by newlines first
+        var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0)
+            .ToList();
+        if (lines.Count > 1) return lines;
+        // If single block, split where uppercase letter starts a new sentence (after space)
+        var parts = Regex.Split(text.Trim(), @"(?<=\s)(?=[A-ZА-ЯЁ][a-zа-яё])")
+            .Select(p => p.Trim())
+            .Where(p => p.Length > 0)
+            .ToList();
+        return parts;
+    }
 
     protected override async Task OnInitializedAsync()
     {

@@ -64,7 +64,7 @@ namespace Yoga.Shared.DTOs
         string CtaText
     );
 
-    public record ForWhomItem(string Title, string Text);
+    public record ForWhomItem(string Title, string Text, string? ImageUrl = null);
 
     public record BlogPostDto(
         Guid Id,

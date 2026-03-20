@@ -1,0 +1,138 @@
+@inject Yoga.Client.Services.AdminApiService Api
+
+<div class="fwe-container">
+    @for (int i = 0; i < items.Count; i++)
+    {
+        var idx = i;
+        <div class="fwe-card">
+            <div class="fwe-card-header">
+                <span class="fwe-card-num">@(idx + 1)</span>
+                <button type="button" class="fwe-remove" @onclick="() => RemoveItem(idx)" title="Удалить">✕</button>
+            </div>
+            <div class="admin-form-group">
+                <label>Заголовок</label>
+                <input class="admin-input" value="@items[idx].Title"
+                       @oninput='e => UpdateTitle(idx, e.Value?.ToString() ?? "")' />
+            </div>
+            <div class="admin-form-group">
+                <label>Текст</label>
+                <textarea class="admin-input admin-textarea" rows="3"
+                          value="@items[idx].Text"
+                          @oninput='e => UpdateText(idx, e.Value?.ToString() ?? "")'></textarea>
+            </div>
+            <div class="admin-form-group">
+                <label>Фото</label>
+                <div class="ce-image-input-row">
+                    <input class="admin-input" style="flex:1" placeholder="/uploads/..."
+                           value="@items[idx].ImageUrl"
+                           @oninput='e => UpdateImageUrl(idx, e.Value?.ToString() ?? "")' />
+                    <button type="button" class="btn-admin btn-admin-outline" @onclick="() => OpenPicker(idx)">📁</button>
+                </div>
+                @if (!string.IsNullOrEmpty(items[idx].ImageUrl))
+                {
+                    <div class="ce-image-preview">
+                        <img src="@ResolveImageUrl(items[idx].ImageUrl)" alt="Preview" loading="lazy" />
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    <button type="button" class="btn-admin btn-admin-outline fwe-add" @onclick="AddItem">+ Добавить элемент</button>
+</div>
+
+@if (showPicker)
+{
+    <Yoga.Client.Components.Admin.MediaPicker
+        EntityType="@EntityType"
+        OnSelected="OnMediaSelected"
+        OnClose="() => showPicker = false" />
+}
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string EntityType { get; set; } = "Course";
+
+    private List<FwItem> items = new();
+    private bool showPicker;
+    private int pickerTargetIdx;
+
+    private class FwItem
+    {
+        public string Title { get; set; } = "";
+        public string Text { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (items.Count == 0 && !string.IsNullOrEmpty(Value))
+            ParseValue();
+    }
+
+    private void ParseValue()
+    {
+        items.Clear();
+        foreach (var segment in Value.Split('|', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = segment.Split('~', 3);
+            items.Add(new FwItem
+            {
+                Title = parts.ElementAtOrDefault(0) ?? "",
+                Text = parts.ElementAtOrDefault(1) ?? "",
+                ImageUrl = parts.ElementAtOrDefault(2) ?? ""
+            });
+        }
+    }
+
+    private string Serialize()
+    {
+        return string.Join("|", items.Select(it =>
+        {
+            var img = it.ImageUrl?.Trim();
+            return string.IsNullOrEmpty(img)
+                ? $"{it.Title}~{it.Text}"
+                : $"{it.Title}~{it.Text}~{img}";
+        }));
+    }
+
+    private async Task Notify() => await ValueChanged.InvokeAsync(Serialize());
+
+    private async Task UpdateTitle(int idx, string val) { items[idx].Title = val; await Notify(); }
+    private async Task UpdateText(int idx, string val) { items[idx].Text = val; await Notify(); }
+    private async Task UpdateImageUrl(int idx, string val) { items[idx].ImageUrl = val; await Notify(); }
+
+    private async Task AddItem()
+    {
+        items.Add(new FwItem());
+        await Notify();
+    }
+
+    private async Task RemoveItem(int idx)
+    {
+        items.RemoveAt(idx);
+        await Notify();
+    }
+
+    private void OpenPicker(int idx)
+    {
+        pickerTargetIdx = idx;
+        showPicker = true;
+    }
+
+    private async Task OnMediaSelected(string url)
+    {
+        showPicker = false;
+        if (pickerTargetIdx >= 0 && pickerTargetIdx < items.Count)
+        {
+            items[pickerTargetIdx].ImageUrl = url;
+            await Notify();
+        }
+    }
+
+    private string ResolveImageUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url) || url.StartsWith("http")) return url;
+        return Api.ApiBaseUrl + url;
+    }
+}

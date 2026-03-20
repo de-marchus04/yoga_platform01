@@ -58,6 +58,13 @@
                                                   value="@GetValue(field.Key)"
                                                   @oninput='e => SetValue(field.Key, e.Value?.ToString() ?? "")'></textarea>
                                     }
+                                    else if (field.Type == ContentFieldType.ForWhom)
+                                    {
+                                        <Yoga.Client.Components.Admin.ForWhomEditor
+                                            Value="@GetValue(field.Key)"
+                                            ValueChanged="@(val => SetValue(field.Key, val ?? ""))"
+                                            EntityType="@EntityType" />
+                                    }
                                     else if (field.Type == ContentFieldType.Image)
                                     {
                                         <div class="ce-image-field">
