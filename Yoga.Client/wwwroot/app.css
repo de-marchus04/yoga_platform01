@@ -1266,20 +1266,23 @@ textarea:focus-visible {
 
 /* ── Module image ── */
 .program-module.has-image {
-  grid-template-columns: 80px 1fr;
+  grid-template-columns: 80px 1fr 1fr;
 }
 .module-image {
-  grid-column: 1 / -1;
   border-radius: 1rem;
   overflow: hidden;
-  max-width: 50%;
-  margin-top: 1.5rem;
+  align-self: center;
 }
 .module-image img {
   width: 100%;
   height: auto;
   object-fit: cover;
   display: block;
+}
+
+@media (max-width: 768px) {
+  .program-module.has-image { grid-template-columns: 1fr; }
+  .module-image { max-width: 100%; }
 }
 
 @media (max-width: 600px) {
