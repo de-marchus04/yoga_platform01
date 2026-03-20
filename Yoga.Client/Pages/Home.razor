@@ -73,19 +73,15 @@
 
         @if (retreats == null)
         {
-            <div class="retreats-grid">
-                @for (int i = 0; i < 3; i++)
-                {
-                    <div class="retreat-card skeleton-card" style="border:1px solid var(--divider); padding:0; display:flex; flex-direction:column;">
-                        <div class="card-img-wrapper skeleton" style="min-height:220px; border-bottom:1px solid var(--divider);"></div>
-                        <div class="card-content" style="padding: 2.5rem 2rem;">
-                            <div class="skeleton skeleton-title"></div>
-                            <div class="skeleton skeleton-text" style="width:40%"></div>
-                            <div class="skeleton skeleton-text" style="width:60%; margin-bottom:1.5rem"></div>
-                            <div class="skeleton skeleton-text" style="height:3rem"></div>
-                        </div>
-                    </div>
-                }
+            <div class="retreat-showcase reveal">
+                <div class="retreat-photo skeleton" style="min-height:400px;"></div>
+                <div class="retreat-info">
+                    <div class="skeleton skeleton-text" style="width:30%; margin-bottom:1rem;"></div>
+                    <div class="skeleton skeleton-title" style="margin-bottom:1.5rem;"></div>
+                    <div class="skeleton skeleton-text" style="width:80%; margin-bottom:0.6rem;"></div>
+                    <div class="skeleton skeleton-text" style="width:60%; margin-bottom:2rem;"></div>
+                    <div class="skeleton skeleton-text" style="height:3rem; width:50%;"></div>
+                </div>
             </div>
         }
         else if (!retreats.Any() && string.IsNullOrEmpty(errorMessage))
@@ -97,23 +93,31 @@
         }
         else
         {
-            <div class="retreats-grid">
-                @foreach (var retreat in retreats)
-                {
-                    <div class="retreat-card reveal reveal-d1">
-                        <div class="card-img-wrapper">
-                            <img src="https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=600&q=80" alt="@retreat.Title" class="card-img" />
-                        </div>
-                        <div class="card-content">
-                            <h3>@retreat.Title</h3>
-                            <p class="location">📍 @retreat.Location</p>
-                            <p class="dates">🗓 @retreat.StartDate.ToString("dd MMM yyyy") — @retreat.EndDate.ToString("dd MMM yyyy")</p>
-                            <p class="description">@retreat.Description</p>
-                            <button class="btn btn-outline" style="width: 100%" @onclick="() => OpenLeadModalForRetreat(retreat)">@Loc["page.home.retreats.cta"]</button>
-                        </div>
+            int ri = 0;
+            foreach (var retreat in retreats)
+            {
+                ri++;
+                var imgUrl = !string.IsNullOrEmpty(retreat.ImageUrl)
+                    ? ApiService.ResolveMediaUrl(retreat.ImageUrl)
+                    : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1200&q=80";
+                <div class="retreat-showcase @(ri % 2 == 0 ? "retreat-showcase--reversed" : "") reveal">
+                    <div class="retreat-photo">
+                        <img src="@imgUrl" alt="@retreat.Title" loading="lazy" />
                     </div>
-                }
-            </div>
+                    <div class="retreat-info">
+                        <p class="retreat-location">@retreat.Location</p>
+                        <p class="retreat-dates">@retreat.StartDate.ToString("dd MMM yyyy") — @retreat.EndDate.ToString("dd MMM yyyy")</p>
+                        <h3>@retreat.Title</h3>
+                        <div class="retreat-divider"></div>
+                        <p class="retreat-description">@retreat.Description</p>
+                        @if (!string.IsNullOrEmpty(retreat.PriceLabel))
+                        {
+                            <p class="retreat-price">@retreat.PriceLabel</p>
+                        }
+                        <button class="btn btn-outline" @onclick="() => OpenLeadModalForRetreat(retreat)">@Loc["page.home.retreats.cta"]</button>
+                    </div>
+                </div>
+            }
         }
     </div>
 </section>

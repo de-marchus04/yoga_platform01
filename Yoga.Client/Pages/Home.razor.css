@@ -125,10 +125,10 @@
 }
 
 /* ===================================================
-   RETREATS SECTION — Editorial grid
+   RETREATS SECTION — Editorial split layout
    =================================================== */
 .retreats-section {
-    padding: 8rem 0;
+    padding: 8rem 0 0;
     background-color: var(--background);
 }
 
@@ -163,93 +163,124 @@
     margin: 2rem auto 0;
 }
 
-.retreats-grid {
+/* ── Retreat showcase — 50/50 split ── */
+.retreat-showcase {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 0;
-    border-top: 1px solid var(--divider);
-    border-left: 1px solid var(--divider);
+    grid-template-columns: 1fr 1fr;
+    min-height: 520px;
 }
 
-.retreat-card {
-    background: var(--white);
-    border-right: 1px solid var(--divider);
-    border-bottom: 1px solid var(--divider);
+.retreat-showcase--reversed {
+    direction: rtl;
+}
+
+.retreat-showcase--reversed > * {
+    direction: ltr;
+}
+
+.retreat-photo {
     overflow: hidden;
-    transition: border-top-color var(--transition-speed);
-    display: flex;
-    flex-direction: column;
     position: relative;
 }
 
-.retreat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent);
-    transform: scaleX(0);
-    transition: transform 0.4s ease;
-    z-index: 2;
-}
-
-.retreat-card:hover::before {
-    transform: scaleX(1);
-}
-
-.card-img-wrapper {
-    overflow: hidden;
-    height: 260px;
-}
-
-.card-img {
+.retreat-photo img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
     transition: transform 0.7s ease;
-    filter: brightness(0.97) saturate(0.85);
+    filter: brightness(0.96) saturate(0.9);
 }
 
-.retreat-card:hover .card-img {
-    transform: scale(1.05);
+.retreat-showcase:hover .retreat-photo img {
+    transform: scale(1.04);
 }
 
-.card-content {
-    padding: 2.2rem 2rem;
+.retreat-info {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    justify-content: center;
+    padding: 5rem;
+    background: var(--section-bg-warm);
 }
 
-.card-content h3 {
-    font-family: var(--font-serif);
-    color: var(--charcoal);
-    font-size: 1.7rem;
+.retreat-location {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
     font-weight: 400;
-    font-style: italic;
-    margin-bottom: 1rem;
-    line-height: 1.2;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
 }
 
-.card-content .location,
-.card-content .dates {
+.retreat-dates {
     font-family: var(--font-sans);
     font-size: 0.72rem;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--accent);
     font-weight: 400;
-    margin-bottom: 0.4rem;
+    margin-bottom: 1.5rem;
 }
 
-.card-content .description {
+.retreat-info h3 {
+    font-family: var(--font-serif);
+    font-size: 2.8rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--charcoal);
+    line-height: 1.1;
+    margin-bottom: 0;
+}
+
+.retreat-divider {
+    width: 50px;
+    height: 1px;
+    background: var(--accent);
+    margin: 2rem 0;
+}
+
+.retreat-description {
     color: var(--text-muted);
-    margin: 1.2rem 0 2rem;
     font-size: 0.95rem;
     font-weight: 300;
-    flex: 1;
     line-height: 1.8;
+    margin-bottom: 2.5rem;
+    max-width: 420px;
+}
+
+.retreat-price {
+    font-family: var(--font-serif);
+    font-size: 1.3rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--charcoal);
+    margin-bottom: 1.5rem;
+}
+
+.retreat-info .btn {
+    align-self: flex-start;
+}
+
+@media (max-width: 768px) {
+    .retreat-showcase {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+    .retreat-showcase--reversed {
+        direction: ltr;
+    }
+    .retreat-photo {
+        height: 55vw;
+        min-height: 280px;
+    }
+    .retreat-info {
+        padding: 3.5rem 2.5rem;
+    }
+    .retreat-info h3 {
+        font-size: 2.2rem;
+    }
 }
 
 .error-text {
@@ -314,7 +345,6 @@
 }
 
 @media (max-width: 480px) {
-    .retreats-section,
     .directions-section,
     .quote-section,
     .reviews-section,
@@ -335,33 +365,30 @@
         font-size: 2.35rem;
     }
 
-    .retreats-grid {
+    .retreats-section {
+        padding: 5rem 0 0;
+    }
+
+    .retreat-showcase {
         grid-template-columns: 1fr;
-        margin-top: 3rem;
+        min-height: auto;
     }
 
-    .card-img-wrapper {
-        height: 220px;
+    .retreat-showcase--reversed {
+        direction: ltr;
     }
 
-    .card-content {
-        padding: 1.8rem 1.4rem;
+    .retreat-photo {
+        height: 55vw;
+        min-height: 260px;
     }
 
-    .card-content h3 {
-        font-size: 1.5rem;
+    .retreat-info {
+        padding: 3rem 2rem;
     }
 
-    .card-content .location,
-    .card-content .dates {
-        font-size: 0.64rem;
-        letter-spacing: 1.6px;
-    }
-
-    .card-content .description {
-        font-size: 0.9rem;
-        line-height: 1.7;
-        margin: 1rem 0 1.5rem;
+    .retreat-info h3 {
+        font-size: 2rem;
     }
 
     .stats-grid {
