@@ -105,7 +105,7 @@ namespace Yoga.Api.Controllers
                     return new CourseLessonDto(l.Id, LF("Title"), LF("Theory"), LF("Practice"), LF("Assignment"), l.SortOrder);
                 }).ToList();
 
-                return new CourseModuleDto(m.Id, MF("Title"), MF("Description"), m.SortOrder, lessons);
+                return new CourseModuleDto(m.Id, MF("Title"), MF("Description"), m.SortOrder, lessons, NullIfEmpty(MF("ImageUrl")));
             }).ToList();
 
             var benefits = F("Benefits").Split('|', StringSplitOptions.RemoveEmptyEntries);

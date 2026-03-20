@@ -14,7 +14,8 @@ namespace Yoga.Shared.DTOs
         string Title,
         string Description,
         int SortOrder,
-        List<CourseLessonDto> Lessons
+        List<CourseLessonDto> Lessons,
+        string? ImageUrl = null
     );
 
     public record CourseDto(

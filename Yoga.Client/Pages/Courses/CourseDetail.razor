@@ -201,7 +201,7 @@ else
                         moduleNum++;
                         @if (mod.Lessons.Count > 0)
                         {
-                            <details class="program-module program-module-expandable reveal">
+                            <details class="program-module program-module-expandable @(string.IsNullOrEmpty(mod.ImageUrl) ? "" : "has-image") reveal">
                                 <summary class="program-module-summary">
                                     <span class="program-module-num">@moduleNum.ToString("D2")</span>
                                     <div>
@@ -213,6 +213,12 @@ else
                                             </div>
                                         }
                                     </div>
+                                    @if (!string.IsNullOrEmpty(mod.ImageUrl))
+                                    {
+                                        <div class="module-image">
+                                            <img src="@Img(mod.ImageUrl)" alt="@mod.Title" loading="lazy" />
+                                        </div>
+                                    }
                                     <span class="program-module-toggle">▾</span>
                                 </summary>
                                 <div class="program-lessons">
@@ -256,7 +262,7 @@ else
                         }
                         else
                         {
-                            <div class="program-module reveal">
+                            <div class="program-module @(string.IsNullOrEmpty(mod.ImageUrl) ? "" : "has-image") reveal">
                                 <span class="program-module-num">@moduleNum.ToString("D2")</span>
                                 <div>
                                     <h3>@mod.Title</h3>
@@ -267,6 +273,12 @@ else
                                         </div>
                                     }
                                 </div>
+                                @if (!string.IsNullOrEmpty(mod.ImageUrl))
+                                {
+                                    <div class="module-image">
+                                        <img src="@Img(mod.ImageUrl)" alt="@mod.Title" loading="lazy" />
+                                    </div>
+                                }
                             </div>
                         }
                     }
