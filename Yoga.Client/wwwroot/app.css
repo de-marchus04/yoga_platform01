@@ -1266,24 +1266,20 @@ textarea:focus-visible {
 
 /* ── Module image ── */
 .program-module.has-image {
-  grid-template-columns: 80px 1fr 200px;
+  grid-template-columns: 80px 1fr;
 }
 .module-image {
-  border-radius: 8px;
+  grid-column: 1 / -1;
+  border-radius: 1rem;
   overflow: hidden;
-  align-self: center;
+  max-width: 50%;
+  margin-top: 1.5rem;
 }
 .module-image img {
   width: 100%;
-  height: 140px;
+  height: auto;
   object-fit: cover;
   display: block;
-}
-
-@media (max-width: 768px) {
-  .program-module.has-image { grid-template-columns: 1fr; }
-  .module-image { max-width: 280px; }
-  .module-image img { height: 160px; }
 }
 
 @media (max-width: 600px) {
