@@ -100,24 +100,39 @@ else
                 <h2>@Loc["section.overview.h2"]</h2>
                 <div class="section-divider"></div>
             </div>
-            <div class="overview-grid">
-                @if (!string.IsNullOrEmpty(course.Description))
+            <div class="overview-grid @(HasPresImage1 ? "overview-grid-with-photo" : "")">
+                <div class="overview-left">
+                    @if (!string.IsNullOrEmpty(course.Description))
+                    {
+                        <div class="overview-desc reveal">
+                            @if (course.Description.Contains('<'))
+                            {
+                                @((MarkupString)course.Description)
+                            }
+                            else
+                            {
+                                @foreach (var para in course.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <p>@para</p>
+                                }
+                            }
+                        </div>
+                    }
+                    @if (course.Benefits.Length > 0)
+                    {
+                        <div class="overview-benefits reveal reveal-d1">
+                            <h4>@Loc["section.benefits.h4"]</h4>
+                            @foreach (var benefit in course.Benefits)
+                            {
+                                <div class="benefit-item"><span class="benefit-check"></span><span>@benefit</span></div>
+                            }
+                        </div>
+                    }
+                </div>
+                @if (HasPresImage1)
                 {
-                    <div class="overview-desc reveal">
-                        @foreach (var para in course.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            <p>@para</p>
-                        }
-                    </div>
-                }
-                @if (course.Benefits.Length > 0)
-                {
-                    <div class="overview-benefits reveal reveal-d1">
-                        <h4>@Loc["section.benefits.h4"]</h4>
-                        @foreach (var benefit in course.Benefits)
-                        {
-                            <div class="benefit-item"><span class="benefit-check"></span><span>@benefit</span></div>
-                        }
+                    <div class="overview-photo reveal reveal-d1">
+                        <img src="@course.PresentationImage1Url" alt="" loading="lazy" />
                     </div>
                 }
             </div>
@@ -133,18 +148,80 @@ else
                     <h2>@Loc["section.program.h2"]</h2>
                     <div class="section-divider"></div>
                 </div>
+                @if (HasPresImage2)
+                {
+                    <div class="program-hero-photo reveal">
+                        <img src="@course.PresentationImage2Url" alt="" loading="lazy" />
+                    </div>
+                }
                 <div class="program-list">
                     @{ int moduleNum = 0; }
                     @foreach (var mod in course.Modules.OrderBy(m => m.SortOrder))
                     {
                         moduleNum++;
-                        <div class="program-module reveal">
-                            <span class="program-module-num">@moduleNum.ToString("D2")</span>
-                            <div>
-                                <h3>@mod.Title</h3>
-                                <p>@mod.Description</p>
+                        @if (mod.Lessons.Count > 0)
+                        {
+                            <details class="program-module program-module-expandable reveal">
+                                <summary class="program-module-summary">
+                                    <span class="program-module-num">@moduleNum.ToString("D2")</span>
+                                    <div>
+                                        <h3>@mod.Title</h3>
+                                        @if (!string.IsNullOrEmpty(mod.Description))
+                                        {
+                                            <p>@mod.Description</p>
+                                        }
+                                    </div>
+                                    <span class="program-module-toggle">▾</span>
+                                </summary>
+                                <div class="program-lessons">
+                                    @foreach (var lesson in mod.Lessons.OrderBy(l => l.SortOrder))
+                                    {
+                                        <div class="lesson-item">
+                                            <h4 class="lesson-title">@lesson.Title</h4>
+                                            @if (!string.IsNullOrEmpty(lesson.Theory))
+                                            {
+                                                <div class="lesson-theory">
+                                                    @foreach (var line in lesson.Theory.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                                                    {
+                                                        <p>@line</p>
+                                                    }
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(lesson.Practice))
+                                            {
+                                                <div class="lesson-practice">
+                                                    <span class="lesson-label">🧘 @P("Практика:", "Практика:", "Practice:")</span>
+                                                    @foreach (var line in lesson.Practice.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                                                    {
+                                                        <p>@line</p>
+                                                    }
+                                                </div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(lesson.Assignment))
+                                            {
+                                                <div class="lesson-assignment">
+                                                    <span class="lesson-label">📌 @P("Задание:", "Завдання:", "Assignment:")</span>
+                                                    @foreach (var line in lesson.Assignment.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                                                    {
+                                                        <p>@line</p>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </details>
+                        }
+                        else
+                        {
+                            <div class="program-module reveal">
+                                <span class="program-module-num">@moduleNum.ToString("D2")</span>
+                                <div>
+                                    <h3>@mod.Title</h3>
+                                    <p>@mod.Description</p>
+                                </div>
                             </div>
-                        </div>
+                        }
                     }
                 </div>
             </div>
@@ -170,6 +247,36 @@ else
                             <p>@fw.Text</p>
                         </div>
                         fwIdx++;
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    @if (HasInstructor)
+    {
+        <section class="instructor-section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <p class="section-eyebrow">@P("Инструктор", "Інструктор", "Instructor")</p>
+                    <h2>@course.InstructorName</h2>
+                    <div class="section-divider"></div>
+                </div>
+                <div class="instructor-grid reveal">
+                    @if (!string.IsNullOrEmpty(course.InstructorImageUrl))
+                    {
+                        <div class="instructor-photo">
+                            <img src="@course.InstructorImageUrl" alt="@course.InstructorName" loading="lazy" />
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(course.InstructorBio))
+                    {
+                        <div class="instructor-bio">
+                            @foreach (var para in course.InstructorBio.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <p>@para</p>
+                            }
+                        </div>
                     }
                 </div>
             </div>
@@ -204,6 +311,10 @@ else
 
     private CourseDto? course;
     private bool loading = true;
+
+    private bool HasPresImage1 => !string.IsNullOrEmpty(course?.PresentationImage1Url);
+    private bool HasPresImage2 => !string.IsNullOrEmpty(course?.PresentationImage2Url);
+    private bool HasInstructor => !string.IsNullOrEmpty(course?.InstructorName) || !string.IsNullOrEmpty(course?.InstructorImageUrl);
 
     protected override async Task OnInitializedAsync()
     {

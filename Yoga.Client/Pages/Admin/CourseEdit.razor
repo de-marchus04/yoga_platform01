@@ -74,40 +74,73 @@
 
         @if (!IsNew)
         {
-            <Yoga.Client.Components.Admin.TranslationEditor
-                EntityType="Course"
-                EntityId="model.Id"
-                Fields="courseFields" />
+            <div class="split-view">
+                <div class="split-view-editor">
+                    <Yoga.Client.Components.Admin.ContentEditor
+                        EntityType="Course"
+                        EntityId="model.Id"
+                        Fields="courseContentFields" />
 
-            @* Модули курса *@
-            <div class="form-card" style="margin-top:1.5rem;">
-                <h3 class="section-title">Модули курса</h3>
-                @if (model.Modules.Any())
-                {
-                    @foreach (var mod in model.Modules.OrderBy(m => m.SortOrder))
-                    {
-                        <div class="module-card">
-                            <div class="form-row">
-                                <div class="admin-form-group" style="flex:0 0 100px;">
-                                    <label>Порядок</label>
-                                    <input class="admin-input" type="number" @bind="mod.SortOrder" />
+                    @* Модули курса *@
+                    <div class="form-card" style="margin-top:1.5rem;">
+                        <h3 class="section-title">Модули курса</h3>
+                        @if (model.Modules.Any())
+                        {
+                            @foreach (var mod in model.Modules.OrderBy(m => m.SortOrder))
+                            {
+                                <div class="module-card">
+                                    <div class="form-row">
+                                        <div class="admin-form-group" style="flex:0 0 100px;">
+                                            <label>Порядок</label>
+                                            <input class="admin-input" type="number" @bind="mod.SortOrder" />
+                                        </div>
+                                        <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
+                                            <button class="btn-admin btn-admin-danger" @onclick="() => RemoveModule(mod)">✕</button>
+                                        </div>
+                                    </div>
+                                    <Yoga.Client.Components.Admin.ContentEditor
+                                        EntityType="CourseModule"
+                                        EntityId="mod.Id"
+                                        Fields="moduleContentFields" />
+
+                                    @* Уроки внутри модуля *@
+                                    <div style="margin-top:0.75rem; padding-left:1rem; border-left:3px solid var(--a-border, #333);">
+                                        <h4 style="margin:0 0 0.5rem; font-size:0.85rem; color:var(--a-text-muted,#888);">Уроки</h4>
+                                        @foreach (var lesson in mod.Lessons.OrderBy(l => l.SortOrder))
+                                        {
+                                            <div class="module-card" style="margin-bottom:0.75rem;">
+                                                <div class="form-row">
+                                                    <div class="admin-form-group" style="flex:0 0 80px;">
+                                                        <label>№</label>
+                                                        <input class="admin-input" type="number" @bind="lesson.SortOrder" />
+                                                    </div>
+                                                    <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
+                                                        <button class="btn-admin btn-admin-danger btn-admin-sm" @onclick="() => RemoveLesson(mod, lesson)">✕</button>
+                                                    </div>
+                                                </div>
+                                                <Yoga.Client.Components.Admin.ContentEditor
+                                                    EntityType="CourseLesson"
+                                                    EntityId="lesson.Id"
+                                                    Fields="lessonContentFields" />
+                                            </div>
+                                        }
+                                        <button class="btn-admin btn-admin-outline btn-admin-sm" @onclick="() => AddLesson(mod)">+ Добавить урок</button>
+                                    </div>
                                 </div>
-                                <div style="display:flex;align-items:flex-end;padding-bottom:4px;">
-                                    <button class="btn-admin btn-admin-danger" @onclick="() => RemoveModule(mod)">✕</button>
-                                </div>
-                            </div>
-                            <Yoga.Client.Components.Admin.TranslationEditor
-                                EntityType="CourseModule"
-                                EntityId="mod.Id"
-                                Fields="moduleFields" />
+                            }
+                        }
+                        <button class="btn-admin btn-admin-outline" @onclick="AddModule">+ Добавить модуль</button>
+                        <div class="form-actions" style="margin-top:1rem;">
+                            <button class="btn-admin btn-admin-primary" disabled="@savingModules" @onclick="SaveModules">
+                                @(savingModules ? "Сохранение..." : "Сохранить структуру")
+                            </button>
                         </div>
-                    }
-                }
-                <button class="btn-admin btn-admin-outline" @onclick="AddModule">+ Добавить модуль</button>
-                <div class="form-actions" style="margin-top:1rem;">
-                    <button class="btn-admin btn-admin-primary" disabled="@savingModules" @onclick="SaveModules">
-                        @(savingModules ? "Сохранение..." : "Сохранить модули")
-                    </button>
+                    </div>
+                </div>
+                <div class="split-view-preview">
+                    <Yoga.Client.Components.Admin.LivePreview
+                        PreviewPath="@($"/courses/{model.Slug}")"
+                        Language="ru" />
                 </div>
             </div>
         }
@@ -124,8 +157,39 @@
     [Parameter] public Guid? Id { get; set; }
     private bool IsNew => Id == null;
 
-    private static readonly string[] courseFields = { "Title", "Subtitle", "Eyebrow", "Description", "Benefits", "ImageUrl", "Duration", "Level", "Format", "Schedule", "ForWhom", "CtaHeading", "CtaText" };
-    private static readonly string[] moduleFields = { "Title", "Description" };
+    private static readonly ContentField[] courseContentFields = new ContentField[]
+    {
+        new("Title", "Заголовок", ContentFieldType.Text, "Основное"),
+        new("Subtitle", "Подзаголовок", ContentFieldType.Text, "Основное"),
+        new("Eyebrow", "Надзаголовок", ContentFieldType.Text, "Основное"),
+        new("Description", "Описание", ContentFieldType.RichText, "Основное"),
+        new("ImageUrl", "Фото Hero", ContentFieldType.Image, "Фото"),
+        new("PresentationImage1Url", "Презентационное фото 1", ContentFieldType.Image, "Фото"),
+        new("PresentationImage2Url", "Презентационное фото 2", ContentFieldType.Image, "Фото"),
+        new("InstructorImageUrl", "Фото инструктора", ContentFieldType.Image, "Инструктор"),
+        new("InstructorName", "Имя инструктора", ContentFieldType.Text, "Инструктор"),
+        new("InstructorBio", "Об инструкторе", ContentFieldType.TextArea, "Инструктор"),
+        new("Duration", "Длительность", ContentFieldType.Text, "Детали"),
+        new("Level", "Уровень", ContentFieldType.Text, "Детали"),
+        new("Format", "Формат", ContentFieldType.Text, "Детали"),
+        new("Schedule", "Расписание", ContentFieldType.Text, "Детали"),
+        new("Benefits", "Преимущества (через |)", ContentFieldType.TextArea, "Для кого", "Пункт1|Пункт2|Пункт3"),
+        new("ForWhom", "Для кого (Заголовок~Текст через |)", ContentFieldType.TextArea, "Для кого", "Заголовок1~Описание1|Заголовок2~Описание2"),
+        new("CtaHeading", "CTA заголовок", ContentFieldType.Text, "CTA"),
+        new("CtaText", "CTA текст", ContentFieldType.TextArea, "CTA"),
+    };
+    private static readonly ContentField[] moduleContentFields = new ContentField[]
+    {
+        new("Title", "Заголовок модуля", ContentFieldType.Text, "Модуль"),
+        new("Description", "Описание модуля", ContentFieldType.TextArea, "Модуль"),
+    };
+    private static readonly ContentField[] lessonContentFields = new ContentField[]
+    {
+        new("Title", "Название урока", ContentFieldType.Text, "Урок"),
+        new("Theory", "Теория", ContentFieldType.TextArea, "Урок"),
+        new("Practice", "Практика 🧘", ContentFieldType.TextArea, "Урок"),
+        new("Assignment", "Задание 📌", ContentFieldType.TextArea, "Урок"),
+    };
 
     private Course model = new();
     private List<LiveEventDto> liveEvents = new();
@@ -204,6 +268,18 @@
     }
 
     private void RemoveModule(CourseModule mod) => model.Modules.Remove(mod);
+
+    private void AddLesson(CourseModule mod)
+    {
+        var lesson = new CourseLesson
+        {
+            CourseModuleId = mod.Id,
+            SortOrder = mod.Lessons.Count + 1
+        };
+        mod.Lessons.Add(lesson);
+    }
+
+    private void RemoveLesson(CourseModule mod, CourseLesson lesson) => mod.Lessons.Remove(lesson);
 
     private async Task SaveModules()
     {

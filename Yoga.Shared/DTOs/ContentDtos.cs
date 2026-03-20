@@ -1,10 +1,20 @@
 namespace Yoga.Shared.DTOs
 {
+    public record CourseLessonDto(
+        Guid Id,
+        string Title,
+        string Theory,
+        string Practice,
+        string Assignment,
+        int SortOrder
+    );
+
     public record CourseModuleDto(
         Guid Id,
         string Title,
         string Description,
-        int SortOrder
+        int SortOrder,
+        List<CourseLessonDto> Lessons
     );
 
     public record CourseDto(
@@ -25,7 +35,12 @@ namespace Yoga.Shared.DTOs
         ForWhomItem[] ForWhom,
         string CtaHeading,
         string CtaText,
-        List<CourseModuleDto> Modules
+        List<CourseModuleDto> Modules,
+        string? PresentationImage1Url = null,
+        string? PresentationImage2Url = null,
+        string? InstructorImageUrl = null,
+        string? InstructorName = null,
+        string? InstructorBio = null
     );
 
     public record ConsultationDto(

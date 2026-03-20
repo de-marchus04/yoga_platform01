@@ -19,6 +19,7 @@ namespace Yoga.Api.Data
         public DbSet<MediaFile> MediaFiles { get; set; }
         public DbSet<Course> Courses { get; set; }
         public DbSet<CourseModule> CourseModules { get; set; }
+        public DbSet<CourseLesson> CourseLessons { get; set; }
         public DbSet<Consultation> Consultations { get; set; }
         public DbSet<BlogPost> BlogPosts { get; set; }
         public DbSet<SitePage> SitePages { get; set; }
@@ -61,6 +62,13 @@ namespace Yoga.Api.Data
                 .HasOne(cm => cm.Course)
                 .WithMany(c => c.Modules)
                 .HasForeignKey(cm => cm.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // CourseLesson FK
+            modelBuilder.Entity<CourseLesson>()
+                .HasOne(cl => cl.Module)
+                .WithMany(m => m.Lessons)
+                .HasForeignKey(cl => cl.CourseModuleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ── Customer domain ──

@@ -6,5 +6,6 @@ namespace Yoga.Shared.Models
         public Guid CourseId { get; set; }
         public Course? Course { get; set; }
         public int SortOrder { get; set; } = 0;
+        public ICollection<CourseLesson> Lessons { get; set; } = new List<CourseLesson>();
     }
 }
