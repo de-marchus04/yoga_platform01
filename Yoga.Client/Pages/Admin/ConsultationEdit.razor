@@ -74,10 +74,19 @@
 
         @if (!IsNew)
         {
-            <Yoga.Client.Components.Admin.TranslationEditor
-                EntityType="Consultation"
-                EntityId="model.Id"
-                Fields="consultationFields" />
+            <div class="split-view">
+                <div class="split-view-editor">
+                    <Yoga.Client.Components.Admin.ContentEditor
+                        EntityType="Consultation"
+                        EntityId="model.Id"
+                        Fields="consultationContentFields" />
+                </div>
+                <div class="split-view-preview">
+                    <Yoga.Client.Components.Admin.LivePreview
+                        PreviewPath="@($"/consultations/{model.Slug}")"
+                        Language="ru" />
+                </div>
+            </div>
         }
         else
         {
@@ -92,7 +101,23 @@
     [Parameter] public Guid? Id { get; set; }
     private bool IsNew => Id == null;
 
-    private static readonly string[] consultationFields = { "Title", "Subtitle", "Eyebrow", "Description", "Quote", "Benefits", "ImageUrl", "Duration", "Format", "LanguageOffered", "PriceLabel", "ForWhom", "CtaHeading", "CtaText" };
+    private static readonly ContentField[] consultationContentFields = new ContentField[]
+    {
+        new("Title", "Заголовок", ContentFieldType.Text, "Основное"),
+        new("Subtitle", "Подзаголовок", ContentFieldType.Text, "Основное"),
+        new("Eyebrow", "Надзаголовок", ContentFieldType.Text, "Основное"),
+        new("Description", "Описание", ContentFieldType.RichText, "Основное"),
+        new("Quote", "Цитата", ContentFieldType.TextArea, "Основное"),
+        new("ImageUrl", "Изображение", ContentFieldType.Image, "Основное"),
+        new("Duration", "Длительность", ContentFieldType.Text, "Детали"),
+        new("Format", "Формат", ContentFieldType.Text, "Детали"),
+        new("LanguageOffered", "Язык проведения", ContentFieldType.Text, "Детали"),
+        new("PriceLabel", "Цена", ContentFieldType.Text, "Детали"),
+        new("Benefits", "Преимущества", ContentFieldType.TextArea, "Для кого"),
+        new("ForWhom", "Для кого", ContentFieldType.TextArea, "Для кого"),
+        new("CtaHeading", "CTA заголовок", ContentFieldType.Text, "CTA"),
+        new("CtaText", "CTA текст", ContentFieldType.TextArea, "CTA"),
+    };
 
     private Consultation model = new();
     private List<LiveEventDto> liveEvents = new();

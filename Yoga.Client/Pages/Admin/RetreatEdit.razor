@@ -82,10 +82,19 @@
 
         @if (!IsNew)
         {
-            <Yoga.Client.Components.Admin.TranslationEditor
-                EntityType="Retreat"
-                EntityId="model.Id"
-                Fields="retreatFields" />
+            <div class="split-view">
+                <div class="split-view-editor">
+                    <Yoga.Client.Components.Admin.ContentEditor
+                        EntityType="Retreat"
+                        EntityId="model.Id"
+                        Fields="retreatContentFields" />
+                </div>
+                <div class="split-view-preview">
+                    <Yoga.Client.Components.Admin.LivePreview
+                        PreviewPath="/retreats"
+                        Language="ru" />
+                </div>
+            </div>
         }
         else
         {
@@ -109,7 +118,14 @@
     private bool showMediaPicker;
     private bool IsNew => Id == null;
 
-    private static readonly string[] retreatFields = { "Title", "Description", "Location", "PriceLabel", "Program" };
+    private static readonly ContentField[] retreatContentFields = new ContentField[]
+    {
+        new("Title", "Заголовок", ContentFieldType.Text, "Основное"),
+        new("Description", "Описание", ContentFieldType.RichText, "Основное"),
+        new("Location", "Локация", ContentFieldType.Text, "Основное"),
+        new("PriceLabel", "Цена", ContentFieldType.Text, "Основное"),
+        new("Program", "Программа", ContentFieldType.RichText, "Программа"),
+    };
 
     private Retreat model = new() { StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7) };
     private bool loading;

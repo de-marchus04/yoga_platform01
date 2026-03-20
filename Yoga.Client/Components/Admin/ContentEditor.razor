@@ -1,0 +1,299 @@
+@inject Yoga.Client.Services.AdminApiService Api
+@implements IDisposable
+
+@if (EntityId != Guid.Empty)
+{
+    <div class="content-editor">
+        @if (loadingTranslations)
+        {
+            <div class="admin-loading">Загрузка переводов...</div>
+        }
+        else
+        {
+            <div class="content-editor-lang-bar">
+                @foreach (var lang in Languages)
+                {
+                    <button class="ce-lang-btn @(currentLang == lang ? "active" : "")"
+                            @onclick="() => SwitchLang(lang)">
+                        @lang.ToUpper()
+                        @if (GetCompleteness(lang) < 100)
+                        {
+                            <span class="ce-lang-pct">@GetCompleteness(lang)%</span>
+                        }
+                    </button>
+                }
+                @if (hasUnsavedChanges)
+                {
+                    <span class="ce-unsaved-badge">●&nbsp;Не сохранено</span>
+                }
+            </div>
+
+            @foreach (var group in FieldGroups)
+            {
+                <div class="ce-section @(IsGroupCollapsed(group.Key) ? "collapsed" : "")">
+                    <button class="ce-section-header" @onclick="() => ToggleGroup(group.Key)">
+                        <span class="ce-section-title">@group.Key</span>
+                        <span class="ce-section-chevron">@(IsGroupCollapsed(group.Key) ? "▸" : "▾")</span>
+                    </button>
+
+                    @if (!IsGroupCollapsed(group.Key))
+                    {
+                        <div class="ce-section-body">
+                            @foreach (var field in group)
+                            {
+                                <div class="admin-form-group">
+                                    <label>@field.Label</label>
+                                    @if (field.Type == ContentFieldType.RichText)
+                                    {
+                                        <div class="admin-richtext-wrapper">
+                                            <Yoga.Client.Components.Admin.RichTextEditor
+                                                Value="@GetValue(field.Key)"
+                                                ValueChanged="@(val => SetValue(field.Key, val ?? ""))" />
+                                        </div>
+                                    }
+                                    else if (field.Type == ContentFieldType.TextArea)
+                                    {
+                                        <textarea class="admin-input admin-textarea" rows="4"
+                                                  placeholder="@field.Placeholder"
+                                                  value="@GetValue(field.Key)"
+                                                  @oninput='e => SetValue(field.Key, e.Value?.ToString() ?? "")'></textarea>
+                                    }
+                                    else if (field.Type == ContentFieldType.Image)
+                                    {
+                                        <div class="ce-image-field">
+                                            <div class="ce-image-input-row">
+                                                <input class="admin-input" style="flex:1"
+                                                       placeholder="@(field.Placeholder ?? "https://...")"
+                                                       value="@GetValue(field.Key)"
+                                                       @oninput='e => SetValue(field.Key, e.Value?.ToString() ?? "")' />
+                                                <button type="button" class="btn-admin btn-admin-outline" @onclick="() => OpenMediaPicker(field.Key)">📁</button>
+                                            </div>
+                                            @{ var imgUrl = GetValue(field.Key); }
+                                            @if (!string.IsNullOrEmpty(imgUrl))
+                                            {
+                                                <div class="ce-image-preview">
+                                                    <img src="@imgUrl" alt="Preview" loading="lazy" />
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <input class="admin-input"
+                                               placeholder="@field.Placeholder"
+                                               value="@GetValue(field.Key)"
+                                               @oninput='e => SetValue(field.Key, e.Value?.ToString() ?? "")' />
+                                    }
+                                </div>
+                            }
+
+                            <div class="form-actions">
+                                <button class="btn-admin btn-admin-primary" disabled="@saving" @onclick="SaveTranslations">
+                                    @(saving ? "Сохранение..." : "Сохранить")
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        @if (!string.IsNullOrEmpty(toast))
+        {
+            <div class="admin-toast @toastType">@toast</div>
+        }
+    </div>
+}
+
+@if (showMediaPicker)
+{
+    <Yoga.Client.Components.Admin.MediaPicker
+        EntityType="@EntityType"
+        OnSelected="OnMediaSelected"
+        OnClose="() => showMediaPicker = false" />
+}
+
+@code {
+    [Parameter] public string EntityType { get; set; } = "";
+    [Parameter] public Guid EntityId { get; set; }
+    [Parameter] public ContentField[] Fields { get; set; } = Array.Empty<ContentField>();
+    [Parameter] public EventCallback<Dictionary<string, string>> OnValuesChanged { get; set; }
+
+    private static readonly string[] Languages = { "ru", "en", "uk" };
+    private string currentLang = "ru";
+    private List<Translation> translations = new();
+    private Dictionary<string, Dictionary<string, string>> buffers = new();
+    private Dictionary<string, Dictionary<string, string>> originalBuffers = new();
+    private HashSet<string> collapsedGroups = new();
+    private bool loadingTranslations;
+    private bool saving;
+    private bool hasUnsavedChanges;
+    private string? toast;
+    private string toastType = "";
+    private System.Threading.Timer? toastTimer;
+    private Guid loadedEntityId;
+    private bool showMediaPicker;
+    private string? pickerTargetField;
+
+    private IEnumerable<IGrouping<string, ContentField>> FieldGroups =>
+        Fields.GroupBy(f => f.Group ?? "Контент");
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EntityId != Guid.Empty && EntityId != loadedEntityId)
+        {
+            loadedEntityId = EntityId;
+            await LoadTranslations();
+        }
+    }
+
+    private async Task LoadTranslations()
+    {
+        loadingTranslations = true;
+        StateHasChanged();
+
+        try
+        {
+            translations = await Api.GetEntityTranslationsAsync(EntityType, EntityId);
+        }
+        catch { translations = new(); }
+
+        buffers = new();
+        originalBuffers = new();
+        foreach (var lang in Languages)
+        {
+            var dict = new Dictionary<string, string>();
+            foreach (var field in Fields)
+            {
+                var t = translations.FirstOrDefault(t => t.Field == field.Key && t.Language == lang);
+                dict[field.Key] = t?.Value ?? "";
+            }
+            buffers[lang] = dict;
+            originalBuffers[lang] = new Dictionary<string, string>(dict);
+        }
+
+        hasUnsavedChanges = false;
+        loadingTranslations = false;
+        StateHasChanged();
+    }
+
+    private void SwitchLang(string lang)
+    {
+        currentLang = lang;
+    }
+
+    private string GetValue(string field)
+    {
+        if (buffers.TryGetValue(currentLang, out var dict) && dict.TryGetValue(field, out var val))
+            return val;
+        return "";
+    }
+
+    private void SetValue(string field, string value)
+    {
+        if (!buffers.ContainsKey(currentLang))
+            buffers[currentLang] = new();
+        buffers[currentLang][field] = value;
+        CheckUnsavedChanges();
+
+        if (OnValuesChanged.HasDelegate && buffers.TryGetValue(currentLang, out var dict))
+            OnValuesChanged.InvokeAsync(new Dictionary<string, string>(dict));
+    }
+
+    private void CheckUnsavedChanges()
+    {
+        hasUnsavedChanges = false;
+        foreach (var lang in Languages)
+        {
+            if (!buffers.ContainsKey(lang) || !originalBuffers.ContainsKey(lang)) continue;
+            foreach (var kv in buffers[lang])
+            {
+                if (!originalBuffers[lang].TryGetValue(kv.Key, out var orig) || orig != kv.Value)
+                {
+                    hasUnsavedChanges = true;
+                    return;
+                }
+            }
+        }
+    }
+
+    private int GetCompleteness(string lang)
+    {
+        if (!buffers.TryGetValue(lang, out var dict) || Fields.Length == 0) return 0;
+        var filled = dict.Count(kv => !string.IsNullOrWhiteSpace(kv.Value));
+        return (int)Math.Round(100.0 * filled / Fields.Length);
+    }
+
+    private bool IsGroupCollapsed(string group) => collapsedGroups.Contains(group);
+    private void ToggleGroup(string group)
+    {
+        if (!collapsedGroups.Remove(group))
+            collapsedGroups.Add(group);
+    }
+
+    private void OpenMediaPicker(string field)
+    {
+        pickerTargetField = field;
+        showMediaPicker = true;
+    }
+
+    private void OnMediaSelected(string url)
+    {
+        if (pickerTargetField != null)
+            SetValue(pickerTargetField, url);
+        showMediaPicker = false;
+        pickerTargetField = null;
+    }
+
+    private async Task SaveTranslations()
+    {
+        saving = true;
+        StateHasChanged();
+
+        try
+        {
+            foreach (var lang in Languages)
+            {
+                if (!buffers.ContainsKey(lang)) continue;
+                foreach (var kv in buffers[lang])
+                {
+                    if (string.IsNullOrEmpty(kv.Value)) continue;
+                    var translation = new Translation
+                    {
+                        EntityType = EntityType,
+                        EntityId = EntityId,
+                        Field = kv.Key,
+                        Language = lang,
+                        Value = kv.Value
+                    };
+                    await Api.UpsertEntityTranslationAsync(translation);
+                }
+            }
+            translations = await Api.GetEntityTranslationsAsync(EntityType, EntityId);
+
+            foreach (var lang in Languages)
+            {
+                if (buffers.ContainsKey(lang))
+                    originalBuffers[lang] = new Dictionary<string, string>(buffers[lang]);
+            }
+            hasUnsavedChanges = false;
+
+            ShowToast("Сохранено ✓", "success");
+        }
+        catch
+        {
+            ShowToast("Ошибка сохранения", "error");
+        }
+        saving = false;
+        StateHasChanged();
+    }
+
+    private void ShowToast(string message, string type)
+    {
+        toast = message; toastType = type; StateHasChanged();
+        toastTimer?.Dispose();
+        toastTimer = new System.Threading.Timer(_ => { toast = null; InvokeAsync(StateHasChanged); }, null, 3000, System.Threading.Timeout.Infinite);
+    }
+
+    public void Dispose() => toastTimer?.Dispose();
+}

@@ -1,0 +1,124 @@
+@page "/admin/home-page"
+@layout Yoga.Client.Layout.AdminLayout
+@inject Yoga.Client.Services.AdminApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>Главная страница — Админ</PageTitle>
+
+<div class="edit-page">
+    <div class="page-header">
+        <h1>Главная страница</h1>
+    </div>
+
+    @if (loading)
+    {
+        <div class="admin-loading">Загрузка...</div>
+    }
+    else if (sitePage == null)
+    {
+        <div class="form-error">Страница «home» не найдена</div>
+    }
+    else
+    {
+        <div class="split-view">
+            <div class="split-view-editor">
+                <Yoga.Client.Components.Admin.ContentEditor
+                    EntityType="SitePage"
+                    EntityId="sitePage.Id"
+                    Fields="AllFields"
+                    OnValuesChanged="OnPreviewUpdate" />
+            </div>
+            <div class="split-view-preview">
+                <Yoga.Client.Components.Admin.LivePreview @ref="preview"
+                    PreviewPath="/"
+                    Language="@currentLang" />
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private SitePage? sitePage;
+    private bool loading = true;
+    private string currentLang = "ru";
+    private Yoga.Client.Components.Admin.LivePreview? preview;
+
+    private static readonly ContentField[] AllFields = new ContentField[]
+    {
+        // Hero
+        new("HeroTitle", "Заголовок", ContentFieldType.Text, "Hero"),
+        new("HeroSubtitle", "Подзаголовок", ContentFieldType.Text, "Hero"),
+        new("HeroEyebrow", "Надзаголовок", ContentFieldType.Text, "Hero"),
+        new("HeroText", "Текст", ContentFieldType.TextArea, "Hero"),
+        new("HeroImage", "Фото героя", ContentFieldType.Image, "Hero"),
+
+        // Статистика
+        new("Stats1Label", "Подпись 1", ContentFieldType.Text, "Статистика"),
+        new("Stats1Value", "Значение 1", ContentFieldType.Text, "Статистика"),
+        new("Stats2Label", "Подпись 2", ContentFieldType.Text, "Статистика"),
+        new("Stats2Value", "Значение 2", ContentFieldType.Text, "Статистика"),
+        new("Stats3Label", "Подпись 3", ContentFieldType.Text, "Статистика"),
+        new("Stats3Value", "Значение 3", ContentFieldType.Text, "Статистика"),
+        new("Stats4Label", "Подпись 4", ContentFieldType.Text, "Статистика"),
+        new("Stats4Value", "Значение 4", ContentFieldType.Text, "Статистика"),
+
+        // Направления
+        new("Dir1Title", "Направление 1 — Заголовок", ContentFieldType.Text, "Направления"),
+        new("Dir1Text", "Направление 1 — Текст", ContentFieldType.TextArea, "Направления"),
+        new("Dir1LinkText", "Направление 1 — Ссылка", ContentFieldType.Text, "Направления"),
+        new("Dir2Title", "Направление 2 — Заголовок", ContentFieldType.Text, "Направления"),
+        new("Dir2Text", "Направление 2 — Текст", ContentFieldType.TextArea, "Направления"),
+        new("Dir2LinkText", "Направление 2 — Ссылка", ContentFieldType.Text, "Направления"),
+        new("Dir3Title", "Направление 3 — Заголовок", ContentFieldType.Text, "Направления"),
+        new("Dir3Text", "Направление 3 — Текст", ContentFieldType.TextArea, "Направления"),
+        new("Dir3LinkText", "Направление 3 — Ссылка", ContentFieldType.Text, "Направления"),
+
+        // Цитата
+        new("QuoteText", "Текст цитаты", ContentFieldType.TextArea, "Цитата"),
+        new("QuoteAuthor", "Автор цитаты", ContentFieldType.Text, "Цитата"),
+        new("QuoteBackgroundImage", "Фон цитаты", ContentFieldType.Image, "Цитата"),
+
+        // Форматы
+        new("Format1Title", "Формат 1 — Заголовок", ContentFieldType.Text, "Форматы"),
+        new("Format1Text", "Формат 1 — Текст", ContentFieldType.TextArea, "Форматы"),
+        new("Format1Cta", "Формат 1 — Кнопка", ContentFieldType.Text, "Форматы"),
+        new("Format1Image", "Формат 1 — Фон", ContentFieldType.Image, "Форматы"),
+        new("Format2Title", "Формат 2 — Заголовок", ContentFieldType.Text, "Форматы"),
+        new("Format2Text", "Формат 2 — Текст", ContentFieldType.TextArea, "Форматы"),
+        new("Format2Cta", "Формат 2 — Кнопка", ContentFieldType.Text, "Форматы"),
+        new("Format2Image", "Формат 2 — Фон", ContentFieldType.Image, "Форматы"),
+
+        // Отзывы
+        new("Review1Quote", "Отзыв 1 — Цитата", ContentFieldType.TextArea, "Отзывы"),
+        new("Review1Author", "Отзыв 1 — Автор", ContentFieldType.Text, "Отзывы"),
+        new("Review1Program", "Отзыв 1 — Программа", ContentFieldType.Text, "Отзывы"),
+        new("Review2Quote", "Отзыв 2 — Цитата", ContentFieldType.TextArea, "Отзывы"),
+        new("Review2Author", "Отзыв 2 — Автор", ContentFieldType.Text, "Отзывы"),
+        new("Review2Program", "Отзыв 2 — Программа", ContentFieldType.Text, "Отзывы"),
+        new("Review3Quote", "Отзыв 3 — Цитата", ContentFieldType.TextArea, "Отзывы"),
+        new("Review3Author", "Отзыв 3 — Автор", ContentFieldType.Text, "Отзывы"),
+        new("Review3Program", "Отзыв 3 — Программа", ContentFieldType.Text, "Отзывы"),
+
+        // SEO
+        new("MetaTitle", "Meta Title", ContentFieldType.Text, "SEO"),
+        new("MetaDescription", "Meta Description", ContentFieldType.TextArea, "SEO"),
+        new("Content", "Дополнительный контент", ContentFieldType.RichText, "SEO"),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var all = await Api.GetAllSitePagesAsync();
+            sitePage = all.FirstOrDefault(p => string.Equals(p.Slug, "home", StringComparison.OrdinalIgnoreCase));
+        }
+        catch { sitePage = null; }
+        loading = false;
+    }
+
+    private async Task OnPreviewUpdate(Dictionary<string, string> values)
+    {
+        if (preview != null)
+            await preview.SendUpdate(values);
+    }
+}

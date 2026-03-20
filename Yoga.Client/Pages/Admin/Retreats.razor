@@ -12,6 +12,21 @@
         <button class="btn-admin btn-admin-primary" @onclick="CreateNew">+ Добавить ретрит</button>
     </div>
 
+    @if (catalogPage != null)
+    {
+        <details class="catalog-settings-accordion">
+            <summary class="ce-section-header" style="list-style:none; cursor:pointer;">
+                <span class="ce-section-title">⚙ Настройки страницы каталога</span>
+            </summary>
+            <div style="padding:0.75rem 0;">
+                <Yoga.Client.Components.Admin.ContentEditor
+                    EntityType="SitePage"
+                    EntityId="catalogPage.Id"
+                    Fields="catalogFields" />
+            </div>
+        </details>
+    }
+
     @if (loading)
     {
         <div class="admin-loading">Загрузка...</div>
@@ -85,15 +100,42 @@
 
 @code {
     private List<Retreat> retreats = new();
+    private SitePage? catalogPage;
     private bool loading = true;
     private Retreat? deleteTarget;
     private string? toast;
     private string toastType = "";
     private System.Threading.Timer? toastTimer;
 
+    private static readonly ContentField[] catalogFields = new ContentField[]
+    {
+        new("HeroImageUrl", "Фото каталога", ContentFieldType.Image, "Каталог"),
+        new("Eyebrow", "Надзаголовок", ContentFieldType.Text, "Каталог"),
+        new("ActualH1", "Актуальные — H1", ContentFieldType.Text, "Каталог"),
+        new("ActualIntro", "Актуальные — Вступление", ContentFieldType.TextArea, "Каталог"),
+        new("ActualImageUrl", "Актуальные — Фото", ContentFieldType.Image, "Каталог"),
+        new("UpcomingH1", "Предстоящие — H1", ContentFieldType.Text, "Каталог"),
+        new("UpcomingIntro", "Предстоящие — Вступление", ContentFieldType.TextArea, "Каталог"),
+        new("UpcomingImageUrl", "Предстоящие — Фото", ContentFieldType.Image, "Каталог"),
+        new("PastH1", "Прошедшие — H1", ContentFieldType.Text, "Каталог"),
+        new("PastIntro", "Прошедшие — Вступление", ContentFieldType.TextArea, "Каталог"),
+        new("PastImageUrl", "Прошедшие — Фото", ContentFieldType.Image, "Каталог"),
+        new("CardCta", "Текст кнопки", ContentFieldType.Text, "Каталог"),
+        new("HeroTitle", "Hero Title", ContentFieldType.Text, "SEO"),
+        new("HeroSubtitle", "Hero Subtitle", ContentFieldType.Text, "SEO"),
+        new("MetaTitle", "Meta Title", ContentFieldType.Text, "SEO"),
+        new("MetaDescription", "Meta Description", ContentFieldType.TextArea, "SEO"),
+    };
+
     protected override async Task OnInitializedAsync()
     {
         await LoadData();
+        try
+        {
+            var pages = await Api.GetAllSitePagesAsync();
+            catalogPage = pages.FirstOrDefault(p => string.Equals(p.Slug, "retreats", StringComparison.OrdinalIgnoreCase));
+        }
+        catch { catalogPage = null; }
     }
 
     private async Task LoadData()

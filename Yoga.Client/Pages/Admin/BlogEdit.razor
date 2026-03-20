@@ -111,10 +111,19 @@
 
         @if (!IsNew)
         {
-            <Yoga.Client.Components.Admin.TranslationEditor
-                EntityType="BlogPost"
-                EntityId="model.Id"
-                Fields="blogFields" />
+            <div class="split-view">
+                <div class="split-view-editor">
+                    <Yoga.Client.Components.Admin.ContentEditor
+                        EntityType="BlogPost"
+                        EntityId="model.Id"
+                        Fields="blogContentFields" />
+                </div>
+                <div class="split-view-preview">
+                    <Yoga.Client.Components.Admin.LivePreview
+                        PreviewPath="@($"/blog/{model.Slug}")"
+                        Language="ru" />
+                </div>
+            </div>
         }
         else
         {
@@ -138,7 +147,13 @@
     private bool IsNew => Id == null;
     private bool showMediaPicker;
 
-    private static readonly string[] blogFields = { "Title", "Excerpt", "Tag" };
+    private static readonly ContentField[] blogContentFields = new ContentField[]
+    {
+        new("Title", "Заголовок", ContentFieldType.Text, "Основное"),
+        new("Excerpt", "Краткое описание", ContentFieldType.TextArea, "Основное"),
+        new("Tag", "Тег", ContentFieldType.Text, "Основное"),
+        new("Content", "Контент статьи", ContentFieldType.RichText, "Контент"),
+    };
 
     private BlogPost model = new() { Category = "articles", PublishedAt = DateTime.UtcNow };
     private List<Course> allCourses = new();

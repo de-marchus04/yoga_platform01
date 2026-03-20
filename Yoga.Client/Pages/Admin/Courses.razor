@@ -12,6 +12,21 @@
         <button class="btn-admin btn-admin-primary" @onclick="CreateNew">+ Добавить курс</button>
     </div>
 
+    @if (catalogPage != null)
+    {
+        <details class="catalog-settings-accordion">
+            <summary class="ce-section-header" style="list-style:none; cursor:pointer;">
+                <span class="ce-section-title">⚙ Настройки страницы каталога</span>
+            </summary>
+            <div style="padding:0.75rem 0;">
+                <Yoga.Client.Components.Admin.ContentEditor
+                    EntityType="SitePage"
+                    EntityId="catalogPage.Id"
+                    Fields="catalogFields" />
+            </div>
+        </details>
+    }
+
     @if (loading)
     {
         <div class="admin-loading">Загрузка...</div>
@@ -83,13 +98,37 @@
 
 @code {
     private List<Course> courses = new();
+    private SitePage? catalogPage;
     private bool loading = true;
     private Course? deleteTarget;
     private string? toast;
     private string toastType = "";
     private System.Threading.Timer? toastTimer;
 
-    protected override async Task OnInitializedAsync() => await LoadData();
+    private static readonly ContentField[] catalogFields = new ContentField[]
+    {
+        new("HeroImageUrl", "Фото каталога", ContentFieldType.Image, "Каталог"),
+        new("Eyebrow", "Надзаголовок", ContentFieldType.Text, "Каталог"),
+        new("H1", "Заголовок H1", ContentFieldType.Text, "Каталог"),
+        new("Intro", "Вступление", ContentFieldType.TextArea, "Каталог"),
+        new("H2", "Подзаголовок H2", ContentFieldType.Text, "Каталог"),
+        new("CardCta", "Текст кнопки карточки", ContentFieldType.Text, "Каталог"),
+        new("HeroTitle", "Hero Title", ContentFieldType.Text, "SEO"),
+        new("HeroSubtitle", "Hero Subtitle", ContentFieldType.Text, "SEO"),
+        new("MetaTitle", "Meta Title", ContentFieldType.Text, "SEO"),
+        new("MetaDescription", "Meta Description", ContentFieldType.TextArea, "SEO"),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        try
+        {
+            var pages = await Api.GetAllSitePagesAsync();
+            catalogPage = pages.FirstOrDefault(p => string.Equals(p.Slug, "courses", StringComparison.OrdinalIgnoreCase));
+        }
+        catch { catalogPage = null; }
+    }
 
     private async Task LoadData()
     {

@@ -82,10 +82,19 @@
 
         @if (!IsNew)
         {
-            <Yoga.Client.Components.Admin.TranslationEditor
-                EntityType="Yagya"
-                EntityId="model.Id"
-                Fields="yagyaFields" />
+            <div class="split-view">
+                <div class="split-view-editor">
+                    <Yoga.Client.Components.Admin.ContentEditor
+                        EntityType="Yagya"
+                        EntityId="model.Id"
+                        Fields="yagyaContentFields" />
+                </div>
+                <div class="split-view-preview">
+                    <Yoga.Client.Components.Admin.LivePreview
+                        PreviewPath="/yagyas"
+                        Language="ru" />
+                </div>
+            </div>
         }
         else
         {
@@ -109,7 +118,14 @@
 
     private bool showMediaPicker;
     private bool IsNew => Id == null;
-    private static readonly string[] yagyaFields = { "Title", "Description", "Location", "PriceLabel", "Program" };
+    private static readonly ContentField[] yagyaContentFields = new ContentField[]
+    {
+        new("Title", "Заголовок", ContentFieldType.Text, "Основное"),
+        new("Description", "Описание", ContentFieldType.RichText, "Основное"),
+        new("Location", "Локация", ContentFieldType.Text, "Основное"),
+        new("PriceLabel", "Цена", ContentFieldType.Text, "Основное"),
+        new("Program", "Программа", ContentFieldType.RichText, "Программа"),
+    };
     private Yagya model = new() { StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(1) };
     private bool loading;
     private bool saving;
