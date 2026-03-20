@@ -141,7 +141,7 @@
 
     private async Task Select(Yoga.Shared.Models.MediaFile f)
     {
-        await OnSelected.InvokeAsync(GetFullUrl(f.Url));
+        await OnSelected.InvokeAsync(f.Url);
     }
 
     private async Task UseManualUrl()
@@ -205,7 +205,7 @@
         {
             files.Insert(0, result);
             uploadedAtByMediaId[result.Id] = DateTime.UtcNow;
-            await OnSelected.InvokeAsync(GetFullUrl(result.Url));
+            await OnSelected.InvokeAsync(result.Url);
         }
         else
         {

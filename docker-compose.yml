@@ -29,6 +29,8 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+    volumes:
+      - uploads-data:/app/wwwroot/uploads
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=db;Database=${POSTGRES_DB:-YogaLifeEnterpriseDb};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
@@ -40,6 +42,9 @@ services:
       - TelegramSettings__ChatId=${TELEGRAM_CHAT_ID:-}
       - Security__AllowedOrigins__0=${APP_ORIGIN:-http://localhost}
       - Security__AllowedOrigins__1=${APP_ORIGIN_WWW:-}
+      - Storage__Provider=Local
+      - Storage__LocalRootPath=wwwroot/uploads
+      - Storage__PublicBaseUrl=/uploads
     restart: always
 
   client:
@@ -55,3 +60,4 @@ services:
 
 volumes:
   postgres-data:
+  uploads-data:
