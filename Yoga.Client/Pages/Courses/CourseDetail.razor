@@ -208,7 +208,9 @@ else
                                         <h3>@mod.Title</h3>
                                         @if (!string.IsNullOrEmpty(mod.Description))
                                         {
-                                            <p>@mod.Description</p>
+                                            <div class="module-desc">
+                                                @((MarkupString)RenderModuleDescription(mod.Description))
+                                            </div>
                                         }
                                     </div>
                                     <span class="program-module-toggle">▾</span>
@@ -258,7 +260,12 @@ else
                                 <span class="program-module-num">@moduleNum.ToString("D2")</span>
                                 <div>
                                     <h3>@mod.Title</h3>
-                                    <p>@mod.Description</p>
+                                    @if (!string.IsNullOrEmpty(mod.Description))
+                                    {
+                                        <div class="module-desc">
+                                            @((MarkupString)RenderModuleDescription(mod.Description))
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         }
@@ -544,6 +551,53 @@ else
 
     private static string CleanEmpty(string html)
         => Regex.Replace(html.Trim(), @"<p>\s*(<br\s*/?>)?\s*</p>", "").Trim();
+
+    private static string RenderModuleDescription(string text)
+    {
+        var lines = text.Split('\n');
+        var sb = new System.Text.StringBuilder();
+        bool inList = false;
+
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                continue;
+            }
+
+            // Lesson heading: "Урок 1." / "Неделя 1." / "Модуль 1."
+            if (Regex.IsMatch(line, @"^(Урок|Неделя|Модуль|Lesson|Week|Module)\s+\d", RegexOptions.IgnoreCase))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                sb.Append($"<h4 class=\"mod-lesson-title\">{Enc(line)}</h4>");
+                continue;
+            }
+
+            // Section label: "Практика:", "Задание:", "Темы:", "Фокус:", "Цель:"
+            if (Regex.IsMatch(line, @"^(Практика|Задание|Темы|Фокус|Цель|Пранаяма|Асаны|Медитация|Practice|Assignment|Topics):", RegexOptions.IgnoreCase))
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                var colonIdx = line.IndexOf(':');
+                var label = line[..colonIdx];
+                var rest = line[(colonIdx + 1)..].Trim();
+                sb.Append($"<p class=\"mod-section-label\"><strong>{Enc(label)}:</strong>");
+                if (!string.IsNullOrEmpty(rest)) sb.Append($" {Enc(rest)}");
+                sb.Append("</p>");
+                continue;
+            }
+
+            // Regular line → bullet
+            if (!inList) { sb.Append("<ul class=\"mod-bullets\">"); inList = true; }
+            sb.Append($"<li>{Enc(line)}</li>");
+        }
+
+        if (inList) sb.Append("</ul>");
+        return sb.ToString();
+
+        static string Enc(string s) => System.Net.WebUtility.HtmlEncode(s);
+    }
 
     private static List<string> SplitForWhomText(string text)
     {

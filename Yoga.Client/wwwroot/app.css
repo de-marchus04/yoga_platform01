@@ -1221,6 +1221,49 @@ textarea:focus-visible {
   margin: 0;
 }
 
+/* ── Module description structured rendering ── */
+.module-desc { margin-top: 0.5rem; }
+
+.module-desc .mod-lesson-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--charcoal);
+  margin: 1.4rem 0 0.4rem;
+}
+.module-desc .mod-lesson-title:first-child { margin-top: 0; }
+
+.module-desc .mod-section-label {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--accent);
+  font-weight: 400;
+  margin: 1rem 0 0.3rem;
+}
+.module-desc .mod-section-label strong { font-weight: 600; }
+
+.module-desc .mod-bullets {
+  list-style: none;
+  margin: 0.3rem 0 0.6rem;
+  padding: 0 0 0 1rem;
+}
+.module-desc .mod-bullets li {
+  position: relative;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1.8;
+  padding-left: 0.8rem;
+}
+.module-desc .mod-bullets li::before {
+  content: '·';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
 @media (max-width: 600px) {
   .program-module { grid-template-columns: 1fr; gap: 0.8rem; }
 }

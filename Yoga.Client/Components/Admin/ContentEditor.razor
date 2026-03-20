@@ -53,7 +53,7 @@
                                     }
                                     else if (field.Type == ContentFieldType.TextArea)
                                     {
-                                        <textarea class="admin-input admin-textarea" rows="4"
+                                        <textarea class="admin-input admin-textarea" rows="10"
                                                   placeholder="@field.Placeholder"
                                                   value="@GetValue(field.Key)"
                                                   @oninput='e => SetValue(field.Key, e.Value?.ToString() ?? "")'></textarea>

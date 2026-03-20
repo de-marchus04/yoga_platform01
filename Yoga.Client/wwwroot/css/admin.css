@@ -472,7 +472,7 @@
     border-color: var(--a-accent);
 }
 .admin-shell select.admin-input { appearance: none; cursor: pointer; }
-.admin-shell textarea.admin-input { min-height: 80px; resize: vertical; }
+.admin-shell textarea.admin-input { min-height: 220px; resize: vertical; }
 
 /* Pagination */
 .admin-shell .admin-pagination {
