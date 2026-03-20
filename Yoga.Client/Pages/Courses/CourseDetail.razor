@@ -386,12 +386,29 @@ else
         return Api.ApiBaseUrl + url;
     }
 
-    private string? GoalBenefit => course?.Benefits
-        .FirstOrDefault(b => b.Contains("\U0001f3af"))
-        ?.Replace("\U0001f3af", "").Trim();
+    private string? GoalBenefit
+    {
+        get
+        {
+            var item = course?.Benefits.FirstOrDefault(b =>
+                b.Contains("Цель курса") || b.Contains("Course Goal") || b.Contains("Мета курсу"));
+            if (item == null) return null;
+            // Explicit ranges — \p{L} unreliable in Blazor WASM invariant globalization
+            var text = Regex.Replace(item.Trim(), @"^[^A-Za-zА-Яа-яЁёЄєІіЇїҐґ]+", "");
+            foreach (var prefix in new[] { "Цель курса", "Course Goal", "Мета курсу" })
+            {
+                if (text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    text = text[prefix.Length..].Trim();
+                    break;
+                }
+            }
+            return string.IsNullOrWhiteSpace(text) ? null : text;
+        }
+    }
 
     private string[] RegularBenefits => course?.Benefits
-        .Where(b => !b.Contains("\U0001f3af"))
+        .Where(b => !b.Contains("Цель курса") && !b.Contains("Course Goal") && !b.Contains("Мета курсу"))
         .ToArray() ?? Array.Empty<string>();
 
     private (string? Intro, List<(string Title, string Html)> Aspects) ParseDescriptionSections()
@@ -399,21 +416,84 @@ else
         if (course is null || string.IsNullOrEmpty(course.Description))
             return (null, new());
 
-        var html = course.Description;
-        if (!html.Contains('<')) return (null, new());
+        var desc = course.Description;
 
+        // Plain text (no HTML tags) — parse by "Title: body" lines
+        if (!desc.Contains('<'))
+            return ParsePlainTextSections(desc);
+
+        var html = desc;
+
+        // Tier 1: heading tags
         var matches = Regex.Matches(html, @"<h[2-4][^>]*>(.*?)</h[2-4]>",
             RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        if (matches.Count >= 2)
+            return SplitByMatches(html, matches);
 
-        if (matches.Count < 2)
+        // Tier 2: <strong>Title:</strong> patterns
+        matches = Regex.Matches(html,
+            @"<(?:strong|b)>([^<]{3,80}?):?\s*</(?:strong|b)>\s*:?",
+            RegexOptions.IgnoreCase);
+        if (matches.Count >= 2)
+            return SplitByMatches(html, matches);
+
+        // Tier 3: <p>Title: body</p> patterns (plain text in p tags)
+        // Use explicit A-Z/А-Я ranges — \p{Lu}/\p{L} unreliable in Blazor WASM invariant globalization
+        matches = Regex.Matches(html,
+            @"<p[^>]*>\s*([A-ZА-ЯЁ][A-Za-zА-Яа-яЁё\s]{2,50}?)\s*:",
+            RegexOptions.None);
+        if (matches.Count >= 3)
+            return SplitByMatches(html, matches);
+
+        // Tier 4: Try extracting text from HTML and parsing as plain text
+        var plainText = Regex.Replace(html, @"<[^>]+>", "\n");
+        var plainResult = ParsePlainTextSections(plainText);
+        if (plainResult.Aspects.Count >= 2) return plainResult;
+
+        return (null, new());
+    }
+
+    private static (string? Intro, List<(string Title, string Html)> Aspects) ParsePlainTextSections(string text)
+    {
+        var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var pattern = new Regex(@"^([A-ZА-ЯЁ][A-Za-zА-Яа-яЁё\s]{2,50}?):\s+(.+)");
+
+        var intro = new List<string>();
+        var aspects = new List<(string Title, string Html)>();
+        bool inAspects = false;
+
+        foreach (var rawLine in lines)
         {
-            matches = Regex.Matches(html,
-                @"<(?:strong|b)>([^<]{3,80}?):?\s*</(?:strong|b)>\s*:?",
-                RegexOptions.IgnoreCase);
+            var trimmed = rawLine.Trim();
+            if (string.IsNullOrWhiteSpace(trimmed)) continue;
+
+            var match = pattern.Match(trimmed);
+            if (match.Success)
+            {
+                inAspects = true;
+                aspects.Add((match.Groups[1].Value.Trim(), $"<p>{match.Groups[2].Value.Trim()}</p>"));
+            }
+            else if (!inAspects)
+            {
+                intro.Add(trimmed);
+            }
+            else if (aspects.Count > 0)
+            {
+                aspects[^1] = (aspects[^1].Title, aspects[^1].Html + $" <p>{trimmed}</p>");
+            }
         }
 
-        if (matches.Count < 2) return (null, new());
+        if (aspects.Count < 2) return (null, new());
 
+        var introHtml = intro.Count > 0
+            ? string.Join("", intro.Select(l => $"<p>{System.Net.WebUtility.HtmlEncode(l)}</p>"))
+            : null;
+        return (introHtml, aspects);
+    }
+
+    private (string? Intro, List<(string Title, string Html)> Aspects) SplitByMatches(
+        string html, MatchCollection matches)
+    {
         var aspects = new List<(string Title, string Html)>();
         string? intro = null;
 
