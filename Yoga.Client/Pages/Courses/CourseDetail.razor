@@ -31,7 +31,7 @@ else if (course == null)
 else
 {
     <section class="page-hero">
-        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrEmpty(course.ImageUrl) ? "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=1600&q=80" : course.ImageUrl)');"></div>
+        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrEmpty(course.ImageUrl) ? "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=1600&q=80" : Img(course.ImageUrl))');"></div>
         <div class="page-hero-overlay"></div>
         <div class="container page-hero-content">
             @if (!string.IsNullOrEmpty(course.Eyebrow))
@@ -132,7 +132,7 @@ else
                 @if (HasPresImage1)
                 {
                     <div class="overview-photo reveal reveal-d1">
-                        <img src="@course.PresentationImage1Url" alt="" loading="lazy" />
+                        <img src="@Img(course.PresentationImage1Url)" alt="" loading="lazy" />
                     </div>
                 }
             </div>
@@ -151,7 +151,7 @@ else
                 @if (HasPresImage2)
                 {
                     <div class="program-hero-photo reveal">
-                        <img src="@course.PresentationImage2Url" alt="" loading="lazy" />
+                        <img src="@Img(course.PresentationImage2Url)" alt="" loading="lazy" />
                     </div>
                 }
                 <div class="program-list">
@@ -266,7 +266,7 @@ else
                     @if (!string.IsNullOrEmpty(course.InstructorImageUrl))
                     {
                         <div class="instructor-photo">
-                            <img src="@course.InstructorImageUrl" alt="@course.InstructorName" loading="lazy" />
+                            <img src="@Img(course.InstructorImageUrl)" alt="@course.InstructorName" loading="lazy" />
                         </div>
                     }
                     @if (!string.IsNullOrEmpty(course.InstructorBio))
@@ -315,6 +315,12 @@ else
     private bool HasPresImage1 => !string.IsNullOrEmpty(course?.PresentationImage1Url);
     private bool HasPresImage2 => !string.IsNullOrEmpty(course?.PresentationImage2Url);
     private bool HasInstructor => !string.IsNullOrEmpty(course?.InstructorName) || !string.IsNullOrEmpty(course?.InstructorImageUrl);
+
+    private string Img(string? url)
+    {
+        if (string.IsNullOrEmpty(url) || url.StartsWith("http")) return url ?? "";
+        return Api.ApiBaseUrl + url;
+    }
 
     protected override async Task OnInitializedAsync()
     {

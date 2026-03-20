@@ -46,7 +46,7 @@
                     var p = post;
                     <a href="/blog/@p.Slug" class="blog-card reveal">
                         <div class="blog-card-img">
-                            <img src="@(p.MediaUrl ?? "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80")" alt="@p.Title" loading="lazy" />
+                            <img src="@(p.MediaUrl != null ? Api.ResolveMediaUrl(p.MediaUrl) : "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80")" alt="@p.Title" loading="lazy" />
                         </div>
                         <div class="blog-card-body">
                             @if (!string.IsNullOrEmpty(p.Tag))

@@ -17,6 +17,12 @@ namespace Yoga.Client.Services
         /// <summary>Base API URL for use by SignalR hub connection.</summary>
         public string ApiBaseUrl => _http.BaseAddress?.AbsoluteUri.TrimEnd('/') ?? string.Empty;
 
+        public string ResolveMediaUrl(string? url)
+        {
+            if (string.IsNullOrEmpty(url) || url.StartsWith("http")) return url ?? "";
+            return ApiBaseUrl + url;
+        }
+
         private async Task<T?> GetSafeAsync<T>(string url)
         {
             try

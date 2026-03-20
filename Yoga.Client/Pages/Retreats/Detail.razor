@@ -38,7 +38,7 @@ else
 
     <!-- ====== HERO ====== -->
     <section class="retreat-detail-hero"
-             style="background-image: url('@(r.ImageUrl ?? "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1600&q=80")');">
+             style="background-image: url('@(r.ImageUrl != null ? ApiService.ResolveMediaUrl(r.ImageUrl) : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1600&q=80")');">
         <div class="retreat-detail-hero-overlay"></div>
         <div class="container retreat-detail-hero-content">
             <a href="/retreats/actual" class="retreat-back-link">← @Loc["page.retreat.detail.back"]</a>
@@ -173,7 +173,7 @@ else
                             {
                                 var o = other;
                                 <div class="retreat-other-card reveal">
-                                    <img src="@(o.ImageUrl ?? "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
+                                    <img src="@(o.ImageUrl != null ? ApiService.ResolveMediaUrl(o.ImageUrl) : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
                                          alt="@o.Title" loading="lazy" />
                                     <div class="retreat-other-body">
                                         <h4>@o.Title</h4>
@@ -233,7 +233,7 @@ else
 
     private List<string> GalleryImages => new()
     {
-        retreat?.ImageUrl ?? "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=800&q=80",
+        retreat?.ImageUrl != null ? ApiService.ResolveMediaUrl(retreat.ImageUrl) : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=800&q=80",
         "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=800&q=80",
         "https://images.unsplash.com/photo-1508672019048-805c876b67e2?auto=format&fit=crop&w=800&q=80",
         "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80",

@@ -28,7 +28,7 @@ else if (item == null)
 else
 {
     <section class="page-hero">
-        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrEmpty(item.ImageUrl) ? "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1600&q=80" : item.ImageUrl)');"></div>
+        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrEmpty(item.ImageUrl) ? "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1600&q=80" : Api.ResolveMediaUrl(item.ImageUrl))');"></div>
         <div class="page-hero-overlay"></div>
         <div class="container page-hero-content">
             @if (!string.IsNullOrEmpty(item.Eyebrow))

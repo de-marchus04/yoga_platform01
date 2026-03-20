@@ -72,7 +72,7 @@
                                             @if (!string.IsNullOrEmpty(imgUrl))
                                             {
                                                 <div class="ce-image-preview">
-                                                    <img src="@imgUrl" alt="Preview" loading="lazy" />
+                                                    <img src="@ResolveImageUrl(imgUrl)" alt="Preview" loading="lazy" />
                                                 </div>
                                             }
                                         </div>
@@ -137,6 +137,12 @@
 
     private IEnumerable<IGrouping<string, ContentField>> FieldGroups =>
         Fields.GroupBy(f => f.Group ?? "Контент");
+
+    private string ResolveImageUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url) || url.StartsWith("http")) return url;
+        return Api.ApiBaseUrl + url;
+    }
 
     protected override async Task OnParametersSetAsync()
     {

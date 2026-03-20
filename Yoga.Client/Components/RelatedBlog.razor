@@ -24,7 +24,7 @@
                             <a href="/blog/@p.Slug" class="related-blog-card">
                                 @if (!string.IsNullOrEmpty(p.MediaUrl))
                                 {
-                                    <img src="@p.MediaUrl" alt="@p.Title" class="related-blog-card-img" loading="lazy" />
+                                    <img src="@Api.ResolveMediaUrl(p.MediaUrl)" alt="@p.Title" class="related-blog-card-img" loading="lazy" />
                                 }
                                 <div class="related-blog-card-body">
                                     @if (!string.IsNullOrEmpty(p.Tag))
@@ -56,7 +56,7 @@
                                 <div class="related-blog-video-thumb">
                                     @if (!string.IsNullOrEmpty(p.MediaUrl))
                                     {
-                                        <img src="@p.MediaUrl" alt="@p.Title" loading="lazy" />
+                                        <img src="@Api.ResolveMediaUrl(p.MediaUrl)" alt="@p.Title" loading="lazy" />
                                     }
                                     else
                                     {
@@ -86,7 +86,7 @@
                         {
                             var p = post;
                             <a href="/blog/@p.Slug" class="related-blog-photo-item">
-                                <img src="@(p.MediaUrl ?? "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
+                                <img src="@(p.MediaUrl != null ? Api.ResolveMediaUrl(p.MediaUrl) : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
                                      alt="@p.Title" loading="lazy" />
                                 <span class="related-blog-photo-overlay">@p.Title</span>
                             </a>

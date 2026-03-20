@@ -14,6 +14,8 @@ namespace Yoga.Client.Services
             _http = http;
         }
 
+        public string ApiBaseUrl => _http.BaseAddress?.ToString().TrimEnd('/') ?? "";
+
         // Dashboard
         public async Task<DashboardDto?> GetDashboardAsync()
         {

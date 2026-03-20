@@ -23,7 +23,7 @@ else if (item == null)
 else
 {
     <section class="page-hero page-hero-detail">
-        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrWhiteSpace(item.ImageUrl) ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=1600&q=80" : item.ImageUrl)');"></div>
+        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrWhiteSpace(item.ImageUrl) ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=1600&q=80" : ApiService.ResolveMediaUrl(item.ImageUrl))');"></div>
         <div class="page-hero-overlay"></div>
         <div class="container page-hero-content">
             <a href="/yagyas" class="back-link">← @Loc["page.yagya.detail.back"]</a>
@@ -72,7 +72,7 @@ else
                     {
                         <div class="retreat-card reveal">
                             <div class="card-img-wrapper">
-                                <img src="@(string.IsNullOrWhiteSpace(other.ImageUrl) ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=600&q=80" : other.ImageUrl)" alt="@other.Title" class="card-img" loading="lazy" decoding="async" />
+                                <img src="@(string.IsNullOrWhiteSpace(other.ImageUrl) ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=600&q=80" : ApiService.ResolveMediaUrl(other.ImageUrl))" alt="@other.Title" class="card-img" loading="lazy" decoding="async" />
                             </div>
                             <div class="card-content">
                                 <h3>@other.Title</h3>

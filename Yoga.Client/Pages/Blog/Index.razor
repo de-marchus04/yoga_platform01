@@ -75,9 +75,8 @@
 
     private string F(string field, string fallback = "")
     {
-        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrEmpty(val))
-            return val;
-        return fallback;
+        var val = pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var v) && !string.IsNullOrEmpty(v) ? v : fallback;
+        return field.Contains("Image", StringComparison.OrdinalIgnoreCase) ? Api.ResolveMediaUrl(val) : val;
     }
 
     private string P(string ru, string uk, string en) => Loc.CurrentLang switch

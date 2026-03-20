@@ -286,9 +286,8 @@
 
     private string F(string field, string fallback = "")
     {
-        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrWhiteSpace(val))
-            return val.Trim();
-        return fallback;
+        var val = pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var v) && !string.IsNullOrWhiteSpace(v) ? v.Trim() : fallback;
+        return field.Contains("Image", StringComparison.OrdinalIgnoreCase) ? ApiService.ResolveMediaUrl(val) : val;
     }
 
     private void OpenLeadModal()

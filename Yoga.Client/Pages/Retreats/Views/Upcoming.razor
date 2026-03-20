@@ -74,9 +74,8 @@
 
     private string F(string field, string fallback = "")
     {
-        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrEmpty(val))
-            return val;
-        return fallback;
+        var val = pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var v) && !string.IsNullOrEmpty(v) ? v : fallback;
+        return field.Contains("Image", StringComparison.OrdinalIgnoreCase) ? ApiService.ResolveMediaUrl(val) : val;
     }
 
     private async Task LoadData()

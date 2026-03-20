@@ -64,16 +64,15 @@
 
     private string F(string field, string fallback = "")
     {
-        if (pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var val) && !string.IsNullOrEmpty(val))
-            return val;
-        return fallback;
+        var val = pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var v) && !string.IsNullOrEmpty(v) ? v : fallback;
+        return field.Contains("Image", StringComparison.OrdinalIgnoreCase) ? ApiService.ResolveMediaUrl(val) : val;
     }
 
     private RenderFragment Card(YagyaDto item, bool isPast, bool hasCta) => builder =>
     {
         var image = string.IsNullOrWhiteSpace(item.ImageUrl)
             ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=600&q=80"
-            : item.ImageUrl;
+            : ApiService.ResolveMediaUrl(item.ImageUrl);
         var seq = 0;
         builder.OpenElement(seq++, "div");
         builder.AddAttribute(seq++, "class", "retreat-card reveal");

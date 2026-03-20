@@ -118,7 +118,7 @@
     private List<BlogPostDto> GetPostsForSection(string key) =>
         posts.Where(p => p.Sections.Any(s => s.Equals(key, StringComparison.OrdinalIgnoreCase))).ToList();
 
-    private static string GetThumbnail(string? url)
+    private string GetThumbnail(string? url)
     {
         if (string.IsNullOrEmpty(url))
             return "https://images.unsplash.com/photo-1611162616475-46b635cb6868?auto=format&fit=crop&w=800&q=80";
@@ -132,7 +132,7 @@
             var id = url.Split("youtu.be/")[1].Split('?')[0];
             return $"https://img.youtube.com/vi/{id}/hqdefault.jpg";
         }
-        return url;
+        return Api.ResolveMediaUrl(url);
     }
 
     private string SectionName(string key) => key switch

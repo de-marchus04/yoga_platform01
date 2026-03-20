@@ -1,5 +1,4 @@
 @inject Yoga.Client.Services.AdminApiService Api
-@inject NavigationManager Nav
 @inject IJSRuntime JS
 
 <div class="media-picker-overlay" @onclick="Close">
@@ -247,8 +246,7 @@
     private string GetFullUrl(string url)
     {
         if (url.StartsWith("http")) return url;
-        var baseUri = Nav.BaseUri.TrimEnd('/').Replace(":5190", ":5293");
-        return baseUri + url;
+        return Api.ApiBaseUrl + url;
     }
 
     private bool IsImage(string url) =>
