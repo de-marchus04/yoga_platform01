@@ -2,7 +2,11 @@
 
 <div class="lead-modal-backdrop" @onclick="Close">
     <div class="lead-modal-content" @onclick:stopPropagation>
-        <button class="close-btn" @onclick="Close" aria-label="Закрыть">&times;</button>
+        <svg class="modal-mountain-decor" viewBox="0 0 480 80" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0,80 L60,35 L110,55 L180,15 L240,45 L300,10 L360,40 L420,20 L480,50 L480,80Z" fill="rgba(140,107,58,0.04)"/>
+            <path d="M0,80 L80,50 L150,30 L220,55 L290,25 L360,50 L440,35 L480,55 L480,80Z" fill="rgba(140,107,58,0.03)"/>
+        </svg>
+        <button class="close-btn" @onclick="Close" aria-label="Close">&times;</button>
         @if (!string.IsNullOrWhiteSpace(ContextTitle))
         {
             <p class="modal-context-label">@Loc["form.context_prefix"]: <strong>@ContextTitle</strong> @(string.IsNullOrEmpty(TargetFormat) ? "" : $"({TargetFormat})")</p>

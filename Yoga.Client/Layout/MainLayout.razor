@@ -46,7 +46,7 @@
                             </button>
                         </div>
                         <ul id="desktop-submenu-courses" class="dropdown-menu">
-                            <li><a href="/courses/pranavidya">@CourseSubmenuLabel()</a></li>
+                            <li><a href="/courses/pranavidya">@Loc["nav.courses.pranayama"]</a></li>
                             <li><a href="/courses/meditation">@Loc["nav.courses.meditation"]</a></li>
                             <li><a href="/courses/yoga">@Loc["nav.courses.yoga"]</a></li>
                         </ul>
@@ -66,7 +66,7 @@
                         </div>
                         <ul id="desktop-submenu-consultations" class="dropdown-menu">
                             <li><a href="/consultations/energy">@Loc["nav.consultations.energy"]</a></li>
-                            <li><a href="/consultations/for-teenagers">@ConsultationSubmenuLabel()</a></li>
+                            <li><a href="/consultations/for-teenagers">@Loc["nav.consultations.ayurveda"]</a></li>
                             <li><a href="/consultations/spirituality">@Loc["nav.consultations.spirituality"]</a></li>
                         </ul>
                     </li>
@@ -130,7 +130,7 @@
                 </ul>
             </nav>
             <div class="header-controls">
-                <a href="/account" class="cabinet-icon-link header-account" title="Личный кабинет">
+                <a href="/account" class="cabinet-icon-link header-account" title='@Loc["footer.account"]'>
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="12" cy="7" r="4"/>
                         <path d="M4 21c0-4 3.582-7 8-7s8 3 8 7"/>
@@ -159,12 +159,12 @@
         <ul class="mobile-nav-menu">
             <li><a href="/" @onclick="CloseMenu">@Loc["nav.home"]</a></li>
             <li class="mobile-section-label">@Loc["nav.courses"]</li>
-            <li><a href="/courses/pranavidya" @onclick="CloseMenu">@CourseSubmenuLabel()</a></li>
+            <li><a href="/courses/pranavidya" @onclick="CloseMenu">@Loc["nav.courses.pranayama"]</a></li>
             <li><a href="/courses/meditation" @onclick="CloseMenu">@Loc["nav.courses.meditation"]</a></li>
             <li><a href="/courses/yoga" @onclick="CloseMenu">@Loc["nav.courses.yoga"]</a></li>
             <li class="mobile-section-label">@Loc["nav.consultations"]</li>
             <li><a href="/consultations/energy" @onclick="CloseMenu">@Loc["nav.consultations.energy"]</a></li>
-            <li><a href="/consultations/for-teenagers" @onclick="CloseMenu">@ConsultationSubmenuLabel()</a></li>
+            <li><a href="/consultations/for-teenagers" @onclick="CloseMenu">@Loc["nav.consultations.ayurveda"]</a></li>
             <li><a href="/consultations/spirituality" @onclick="CloseMenu">@Loc["nav.consultations.spirituality"]</a></li>
             <li class="mobile-section-label">@Loc["nav.retreats"]</li>
             <li><a href="/retreats/actual" @onclick="CloseMenu">@Loc["nav.retreats.actual"]</a></li>
@@ -179,10 +179,10 @@
             <li><a href="/about" @onclick="CloseMenu">@Loc["nav.about"]</a></li>
             <li><a href="/contacts" @onclick="CloseMenu">@Loc["nav.contacts"]</a></li>
             <li class="mobile-divider"></li>
-            <li><a href="/privacy" @onclick="CloseMenu">Политика конфиденциальности</a></li>
-            <li><a href="/terms" @onclick="CloseMenu">Условия использования</a></li>
+            <li><a href="/privacy" @onclick="CloseMenu">@Loc["footer.privacy"]</a></li>
+            <li><a href="/terms" @onclick="CloseMenu">@Loc["footer.terms"]</a></li>
             <li class="mobile-divider"></li>
-            <li><a href="/account" @onclick="CloseMenu">👤 Личный кабинет</a></li>
+            <li><a href="/account" @onclick="CloseMenu">👤 @Loc["footer.account"]</a></li>
         </ul>
         <div class="mobile-nav-footer">
             <div class="lang-switcher">
@@ -192,7 +192,7 @@
                 <span class="lang-sep">·</span>
                 <button class="lang-btn @(Loc.CurrentLang == "en" ? "active" : "")" @onclick='() => SetLang("en")'>EN</button>
             </div>
-            <button class="mobile-theme-toggle" @onclick="ToggleTheme" aria-label="Toggle theme">@(Theme.IsDark ? "☀ Светлая тема" : "☾ Тёмная тема")</button>
+            <button class="mobile-theme-toggle" @onclick="ToggleTheme" aria-label="Toggle theme">@(Theme.IsDark ? $"☀ {Loc["footer.light_theme"]}" : $"☾ {Loc["footer.dark_theme"]}")</button>
         </div>
     </nav>
 
@@ -207,11 +207,11 @@
                 <span class="brand-wordmark footer-brand" aria-label="shakti.ashram">
                     <span class="brand-prefix">sha</span><span class="brand-rest">kti.ashram</span>
                 </span>
-                <span>. @FooterTagline()</span>
+                <span>. @Loc["footer.tagline"]</span>
             </p>
             <div class="footer-legal-links">
-                <a href="/privacy">Политика конфиденциальности</a>
-                <a href="/terms">Условия использования</a>
+                <a href="/privacy">@Loc["footer.privacy"]</a>
+                <a href="/terms">@Loc["footer.terms"]</a>
             </div>
         </div>
     </footer>
@@ -258,27 +258,6 @@
     }
 
     private Task SetBodyScrollLockAsync(bool locked) => JS.InvokeVoidAsync("ylToggleBodyScroll", "menu", locked).AsTask();
-
-    private string FooterTagline() => Loc.CurrentLang switch
-    {
-        "en" => "A return to origins.",
-        "uk" => "Повернення до витоків.",
-        _ => "Возврат к истокам."
-    };
-
-    private string CourseSubmenuLabel() => Loc.CurrentLang switch
-    {
-        "en" => "Pranavidya",
-        "uk" => "Пранавід'я",
-        _ => "Пранавидья"
-    };
-
-    private string ConsultationSubmenuLabel() => Loc.CurrentLang switch
-    {
-        "en" => "For Teenagers",
-        "uk" => "Для підлітків",
-        _ => "Для подростков"
-    };
 
     public void Dispose()
     {
