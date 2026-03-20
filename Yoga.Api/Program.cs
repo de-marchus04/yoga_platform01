@@ -68,6 +68,7 @@ builder.Services.AddProblemDetails(options =>
 
 // Services
 builder.Services.AddHttpClient<ITelegramService, TelegramService>();
+builder.Services.AddHttpClient<GoogleTranslateService>();
 builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
 builder.Services.AddScoped<PublicContentResetService>();
 builder.Services.AddScoped<LocalFileStorageService>();

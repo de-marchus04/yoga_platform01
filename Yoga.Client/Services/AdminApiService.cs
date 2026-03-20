@@ -144,6 +144,26 @@ namespace Yoga.Client.Services
             return await _http.PutAsJsonAsync("api/translations/entity", translation);
         }
 
+        public async Task<string?> TranslateTextAsync(string text, string from, string to)
+        {
+            var response = await _http.PostAsJsonAsync("api/translations/auto-translate", new { text, from, to });
+            if (!response.IsSuccessStatusCode) return null;
+            var result = await response.Content.ReadFromJsonAsync<TranslateResult>();
+            return result?.Text;
+        }
+
+        public async Task<int> AutoTranslateEntityAsync(string entityType, Guid entityId, string sourceLang, string targetLang)
+        {
+            var response = await _http.PostAsJsonAsync("api/translations/auto-translate-entity",
+                new { entityType, entityId, sourceLang, targetLang });
+            if (!response.IsSuccessStatusCode) return 0;
+            var result = await response.Content.ReadFromJsonAsync<AutoTranslateResult>();
+            return result?.Translated ?? 0;
+        }
+
+        private record TranslateResult(string Text);
+        private record AutoTranslateResult(int Translated);
+
         // Courses (admin)
         public async Task<List<Course>> GetAllCoursesAsync()
         {

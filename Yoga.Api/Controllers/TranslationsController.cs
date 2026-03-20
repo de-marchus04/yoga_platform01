@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
+using Yoga.Api.Services;
 using Yoga.Shared.Models;
 
 namespace Yoga.Api.Controllers
@@ -11,10 +12,12 @@ namespace Yoga.Api.Controllers
     public class TranslationsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly GoogleTranslateService _translator;
 
-        public TranslationsController(AppDbContext context)
+        public TranslationsController(AppDbContext context, GoogleTranslateService translator)
         {
             _context = context;
+            _translator = translator;
         }
 
         /// <summary>
@@ -127,5 +130,85 @@ namespace Yoga.Api.Controllers
                 .ToListAsync();
             return Ok(list);
         }
+
+        // Image-related field names — copied as-is without translation
+        private static readonly HashSet<string> ImageFields = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "ImageUrl", "PresentationImage1Url", "PresentationImage2Url", "InstructorImageUrl"
+        };
+
+        /// <summary>
+        /// POST /api/translations/auto-translate — translate single text field (admin).
+        /// </summary>
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPost("auto-translate")]
+        public async Task<ActionResult<TranslateResponse>> AutoTranslate([FromBody] TranslateRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Text))
+                return Ok(new TranslateResponse(""));
+
+            var translated = await _translator.TranslateAsync(request.Text, request.From, request.To);
+            return Ok(new TranslateResponse(translated));
+        }
+
+        public record TranslateRequest(string Text, string From = "ru", string To = "en");
+        public record TranslateResponse(string Text);
+
+        /// <summary>
+        /// POST /api/translations/auto-translate-entity — translate all fields of an entity from source to target language (admin).
+        /// </summary>
+        [Authorize(Roles = "SuperAdmin")]
+        [HttpPost("auto-translate-entity")]
+        public async Task<IActionResult> AutoTranslateEntity([FromBody] AutoTranslateEntityRequest request)
+        {
+            var sourceTranslations = await _context.Translations
+                .Where(t => t.EntityType == request.EntityType
+                    && t.EntityId == request.EntityId
+                    && t.Language == request.SourceLang)
+                .ToListAsync();
+
+            if (sourceTranslations.Count == 0) return Ok(new { translated = 0 });
+
+            int count = 0;
+            foreach (var src in sourceTranslations)
+            {
+                var existing = await _context.Translations
+                    .FirstOrDefaultAsync(t => t.EntityType == src.EntityType
+                        && t.EntityId == src.EntityId
+                        && t.Field == src.Field
+                        && t.Language == request.TargetLang);
+
+                // Skip if already has content (don't overwrite manual edits)
+                if (existing != null && !string.IsNullOrWhiteSpace(existing.Value)) continue;
+
+                string value;
+                if (ImageFields.Contains(src.Field))
+                    value = src.Value; // Copy images as-is
+                else
+                    value = await _translator.TranslateAsync(src.Value, request.SourceLang, request.TargetLang);
+
+                if (existing != null)
+                {
+                    existing.Value = value;
+                }
+                else
+                {
+                    _context.Translations.Add(new Translation
+                    {
+                        EntityType = src.EntityType,
+                        EntityId = src.EntityId,
+                        Field = src.Field,
+                        Language = request.TargetLang,
+                        Value = value
+                    });
+                }
+                count++;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { translated = count });
+        }
+
+        public record AutoTranslateEntityRequest(string EntityType, Guid EntityId, string SourceLang = "ru", string TargetLang = "en");
     }
 }
