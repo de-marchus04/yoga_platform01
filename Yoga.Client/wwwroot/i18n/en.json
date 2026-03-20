@@ -30,6 +30,16 @@
   "footer.dark_theme": "Dark theme",
   "footer.light_theme": "Light theme",
 
+  "auth.page_title": "My Account — Sign In",
+  "auth.eyebrow": "My Account",
+  "auth.heading": "Sign In",
+  "auth.email": "Email",
+  "auth.password": "Password",
+  "auth.submit": "Sign In",
+  "auth.loading": "Signing in...",
+  "auth.error": "Login failed",
+  "auth.visual_tagline": "A space for your growth",
+
   "page.home.title": "shakti.ashram | Author-Led Retreats",
   "page.home.hero.eyebrow": "shakti.ashram",
   "page.home.hero.h1.line1": "Return",

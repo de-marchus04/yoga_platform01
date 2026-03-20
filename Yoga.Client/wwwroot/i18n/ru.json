@@ -30,6 +30,16 @@
   "footer.dark_theme": "Тёмная тема",
   "footer.light_theme": "Светлая тема",
 
+  "auth.page_title": "Личный кабинет — Вход",
+  "auth.eyebrow": "Личный кабинет",
+  "auth.heading": "Войти",
+  "auth.email": "Email",
+  "auth.password": "Пароль",
+  "auth.submit": "Войти",
+  "auth.loading": "Вход...",
+  "auth.error": "Ошибка входа",
+  "auth.visual_tagline": "Пространство для вашего развития",
+
   "page.home.title": "shakti.ashram | Авторские Ретриты",
   "page.home.hero.eyebrow": "shakti.ashram",
   "page.home.hero.h1.line1": "Возврат",

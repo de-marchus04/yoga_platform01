@@ -346,7 +346,8 @@ namespace Yoga.Client.Services
         {
             var url = $"api/admin/customers?page={page}&pageSize={pageSize}";
             if (!string.IsNullOrEmpty(search)) url += $"&search={Uri.EscapeDataString(search)}";
-            return await _http.GetFromJsonAsync<List<CustomerDto>>(url) ?? new();
+            var result = await _http.GetFromJsonAsync<PaginatedResult<CustomerDto>>(url);
+            return result?.Items ?? new();
         }
 
         public async Task<CustomerDto?> GetCustomerAsync(Guid id)
