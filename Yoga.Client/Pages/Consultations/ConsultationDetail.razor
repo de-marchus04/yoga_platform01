@@ -5,6 +5,19 @@
 @implements IDisposable
 
 <PageTitle>@(DisplayConsultationTitle() ?? Loc["nav.consultations"])</PageTitle>
+<HeadContent>
+    @if (item != null)
+    {
+        <meta name="description" content="@Truncate(item.Description, 160)" />
+        <meta property="og:title" content="@item.Title — shakti.ashram" />
+        <meta property="og:description" content="@Truncate(item.Description, 200)" />
+        <meta property="og:type" content="website" />
+        @if (!string.IsNullOrEmpty(item.ImageUrl))
+        {
+            <meta property="og:image" content="@item.ImageUrl" />
+        }
+    }
+</HeadContent>
 
 @if (loading)
 {
@@ -271,4 +284,7 @@ else
     };
 
     public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+
+    private static string Truncate(string? s, int max) =>
+        string.IsNullOrEmpty(s) ? "" : s.Length <= max ? s : s[..max] + "…";
 }

@@ -6,6 +6,19 @@
 @using Yoga.Shared.DTOs
 
 <PageTitle>@(retreat?.Title ?? Loc["page.retreat.detail.loading"]) | shakti.ashram</PageTitle>
+<HeadContent>
+    @if (retreat != null)
+    {
+        <meta name="description" content="@Truncate(retreat.Description, 160)" />
+        <meta property="og:title" content="@retreat.Title — shakti.ashram" />
+        <meta property="og:description" content="@Truncate(retreat.Description, 200)" />
+        <meta property="og:type" content="website" />
+        @if (!string.IsNullOrEmpty(retreat.ImageUrl))
+        {
+            <meta property="og:image" content="@retreat.ImageUrl" />
+        }
+    }
+</HeadContent>
 
 @if (retreat == null && !notFound)
 {
@@ -295,4 +308,7 @@ else
     };
 
     public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+
+    private static string Truncate(string? s, int max) =>
+        string.IsNullOrEmpty(s) ? "" : s.Length <= max ? s : s[..max] + "…";
 }

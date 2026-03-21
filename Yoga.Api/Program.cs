@@ -12,12 +12,33 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using Yoga.Api.Data;
 using Yoga.Api.Hubs;
 using Yoga.Api.Options;
 using Yoga.Api.Services;
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+try
+{
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog((ctx, lc) => lc
+    .ReadFrom.Configuration(ctx.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console());
+
+builder.WebHost.UseSentry(o =>
+{
+    o.Dsn = builder.Configuration["Sentry:Dsn"] ?? "";
+    o.TracesSampleRate = 0.2;
+    o.SendDefaultPii = false;
+    o.Environment = builder.Environment.EnvironmentName;
+});
+
 var isDevelopment = builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing");
 
 // Add services to the container.
@@ -205,7 +226,11 @@ using (var scope = app.Services.CreateScope())
     if (app.Environment.IsEnvironment("Testing"))
         db.Database.EnsureCreated();
     else
+    {
+        Log.Information("Applying pending EF migrations...");
         db.Database.Migrate();
+        Log.Information("Database migrations applied successfully");
+    }
 }
 
 var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
@@ -253,6 +278,8 @@ app.UseExceptionHandler(exceptionApp =>
 });
 
 app.UseHttpsRedirection();
+app.UseSerilogRequestLogging();
+app.UseSentryTracing();
 
 var securityOptions = app.Services.GetRequiredService<IOptions<SecurityOptions>>().Value;
 if (!app.Environment.IsDevelopment() && securityOptions.EnableHsts)
@@ -322,6 +349,16 @@ static Task WriteHealthResponseAsync(HttpContext context, HealthReport report)
     };
 
     return context.Response.WriteAsync(JsonSerializer.Serialize(payload));
+}
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
 }
 
 public partial class Program { }

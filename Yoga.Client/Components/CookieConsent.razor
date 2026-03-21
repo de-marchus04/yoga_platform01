@@ -1,0 +1,46 @@
+@inject IJSRuntime JS
+
+@if (showBanner)
+{
+    <div class="cookie-consent">
+        <div class="cookie-consent-inner">
+            <p class="cookie-consent-text">
+                Мы используем файлы cookie для корректной работы сайта и аналитики. 
+                Подробнее в <a href="/privacy">Политике конфиденциальности</a>.
+            </p>
+            <div class="cookie-consent-actions">
+                <button class="cookie-btn cookie-btn-accept" @onclick="Accept">Принять</button>
+                <button class="cookie-btn cookie-btn-decline" @onclick="Decline">Только необходимые</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool showBanner;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var consent = await JS.InvokeAsync<string?>("localStorage.getItem", "cookie-consent");
+            if (string.IsNullOrEmpty(consent))
+            {
+                showBanner = true;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task Accept()
+    {
+        await JS.InvokeVoidAsync("localStorage.setItem", "cookie-consent", "all");
+        showBanner = false;
+    }
+
+    private async Task Decline()
+    {
+        await JS.InvokeVoidAsync("localStorage.setItem", "cookie-consent", "essential");
+        showBanner = false;
+    }
+}

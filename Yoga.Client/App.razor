@@ -7,9 +7,19 @@
                 <FocusOnNavigate RouteData="@routeData" Selector="h1" />
             </Found>
             <NotFound>
-                <PageTitle>Not found</PageTitle>
+                <PageTitle>404 — Страница не найдена</PageTitle>
                 <LayoutView Layout="@typeof(MainLayout)">
-                    <p role="alert">Sorry, there's nothing at this address.</p>
+                    <section style="padding:10rem 0 6rem;text-align:center;">
+                        <div class="container" style="max-width:620px;">
+                            <p class="section-eyebrow">404</p>
+                            <h1 style="font-size:2.5rem;margin-bottom:1rem;">Страница не найдена</h1>
+                            <div class="section-divider" style="margin:1.5rem auto;"></div>
+                            <p style="color:var(--text-muted);margin-bottom:2rem;">
+                                Возможно, страница была удалена или адрес указан неверно.
+                            </p>
+                            <a class="btn btn-outline" href="/" style="display:inline-flex;">← На главную</a>
+                        </div>
+                    </section>
                 </LayoutView>
             </NotFound>
         </Router>
