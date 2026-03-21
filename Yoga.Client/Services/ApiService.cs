@@ -29,24 +29,34 @@ namespace Yoga.Client.Services
             {
                 return await _http.GetFromJsonAsync<T>(url);
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
+                Console.WriteLine($"[YLE] GET {url} HttpRequestException: {ex.Message}");
                 return default;
             }
-            catch (TaskCanceledException)
+            catch (TaskCanceledException ex)
             {
+                Console.WriteLine($"[YLE] GET {url} TaskCanceledException: {ex.Message}");
                 return default;
             }
-            catch (NotSupportedException)
+            catch (NotSupportedException ex)
             {
+                Console.WriteLine($"[YLE] GET {url} NotSupportedException: {ex.Message}");
                 return default;
             }
-            catch (JsonException)
+            catch (JsonException ex)
             {
+                Console.WriteLine($"[YLE] GET {url} JsonException: {ex.Message}");
                 return default;
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex)
             {
+                Console.WriteLine($"[YLE] GET {url} InvalidOperationException: {ex.Message}");
+                return default;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[YLE] GET {url} {ex.GetType().Name}: {ex.Message}");
                 return default;
             }
         }

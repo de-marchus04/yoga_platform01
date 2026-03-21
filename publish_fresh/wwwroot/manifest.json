@@ -1,0 +1,16 @@
+{
+  "name": "Shakti Ashram",
+  "short_name": "Shakti",
+  "description": "Премиальные ретриты, курсы и практики",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0e0c",
+  "theme_color": "#8C6B3A",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

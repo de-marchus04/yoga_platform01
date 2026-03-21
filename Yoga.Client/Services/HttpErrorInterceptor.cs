@@ -27,8 +27,9 @@ namespace Yoga.Client.Services
 
                 return response;
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
+                Console.WriteLine($"[YLE] HTTP {request.Method} {request.RequestUri} NETWORK ERROR: {ex.Message}");
                 _toastService.ShowError("Ошибка сети", "Не удалось подключиться к серверу. Проверьте интернет-соединение.");
                 throw;
             }

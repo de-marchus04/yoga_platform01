@@ -52,6 +52,8 @@ services:
       context: .
       dockerfile: Dockerfile.Client
     container_name: yoga-client
+    profiles:
+      - local
     ports:
       - "80:80"
     depends_on:
