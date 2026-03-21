@@ -85,22 +85,9 @@
         return field.Contains("Image", StringComparison.OrdinalIgnoreCase) ? Api.ResolveMediaUrl(val) : val;
     }
 
-    private static string CanonicalConsultationSlug(string slug) => slug switch
-    {
-        "ayurveda" => "for-teenagers",
-        _ => slug
-    };
+    private static string CanonicalConsultationSlug(string slug) => slug;
 
-    private string DisplayConsultationTitle(ConsultationDto consultation) => CanonicalConsultationSlug(consultation.Slug) switch
-    {
-        "for-teenagers" => Loc.CurrentLang switch
-        {
-            "en" => "For Teenagers",
-            "uk" => "Для підлітків",
-            _ => "Для подростков"
-        },
-        _ => consultation.Title
-    };
+    private string DisplayConsultationTitle(ConsultationDto consultation) => consultation.Title;
 
     private async Task LoadAsync()
     {

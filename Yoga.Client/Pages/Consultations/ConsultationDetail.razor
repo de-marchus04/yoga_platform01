@@ -254,31 +254,14 @@ else
             return null;
         }
 
-        return CanonicalConsultationSlug(NormalizeSlug(item.Slug)) == "for-teenagers"
-            ? ConsultationDisplayLabel()
-            : item.Title;
+        return item.Title;
     }
 
     private static string NormalizeSlug(string? slug) => slug?.Trim().ToLowerInvariant() ?? string.Empty;
 
-    private static string CanonicalConsultationSlug(string slug) => slug switch
-    {
-        "ayurveda" => "for-teenagers",
-        _ => slug
-    };
+    private static string CanonicalConsultationSlug(string slug) => slug;
 
-    private static string ApiConsultationSlug(string slug) => slug switch
-    {
-        "for-teenagers" => "ayurveda",
-        _ => slug
-    };
-
-    private string ConsultationDisplayLabel() => Loc.CurrentLang switch
-    {
-        "en" => "For Teenagers",
-        "uk" => "Для підлітків",
-        _ => "Для подростков"
-    };
+    private static string ApiConsultationSlug(string slug) => slug;
 
     private void OpenModal()
     {

@@ -158,14 +158,14 @@ namespace Yoga.Api.Data
                 new Course { Id = courseYoga, Slug = "yoga", SortOrder = 3, IsActive = true }
             );
 
-            // Seed Consultations
-            var consultEnergy = Guid.Parse("33333333-3333-3333-3333-333333333301");
-            var consultAyurveda = Guid.Parse("33333333-3333-3333-3333-333333333302");
-            var consultSpirit = Guid.Parse("33333333-3333-3333-3333-333333333303");
+            // Seed Consultations (new structure: spiritual-development, youth, personal)
+            var consultSpiritualDev = Guid.Parse("33333333-3333-3333-3333-333333333304");
+            var consultYouth = Guid.Parse("33333333-3333-3333-3333-333333333305");
+            var consultPersonal = Guid.Parse("33333333-3333-3333-3333-333333333306");
             modelBuilder.Entity<Consultation>().HasData(
-                new Consultation { Id = consultEnergy, Slug = "energy", SortOrder = 1, IsActive = true },
-                new Consultation { Id = consultAyurveda, Slug = "ayurveda", SortOrder = 2, IsActive = true },
-                new Consultation { Id = consultSpirit, Slug = "spirituality", SortOrder = 3, IsActive = true }
+                new Consultation { Id = consultSpiritualDev, Slug = "spiritual-development", SortOrder = 1, IsActive = true },
+                new Consultation { Id = consultYouth, Slug = "youth", SortOrder = 2, IsActive = true },
+                new Consultation { Id = consultPersonal, Slug = "personal", SortOrder = 3, IsActive = true }
             );
 
             // Seed SitePages
@@ -215,9 +215,9 @@ namespace Yoga.Api.Data
             Add("nav.courses.meditation", "Медитация", "Meditation", "Медитація");
             Add("nav.courses.yoga", "Йога", "Yoga", "Йога");
             Add("nav.consultations", "Консультации", "Consultations", "Консультації");
-            Add("nav.consultations.energy", "Энергетика", "Energetics", "Енергетика");
-            Add("nav.consultations.ayurveda", "Для подростков", "For Teenagers", "Для підлітків");
-            Add("nav.consultations.spirituality", "Духовность", "Spirituality", "Духовність");
+            Add("nav.consultations.spiritual_development", "Духовное развитие", "Spiritual Development", "Духовний розвиток");
+            Add("nav.consultations.youth", "Молодежь", "Youth", "Молодь");
+            Add("nav.consultations.personal", "Личные вопросы", "Personal Questions", "Особисті питання");
             Add("nav.retreats", "Ретриты", "Retreats", "Ретрити");
             Add("nav.retreats.actual", "Актуальные", "Current", "Актуальні");
             Add("nav.retreats.upcoming", "Предстоящие", "Upcoming", "Майбутні");

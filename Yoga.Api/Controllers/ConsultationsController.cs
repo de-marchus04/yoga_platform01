@@ -83,11 +83,7 @@ namespace Yoga.Api.Controllers
             return Ok(dto);
         }
 
-        private static string ResolveConsultationSlug(string slug) => slug.Trim().ToLowerInvariant() switch
-        {
-            "for-teenagers" => "ayurveda",
-            _ => slug.Trim().ToLowerInvariant()
-        };
+        private static string ResolveConsultationSlug(string slug) => slug.Trim().ToLowerInvariant();
 
         [Authorize(Roles = "SuperAdmin")]
         [HttpPost]
