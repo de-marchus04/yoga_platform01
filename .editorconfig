@@ -1,23 +1,43 @@
 root = true
 
 [*.cs]
-# Suppress noisy IDE info diagnostics
-dotnet_diagnostic.IDE0058.severity = none      # Expression value is never used
-dotnet_diagnostic.IDE0290.severity = none      # Use primary constructor
-dotnet_diagnostic.IDE0300.severity = none      # Collection initialization can be simplified
-dotnet_diagnostic.IDE0028.severity = none      # Use collection initializers
-dotnet_diagnostic.IDE0305.severity = none      # Collection initialization can be simplified
-dotnet_diagnostic.IDE0017.severity = none      # Object initialization can be simplified
-dotnet_diagnostic.IDE0090.severity = none      # Simplify new expression
-dotnet_diagnostic.IDE0063.severity = none      # Use simple using statement
-dotnet_diagnostic.IDE0066.severity = none      # Use switch expression
-dotnet_diagnostic.IDE0078.severity = none      # Use pattern matching
-dotnet_diagnostic.IDE0270.severity = none      # Null check can be simplified
-dotnet_diagnostic.CA1814.severity = none       # Prefer jagged arrays
-dotnet_diagnostic.CA2254.severity = none       # Message template should be string literal
-dotnet_diagnostic.CS8618.severity = none       # Non-nullable field not initialized
+# Suppress ALL style/info analyzers in bulk
+dotnet_analyzer_diagnostic.category-Style.severity = none
+dotnet_analyzer_diagnostic.category-CodeQuality.severity = none
+
+# Specific high-volume suppressions
+dotnet_diagnostic.IDE0058.severity = none
+dotnet_diagnostic.IDE0290.severity = none
+dotnet_diagnostic.IDE0300.severity = none
+dotnet_diagnostic.IDE0028.severity = none
+dotnet_diagnostic.IDE0305.severity = none
+dotnet_diagnostic.IDE0017.severity = none
+dotnet_diagnostic.IDE0090.severity = none
+dotnet_diagnostic.IDE0063.severity = none
+dotnet_diagnostic.IDE0066.severity = none
+dotnet_diagnostic.IDE0078.severity = none
+dotnet_diagnostic.IDE0270.severity = none
+dotnet_diagnostic.IDE0055.severity = none
+dotnet_diagnostic.IDE0044.severity = none
+dotnet_diagnostic.IDE0039.severity = none
+dotnet_diagnostic.IDE0060.severity = none
+dotnet_diagnostic.IDE0130.severity = none
+dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.IDE0005.severity = none
+dotnet_diagnostic.CA1814.severity = none
+dotnet_diagnostic.CA2254.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1860.severity = none
+dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.CA1862.severity = none
+dotnet_diagnostic.CS8618.severity = none
+dotnet_diagnostic.CS8602.severity = none
+dotnet_diagnostic.CS8604.severity = none
 
 [*.{razor,cshtml}]
+dotnet_analyzer_diagnostic.category-Style.severity = none
+dotnet_analyzer_diagnostic.category-CodeQuality.severity = none
 dotnet_diagnostic.IDE0058.severity = none
 dotnet_diagnostic.CS8618.severity = none
-dotnet_diagnostic.BL0007.severity = none       # Component parameter should be auto-property
+dotnet_diagnostic.BL0007.severity = none
+dotnet_diagnostic.BL0005.severity = none

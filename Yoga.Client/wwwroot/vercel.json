@@ -6,6 +6,10 @@
       "destination": "https://api.medisha.space/api/$1"
     },
     {
+      "source": "/uploads/(.*)",
+      "destination": "https://api.medisha.space/uploads/$1"
+    },
+    {
       "source": "/health/(.*)",
       "destination": "https://api.medisha.space/health/$1"
     },
