@@ -105,13 +105,17 @@
         }),
         new("consultations", SectionName("consultations"), new()
         {
-            (Loc["nav.consultations.energy"], "/consultations/energy"),
-            (ConsultationLabel(), "/consultations/for-teenagers"),
-            (Loc["nav.consultations.spirituality"], "/consultations/spirituality")
+            (Loc["nav.consultations.spiritual_development"], "/consultations/spiritual-development"),
+            (Loc["nav.consultations.youth"], "/consultations/youth"),
+            (Loc["nav.consultations.personal"], "/consultations/personal")
         }),
         new("retreats", SectionName("retreats"), new()
         {
             (Loc["nav.retreats.actual"], "/retreats/actual")
+        }),
+        new("yagyas", SectionName("yagyas"), new()
+        {
+            (Loc["nav.yagyas"], "/yagyas")
         }),
     };
 
@@ -140,6 +144,7 @@
         "courses" => Loc["nav.courses"],
         "consultations" => Loc["nav.consultations"],
         "retreats" => Loc["nav.retreats"],
+        "yagyas" => Loc["nav.yagyas"],
         _ => key
     };
 

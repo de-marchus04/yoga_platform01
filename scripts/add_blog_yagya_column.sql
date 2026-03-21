@@ -1,0 +1,1 @@
+ALTER TABLE "BlogPosts" ADD COLUMN IF NOT EXISTS "RelatedYagyaId" UUID;

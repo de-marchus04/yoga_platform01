@@ -53,6 +53,7 @@
                     <label><input type="checkbox" checked="@HasSection("retreats")" @onchange='e => ToggleSection("retreats", (bool)(e.Value ?? false))' /> Ретриты</label>
                     <label><input type="checkbox" checked="@HasSection("courses")" @onchange='e => ToggleSection("courses", (bool)(e.Value ?? false))' /> Курсы</label>
                     <label><input type="checkbox" checked="@HasSection("consultations")" @onchange='e => ToggleSection("consultations", (bool)(e.Value ?? false))' /> Консультации</label>
+                    <label><input type="checkbox" checked="@HasSection("yagyas")" @onchange='e => ToggleSection("yagyas", (bool)(e.Value ?? false))' /> Ягьи</label>
                 </div>
             </div>
 
@@ -84,6 +85,16 @@
                         @foreach (var r in allRetreats)
                         {
                             <option value="@r.Id">@r.Title (ID: @r.Id.ToString().Substring(0, 8))</option>
+                        }
+                    </select>
+                </div>
+                <div class="admin-form-group">
+                    <label>Связанная ягья</label>
+                    <select class="admin-input" @bind="model.RelatedYagyaId">
+                        <option value="">-- Не выбрано --</option>
+                        @foreach (var y in allYagyas)
+                        {
+                            <option value="@y.Id">@y.Title (ID: @y.Id.ToString().Substring(0, 8))</option>
                         }
                     </select>
                 </div>
@@ -159,6 +170,7 @@
     private List<Course> allCourses = new();
     private List<Consultation> allConsultations = new();
     private List<Retreat> allRetreats = new();
+    private List<Yagya> allYagyas = new();
     
     private bool loading;
     private bool saving;
@@ -172,12 +184,14 @@
             var coursesTask = Api.GetAllCoursesAsync();
             var consTask = Api.GetAllConsultationsAsync();
             var retreatsTask = Api.GetAllRetreatsAsync();
+            var yagyasTask = Api.GetAllYagyasAsync();
 
-            await Task.WhenAll(coursesTask, consTask, retreatsTask);
+            await Task.WhenAll(coursesTask, consTask, retreatsTask, yagyasTask);
 
             allCourses = await coursesTask;
             allConsultations = await consTask;
             allRetreats = await retreatsTask;
+            allYagyas = await yagyasTask;
 
             if (!IsNew)
             {

@@ -15,5 +15,6 @@ namespace Yoga.Shared.Models
         public Guid? RelatedCourseId { get; set; }
         public Guid? RelatedConsultationId { get; set; }
         public Guid? RelatedRetreatId { get; set; }
+        public Guid? RelatedYagyaId { get; set; }
     }
 }

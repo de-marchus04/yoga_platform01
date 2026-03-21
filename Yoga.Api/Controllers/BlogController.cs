@@ -40,7 +40,7 @@ namespace Yoga.Api.Controllers
             if (!string.IsNullOrEmpty(section) && relatedEntityId.HasValue)
             {
                 var id = relatedEntityId.Value;
-                query = query.Where(b => b.Sections.Any(s => s == section) || b.RelatedCourseId == id || b.RelatedConsultationId == id || b.RelatedRetreatId == id);
+                query = query.Where(b => b.Sections.Any(s => s == section) || b.RelatedCourseId == id || b.RelatedConsultationId == id || b.RelatedRetreatId == id || b.RelatedYagyaId == id);
             }
             else if (!string.IsNullOrEmpty(section))
             {
@@ -49,7 +49,7 @@ namespace Yoga.Api.Controllers
             else if (relatedEntityId.HasValue)
             {
                 var id = relatedEntityId.Value;
-                query = query.Where(b => b.RelatedCourseId == id || b.RelatedConsultationId == id || b.RelatedRetreatId == id);
+                query = query.Where(b => b.RelatedCourseId == id || b.RelatedConsultationId == id || b.RelatedRetreatId == id || b.RelatedYagyaId == id);
             }
 
             var posts = await query
@@ -66,7 +66,7 @@ namespace Yoga.Api.Controllers
                 var ct = translations.Where(t => t.EntityId == p.Id).ToDictionary(t => t.Field, t => t.Value);
                 string F(string field) => ct.TryGetValue(field, out var v) ? v : string.Empty;
 
-                return new BlogPostDto(p.Id, p.Slug, p.Category, F("Title"), F("Excerpt"), F("Tag"), p.MediaUrl, p.PublishedAt, p.Sections, p.RelatedCourseId, p.RelatedConsultationId, p.RelatedRetreatId);
+                return new BlogPostDto(p.Id, p.Slug, p.Category, F("Title"), F("Excerpt"), F("Tag"), p.MediaUrl, p.PublishedAt, p.Sections, p.RelatedCourseId, p.RelatedConsultationId, p.RelatedRetreatId, RelatedYagyaId: p.RelatedYagyaId);
             }).ToList();
 
             return Ok(result);
@@ -89,7 +89,7 @@ namespace Yoga.Api.Controllers
 
             string F(string field) => ct.TryGetValue(field, out var v) ? v : string.Empty;
 
-            return Ok(new BlogPostDto(post.Id, post.Slug, post.Category, F("Title"), F("Excerpt"), F("Tag"), post.MediaUrl, post.PublishedAt, post.Sections, post.RelatedCourseId, post.RelatedConsultationId, post.RelatedRetreatId, F("Content")));
+            return Ok(new BlogPostDto(post.Id, post.Slug, post.Category, F("Title"), F("Excerpt"), F("Tag"), post.MediaUrl, post.PublishedAt, post.Sections, post.RelatedCourseId, post.RelatedConsultationId, post.RelatedRetreatId, F("Content"), post.RelatedYagyaId));
         }
 
         // GET: api/blog/all (Admin Only — all posts including inactive)

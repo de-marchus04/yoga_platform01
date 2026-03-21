@@ -80,7 +80,8 @@ namespace Yoga.Shared.DTOs
         Guid? RelatedCourseId,
         Guid? RelatedConsultationId,
         Guid? RelatedRetreatId,
-        string? Content = null
+        string? Content = null,
+        Guid? RelatedYagyaId = null
     );
 
     public record SitePageDto(
