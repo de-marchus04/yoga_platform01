@@ -76,7 +76,7 @@ var host = builder.Build();
 var locService = host.Services.GetRequiredService<LocalizationService>();
 var jsRuntime = host.Services.GetRequiredService<Microsoft.JSInterop.IJSRuntime>();
 var localizationInitTask = locService.InitAsync(jsRuntime);
-var localizationCompletedTask = await Task.WhenAny(localizationInitTask, Task.Delay(TimeSpan.FromSeconds(3)));
+var localizationCompletedTask = await Task.WhenAny(localizationInitTask, Task.Delay(TimeSpan.FromSeconds(10)));
 if (localizationCompletedTask == localizationInitTask)
 {
     await localizationInitTask;

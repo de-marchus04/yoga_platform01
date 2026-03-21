@@ -5,7 +5,7 @@ namespace Yoga.Client.Services;
 
 public class LocalizationService
 {
-    private static readonly TimeSpan ApiTranslationsTimeout = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan ApiTranslationsTimeout = TimeSpan.FromSeconds(8);
 
     private readonly HttpClient _http;
     private readonly HttpClient _apiHttp;
