@@ -13,6 +13,7 @@ namespace Yoga.Shared.Models
 
         [Required(ErrorMessage = "Контактные данные обязательны.")]
         [StringLength(100, ErrorMessage = "Контактные данные слишком длинные.")]
+        [MinLength(3, ErrorMessage = "Контактные данные слишком короткие.")]
         public string ContactDetails { get; set; } = string.Empty; // Phone or Email
         
         [StringLength(50)]

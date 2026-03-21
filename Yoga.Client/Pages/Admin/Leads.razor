@@ -101,6 +101,11 @@
                             </td>
                             <td class="actions-cell">
                                 <button class="btn-admin btn-admin-sm btn-admin-outline"
+                                        title="Создать клиента"
+                                        @onclick="() => OpenCreateClient(lead)">
+                                    👤+
+                                </button>
+                                <button class="btn-admin btn-admin-sm btn-admin-outline"
                                         title="Добавить заметку"
                                         @onclick="() => EditNotes(lead)">
                                     ✎
@@ -162,6 +167,41 @@
         </div>
     }
 
+    @if (createClientTarget != null)
+    {
+        <div class="modal-backdrop" @onclick="CancelCreateClient">
+            <div class="modal-card" style="max-width:480px;" @onclick:stopPropagation="true">
+                <h3>Создать клиента</h3>
+                <p>Заявка от <strong>@createClientTarget.Name</strong></p>
+                @if (!string.IsNullOrEmpty(createClientError))
+                {
+                    <div class="admin-alert admin-alert-error" style="margin-bottom:1rem;">@createClientError</div>
+                }
+                <div class="admin-form-group">
+                    <label>Имя <span style="color:red;">*</span></label>
+                    <input class="admin-input" @bind="createClientFullName" placeholder="Полное имя" />
+                </div>
+                <div class="admin-form-group">
+                    <label>Email <span style="color:red;">*</span></label>
+                    <input class="admin-input" type="email" @bind="createClientEmail" placeholder="email@example.com" />
+                </div>
+                <div class="admin-form-group">
+                    <label>Пароль <span style="color:red;">*</span></label>
+                    <div style="display:flex;gap:0.5rem;">
+                        <input class="admin-input" @bind="createClientPassword" placeholder="Мин. 8 символов" style="flex:1;" />
+                        <button class="btn-admin btn-admin-outline" type="button" @onclick="GeneratePassword">Ген.</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-admin btn-admin-outline" @onclick="CancelCreateClient" disabled="@createClientLoading">Отмена</button>
+                    <button class="btn-admin btn-admin-primary" @onclick="ExecuteCreateClient" disabled="@createClientLoading">
+                        @(createClientLoading ? "Создаём..." : "Создать клиента")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
     @if (!string.IsNullOrEmpty(toast))
     {
         <div class="admin-toast @toastType">@toast</div>
@@ -179,6 +219,13 @@
     private LeadSummaryDto? deleteTarget;
     private LeadSummaryDto? editNotesTarget;
     private string editNotesText = "";
+
+    private LeadSummaryDto? createClientTarget;
+    private string createClientEmail = "";
+    private string createClientFullName = "";
+    private string createClientPassword = "";
+    private string? createClientError;
+    private bool createClientLoading;
     
     private string? toast;
     private string toastType = "";
@@ -272,6 +319,69 @@
         else
         {
             ShowToast("Ошибка при обновлении", "error");
+        }
+    }
+
+    private void OpenCreateClient(LeadSummaryDto lead)
+    {
+        createClientTarget = lead;
+        createClientFullName = lead.Name;
+        createClientEmail = "";
+        createClientPassword = "";
+        createClientError = null;
+        createClientLoading = false;
+        GeneratePassword();
+    }
+
+    private void CancelCreateClient()
+    {
+        createClientTarget = null;
+        createClientError = null;
+    }
+
+    private void GeneratePassword()
+    {
+        const string chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#";
+        var rng = new Random();
+        createClientPassword = new string(Enumerable.Range(0, 12).Select(_ => chars[rng.Next(chars.Length)]).ToArray());
+    }
+
+    private async Task ExecuteCreateClient()
+    {
+        if (createClientTarget == null) return;
+        if (string.IsNullOrWhiteSpace(createClientEmail) || string.IsNullOrWhiteSpace(createClientPassword) || string.IsNullOrWhiteSpace(createClientFullName))
+        {
+            createClientError = "Заполните все обязательные поля.";
+            return;
+        }
+        if (createClientPassword.Length < 8)
+        {
+            createClientError = "Пароль должен быть не менее 8 символов.";
+            return;
+        }
+        createClientLoading = true;
+        createClientError = null;
+        var phone = createClientTarget.Messager == "Phone" ? createClientTarget.ContactDetails : null;
+        var messenger = createClientTarget.Messager != "Phone" ? createClientTarget.Messager : null;
+        var req = new Yoga.Shared.DTOs.CreateCustomerFromLeadRequest(
+            createClientTarget.Id,
+            createClientEmail.Trim(),
+            createClientPassword,
+            createClientFullName.Trim(),
+            phone,
+            messenger
+        );
+        var (ok, error) = await Api.CreateCustomerFromLeadAsync(createClientTarget.Id, req);
+        createClientLoading = false;
+        if (ok)
+        {
+            createClientTarget = null;
+            ShowToast("Клиент создан. Пароль: " + createClientPassword, "success");
+            await LoadData();
+        }
+        else
+        {
+            createClientError = error ?? "Ошибка при создании клиента.";
         }
     }
 

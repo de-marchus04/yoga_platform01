@@ -22,13 +22,6 @@
         {
             <div class="public-loading-state">Загружаем видео</div>
         }
-        else if (!posts.Any())
-        {
-            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
-                <p style="margin-bottom:1rem;">Видео-раздел очищен и готов к новой медиа-матрице.</p>
-                <p>Сюда нужно добавить видео с превью, названием, тематикой, привязкой к разделу сайта и коротким пояснением, зачем пользователь должен открыть именно этот материал.</p>
-            </div>
-        }
         else
         {
             <div class="section-filter-bar">
@@ -40,45 +33,55 @@
                 }
             </div>
 
-            @foreach (var sec in VisibleSections)
+            @if (!posts.Any())
             {
-                var secPosts = GetPostsForSection(sec.Key);
-                @if (secPosts.Any())
+                <div style="text-align:center;padding:4rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
+                    <p style="margin-bottom:1rem;">Видео-раздел очищен и готов к новой медиа-матрице.</p>
+                    <p>Сюда нужно добавить видео с превью, названием, тематикой, привязкой к разделу сайта и коротким пояснением, зачем пользователь должен открыть именно этот материал.</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var sec in VisibleSections)
                 {
-                    <div class="section-group">
-                        <div class="section-group-header">
-                            <span class="section-group-title">@sec.Name</span>
-                            <div class="section-group-tags">
-                                @foreach (var link in sec.Links)
+                    var secPosts = GetPostsForSection(sec.Key);
+                    @if (secPosts.Any())
+                    {
+                        <div class="section-group">
+                            <div class="section-group-header">
+                                <span class="section-group-title">@sec.Name</span>
+                                <div class="section-group-tags">
+                                    @foreach (var link in sec.Links)
+                                    {
+                                        <a href="@link.Url" class="section-tag-link">@link.Label</a>
+                                    }
+                                </div>
+                            </div>
+                            <div class="video-grid" style="margin-top:2rem;">
+                                @foreach (var post in secPosts.Take(6))
                                 {
-                                    <a href="@link.Url" class="section-tag-link">@link.Label</a>
+                                    var p = post;
+                                    <a href="/blog/@p.Slug" class="video-card reveal">
+                                        <div class="video-card-thumb">
+                                            <img src="@GetThumbnail(p.MediaUrl)" alt="@p.Title" loading="lazy" />
+                                            <div class="video-card-play"></div>
+                                        </div>
+                                        <div class="video-card-body">
+                                            @if (!string.IsNullOrEmpty(p.Tag))
+                                            {
+                                                <span class="video-tag">@p.Tag</span>
+                                            }
+                                            <h3>@p.Title</h3>
+                                            @if (!string.IsNullOrEmpty(p.Excerpt))
+                                            {
+                                                <span class="video-duration">@p.Excerpt</span>
+                                            }
+                                        </div>
+                                    </a>
                                 }
                             </div>
                         </div>
-                        <div class="video-grid" style="margin-top:2rem;">
-                            @foreach (var post in secPosts.Take(6))
-                            {
-                                var p = post;
-                                <a href="/blog/@p.Slug" class="video-card reveal">
-                                    <div class="video-card-thumb">
-                                        <img src="@GetThumbnail(p.MediaUrl)" alt="@p.Title" loading="lazy" />
-                                        <div class="video-card-play"></div>
-                                    </div>
-                                    <div class="video-card-body">
-                                        @if (!string.IsNullOrEmpty(p.Tag))
-                                        {
-                                            <span class="video-tag">@p.Tag</span>
-                                        }
-                                        <h3>@p.Title</h3>
-                                        @if (!string.IsNullOrEmpty(p.Excerpt))
-                                        {
-                                            <span class="video-duration">@p.Excerpt</span>
-                                        }
-                                    </div>
-                                </a>
-                            }
-                        </div>
-                    </div>
+                    }
                 }
             }
         }

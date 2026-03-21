@@ -20,16 +20,27 @@
 {
     <div class="public-loading-state">Загружаем фотографии</div>
 }
-else if (!posts.Any())
-{
-    <div style="text-align:center;padding:8rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
-        <p style="margin-bottom:1rem;">Фотогалерея очищена и ждёт новые визуальные материалы.</p>
-        <p>Сюда нужно добавить фото по курсам, консультациям и ретритам, чтобы пользователь видел атмосферу, формат работы и реальный визуальный стиль проекта.</p>
-    </div>
-}
 else
 {
-    @foreach (var sec in SectionDefs)
+    <div class="section-filter-bar" style="max-width:1200px;margin:0 auto 3rem;padding:0 2rem;">
+        <button class="filter-tab @(activeSection == "" ? "active" : "")" @onclick="() => SetSection(string.Empty)">Все</button>
+        @foreach (var sec in SectionDefs)
+        {
+            var fs = sec;
+            <button class="filter-tab @(activeSection == fs.Key ? "active" : "")" @onclick="() => SetSection(fs.Key)">@fs.Name</button>
+        }
+    </div>
+
+    @if (!posts.Any())
+    {
+        <div style="text-align:center;padding:8rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
+            <p style="margin-bottom:1rem;">Фотогалерея очищена и ждёт новые визуальные материалы.</p>
+            <p>Сюда нужно добавить фото по курсам, консультациям и ретритам, чтобы пользователь видел атмосферу, формат работы и реальный визуальный стиль проекта.</p>
+        </div>
+    }
+    else
+    {
+    @foreach (var sec in SectionDefs.Where(s => string.IsNullOrEmpty(activeSection) || s.Key == activeSection))
     {
         var secPosts = posts.Where(p => p.Sections.Any(s => s.Equals(sec.Key, StringComparison.OrdinalIgnoreCase))).ToList();
         var s = sec;
@@ -62,10 +73,13 @@ else
             </div>
         }
     }
+    }
 }
 
 @code {
     private record SecDef(string Key, string Name, string Eyebrow, string Title, string IndexUrl, bool Reverse);
+    private string activeSection = "";
+    private void SetSection(string s) { activeSection = s; }
 
     private static readonly List<SecDef> SectionDefs = new()
     {
