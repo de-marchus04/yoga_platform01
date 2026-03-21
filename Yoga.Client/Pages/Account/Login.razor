@@ -53,6 +53,9 @@
             <button class="auth-submit" @onclick="HandleLogin" disabled="@loading">
                 @(loading ? Loc["auth.loading"] : Loc["auth.submit"])
             </button>
+            <div style="text-align:center;margin-top:1rem">
+                <a href="/forgot-password" style="color:var(--auth-accent,#C9A96E);font-size:0.9rem;text-decoration:none">Забыли пароль?</a>
+            </div>
         </div>
     </div>
 </section>

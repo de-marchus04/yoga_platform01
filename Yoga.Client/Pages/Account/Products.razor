@@ -109,7 +109,7 @@ else
 
     private string? ProductLink(AccessGrantDto g) => g.AccessType switch
     {
-        "Course" when g.CourseSlug != null => $"/courses/{CanonicalCourseSlug(g.CourseSlug)}",
+        "Course" when g.CourseId.HasValue && g.Status == "Active" => $"/account/course/{g.CourseId}",
         "Consultation" when g.ConsultationSlug != null => $"/consultations/{CanonicalConsultationSlug(g.ConsultationSlug)}",
         "Retreat" when g.RetreatId.HasValue => $"/retreats/{g.RetreatId}",
         _ => null

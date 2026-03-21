@@ -55,11 +55,35 @@ namespace Yoga.Client.Services
         public async Task<List<PremiumResourceDto>> GetPremiumResourcesAsync() =>
             await _http.GetFromJsonAsync<List<PremiumResourceDto>>("api/premium-resources") ?? new();
 
+        // ── Course content (cabinet) ──
+        public async Task<CourseDto?> GetMyCourseAsync(Guid courseId)
+        {
+            var r = await _http.GetAsync($"api/my/courses/{courseId}");
+            if (!r.IsSuccessStatusCode) return null;
+            return await r.Content.ReadFromJsonAsync<CourseDto>();
+        }
+
         public async Task<ProtectedMediaAccessDto?> GetPremiumResourceAccessAsync(Guid id) =>
             await _http.GetFromJsonAsync<ProtectedMediaAccessDto>($"api/premium-resources/{id}/access");
 
         // ── Public events ──
         public async Task<List<LiveEventDto>> GetPublishedEventsAsync() =>
             await _http.GetFromJsonAsync<List<LiveEventDto>>("api/live-events") ?? new();
+
+        // ── Password Reset ──
+        public async Task<bool> ForgotPasswordAsync(string email)
+        {
+            var r = await _http.PostAsJsonAsync("api/customer-auth/forgot-password",
+                new ForgotPasswordRequest(email));
+            return r.IsSuccessStatusCode;
+        }
+
+        public async Task<(bool Success, string? Error)> ResetPasswordAsync(string token, string newPassword)
+        {
+            var r = await _http.PostAsJsonAsync("api/customer-auth/reset-password",
+                new ResetPasswordRequest(token, newPassword));
+            if (r.IsSuccessStatusCode) return (true, null);
+            return (false, "Недействительная или истёкшая ссылка");
+        }
     }
 }

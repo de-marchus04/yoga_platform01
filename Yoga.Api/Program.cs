@@ -70,6 +70,8 @@ builder.Services.AddProblemDetails(options =>
 builder.Services.AddHttpClient<ITelegramService, TelegramService>();
 builder.Services.AddHttpClient<GoogleTranslateService>();
 builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
+builder.Services.AddSingleton<IEmailService, ResendEmailService>();
+builder.Services.AddHttpClient("Resend");
 builder.Services.AddScoped<PublicContentResetService>();
 builder.Services.AddScoped<LocalFileStorageService>();
 builder.Services.AddScoped<S3FileStorageService>();

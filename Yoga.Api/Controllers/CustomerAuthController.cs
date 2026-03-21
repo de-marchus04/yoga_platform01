@@ -1,6 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Yoga.Api.Data;
+using Yoga.Api.Services;
 using Yoga.Shared.DTOs;
 using Yoga.Shared.Models;
 
@@ -20,11 +22,13 @@ namespace Yoga.Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
+        private readonly IEmailService _email;
 
-        public CustomerAuthController(AppDbContext context, IConfiguration config)
+        public CustomerAuthController(AppDbContext context, IConfiguration config, IEmailService email)
         {
             _context = context;
             _config = config;
+            _email = email;
         }
 
         [HttpPost("login")]
@@ -106,6 +110,58 @@ namespace Yoga.Api.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Password changed" });
+        }
+
+        [HttpPost("forgot-password")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            // Always return OK to prevent email enumeration
+            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == request.Email && c.IsActive);
+            if (customer == null) return Ok(new { message = "If this email exists, a reset link has been sent." });
+
+            // Invalidate any existing tokens
+            var existing = await _context.PasswordResetTokens
+                .Where(t => t.CustomerId == customer.Id && !t.IsUsed)
+                .ToListAsync();
+            foreach (var t in existing) t.IsUsed = true;
+
+            var token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+                .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+
+            _context.PasswordResetTokens.Add(new PasswordResetToken
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = customer.Id,
+                Token = token,
+                ExpiresAt = DateTime.UtcNow.AddHours(1),
+            });
+            await _context.SaveChangesAsync();
+
+            var clientBase = _config["ClientBaseUrl"] ?? "https://www.medisha.space";
+            var resetUrl = $"{clientBase}/reset-password?token={token}";
+
+            await _email.SendPasswordResetAsync(customer.Email, customer.FullName, resetUrl);
+
+            return Ok(new { message = "If this email exists, a reset link has been sent." });
+        }
+
+        [HttpPost("reset-password")]
+        [EnableRateLimiting("auth")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            var tokenRecord = await _context.PasswordResetTokens
+                .Include(t => t.Customer)
+                .FirstOrDefaultAsync(t => t.Token == request.Token && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
+
+            if (tokenRecord == null)
+                return BadRequest(new { message = "Invalid or expired reset token" });
+
+            tokenRecord.IsUsed = true;
+            tokenRecord.Customer.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password has been reset" });
         }
 
         private string GenerateToken(Customer customer)

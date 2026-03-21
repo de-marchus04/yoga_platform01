@@ -132,6 +132,53 @@ namespace Yoga.Api.Controllers
             return Ok(items);
         }
 
+        /// <summary>
+        /// GET /api/my/courses/{courseId}?lang=ru — full course content for customers with active access.
+        /// </summary>
+        [HttpGet("courses/{courseId:guid}")]
+        public async Task<IActionResult> MyCourse(Guid courseId, [FromQuery] string lang = "ru")
+        {
+            var cid = GetCustomerId();
+            if (cid == null) return Unauthorized();
+
+            var hasAccess = await _context.CustomerAccessGrants.AnyAsync(g =>
+                g.CustomerId == cid
+                && g.CourseId == courseId
+                && g.Status == "Active"
+                && g.StartsAt <= DateTime.UtcNow
+                && (g.EndsAt == null || g.EndsAt > DateTime.UtcNow));
+
+            if (!hasAccess) return Forbid();
+
+            var course = await _context.Courses
+                .Include(c => c.Modules.OrderBy(m => m.SortOrder))
+                    .ThenInclude(m => m.Lessons.OrderBy(l => l.SortOrder))
+                .FirstOrDefaultAsync(c => c.Id == courseId);
+
+            if (course == null) return NotFound();
+
+            var ct = await _context.Translations
+                .Where(t => t.EntityType == "Course" && t.EntityId == course.Id && t.Language == lang)
+                .ToListAsync();
+
+            var moduleIds = course.Modules.Select(m => m.Id).ToList();
+            var mt = moduleIds.Count > 0
+                ? await _context.Translations
+                    .Where(t => t.EntityType == "CourseModule" && moduleIds.Contains(t.EntityId) && t.Language == lang)
+                    .ToListAsync()
+                : new List<Translation>();
+
+            var lessonIds = course.Modules.SelectMany(m => m.Lessons).Select(l => l.Id).ToList();
+            var lt = lessonIds.Count > 0
+                ? await _context.Translations
+                    .Where(t => t.EntityType == "CourseLesson" && lessonIds.Contains(t.EntityId) && t.Language == lang)
+                    .ToListAsync()
+                : new List<Translation>();
+
+            var dto = BuildCourseDto(course, ct, mt, lt);
+            return Ok(dto);
+        }
+
         private Guid? GetCustomerId()
         {
             var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
@@ -181,5 +228,40 @@ namespace Yoga.Api.Controllers
                 LiveEventTitle: g.LiveEventId != null && eventTitles.TryGetValue(g.LiveEventId.Value, out var et) ? et : null
             )).ToList();
         }
+
+        private static CourseDto BuildCourseDto(Course c, List<Translation> courseTranslations,
+            List<Translation> moduleTranslations, List<Translation> lessonTranslations)
+        {
+            var ct = courseTranslations.Where(t => t.EntityId == c.Id).ToDictionary(t => t.Field, t => t.Value);
+            string F(string field) => ct.TryGetValue(field, out var v) ? v : string.Empty;
+
+            var modules = c.Modules.Select(m =>
+            {
+                var mDict = moduleTranslations.Where(t => t.EntityId == m.Id).ToDictionary(t => t.Field, t => t.Value);
+                string MF(string field) => mDict.TryGetValue(field, out var v) ? v : string.Empty;
+
+                var lessons = m.Lessons.Select(l =>
+                {
+                    var lDict = lessonTranslations.Where(t => t.EntityId == l.Id).ToDictionary(t => t.Field, t => t.Value);
+                    string LF(string field) => lDict.TryGetValue(field, out var v) ? v : string.Empty;
+                    return new CourseLessonDto(l.Id, LF("Title"), LF("Theory"), LF("Practice"), LF("Assignment"), l.SortOrder);
+                }).ToList();
+
+                return new CourseModuleDto(m.Id, MF("Title"), MF("Description"), m.SortOrder, lessons, NullIfEmpty(MF("ImageUrl")));
+            }).ToList();
+
+            var benefits = F("Benefits").Split('|', StringSplitOptions.RemoveEmptyEntries);
+            var forWhom = F("ForWhom").Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => { var parts = x.Split("~", 3); return new ForWhomItem(parts.ElementAtOrDefault(0) ?? "", parts.ElementAtOrDefault(1) ?? "", parts.Length > 2 ? NullIfEmpty(parts[2]) : null); })
+                .ToArray();
+
+            return new CourseDto(c.Id, c.Slug, c.IsOnline, c.IsOffline, F("Title"), F("Subtitle"), F("Eyebrow"), F("Description"),
+                benefits, F("ImageUrl"), F("Duration"), F("Level"), F("Format"), F("Schedule"),
+                forWhom, F("CtaHeading"), F("CtaText"), modules,
+                NullIfEmpty(F("PresentationImage1Url")), NullIfEmpty(F("PresentationImage2Url")),
+                NullIfEmpty(F("InstructorImageUrl")), NullIfEmpty(F("InstructorName")), NullIfEmpty(F("InstructorBio")));
+        }
+
+        private static string? NullIfEmpty(string s) => string.IsNullOrWhiteSpace(s) ? null : s;
     }
 }

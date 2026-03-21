@@ -1,0 +1,106 @@
+@page "/account/course/{CourseId:guid}"
+@layout CabinetLayout
+@inject UserApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>@(course?.Title ?? "Курс")</PageTitle>
+
+@if (loading)
+{
+    <div class="cab-page-header">
+        <div class="cab-skeleton" style="height:32px;width:60%;margin-bottom:12px"></div>
+        <div class="cab-skeleton" style="height:18px;width:40%"></div>
+    </div>
+    <div class="course-modules">
+        @for (int i = 0; i < 3; i++)
+        {
+            <div class="cab-skeleton" style="height:60px;margin-bottom:12px;border-radius:8px"></div>
+        }
+    </div>
+}
+else if (course == null)
+{
+    <div class="cab-empty">
+        <div class="cab-empty-icon">🔒</div>
+        <p>Курс не найден или доступ не предоставлен</p>
+        <a href="/account/products" class="cab-link-accent">← К моим продуктам</a>
+    </div>
+}
+else
+{
+    <div class="cab-page-header">
+        <a href="/account/products" class="cab-back-link">← Мои продукты</a>
+        <h1 class="cab-page-title">@course.Title</h1>
+        @if (!string.IsNullOrEmpty(course.Subtitle))
+        {
+            <p class="cab-page-subtitle">@course.Subtitle</p>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(course.Description))
+    {
+        <div class="course-description">@course.Description</div>
+    }
+
+    <div class="course-modules">
+        @foreach (var mod in course.Modules)
+        {
+            <div class="course-module @(expandedModuleId == mod.Id ? "is-expanded" : "")">
+                <button class="course-module-header" @onclick="() => ToggleModule(mod.Id)">
+                    <span class="module-expand-icon">@(expandedModuleId == mod.Id ? "▾" : "▸")</span>
+                    <span class="module-title">@mod.Title</span>
+                    <span class="module-lesson-count">@mod.Lessons.Count @LessonWord(mod.Lessons.Count)</span>
+                </button>
+                @if (expandedModuleId == mod.Id)
+                {
+                    <div class="course-module-body">
+                        @if (!string.IsNullOrEmpty(mod.Description))
+                        {
+                            <p class="module-description">@mod.Description</p>
+                        }
+                        <ul class="lesson-list">
+                            @foreach (var lesson in mod.Lessons)
+                            {
+                                <li>
+                                    <a class="lesson-link" href="/account/course/@CourseId/lesson/@lesson.Id">
+                                        <span class="lesson-number">@lesson.SortOrder.</span>
+                                        <span class="lesson-title">@lesson.Title</span>
+                                        <span class="lesson-arrow">→</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public Guid CourseId { get; set; }
+
+    private CourseDto? course;
+    private bool loading = true;
+    private Guid? expandedModuleId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        course = await Api.GetMyCourseAsync(CourseId);
+        if (course?.Modules.Count > 0)
+            expandedModuleId = course.Modules[0].Id;
+        loading = false;
+    }
+
+    private void ToggleModule(Guid moduleId)
+    {
+        expandedModuleId = expandedModuleId == moduleId ? null : moduleId;
+    }
+
+    private static string LessonWord(int count) => count switch
+    {
+        1 => "урок",
+        >= 2 and <= 4 => "урока",
+        _ => "уроков"
+    };
+}

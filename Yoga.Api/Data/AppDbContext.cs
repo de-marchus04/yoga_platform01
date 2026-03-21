@@ -32,6 +32,7 @@ namespace Yoga.Api.Data
         public DbSet<PremiumResource> PremiumResources { get; set; }
         public DbSet<LiveEvent> LiveEvents { get; set; }
         public DbSet<AdminAuditLog> AdminAuditLogs { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -100,6 +101,16 @@ namespace Yoga.Api.Data
                 .HasIndex(a => a.CreatedAt);
             modelBuilder.Entity<AdminAuditLog>()
                 .HasIndex(a => new { a.EntityType, a.EntityId, a.CreatedAt });
+
+            modelBuilder.Entity<PasswordResetToken>().HasKey(t => t.Id);
+            modelBuilder.Entity<PasswordResetToken>()
+                .HasOne(t => t.Customer)
+                .WithMany()
+                .HasForeignKey(t => t.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<PasswordResetToken>()
+                .HasIndex(t => t.Token)
+                .IsUnique();
 
             // Seed SuperAdmin Default
             modelBuilder.Entity<AdminUser>().HasData(new AdminUser

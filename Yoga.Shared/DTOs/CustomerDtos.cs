@@ -219,4 +219,15 @@ namespace Yoga.Shared.DTOs
         DateTime? EndsAt,
         [StringLength(1000)] string? Notes
     );
+
+    // ── Password Reset ──
+
+    public record ForgotPasswordRequest(
+        [Required, EmailAddress, StringLength(255)] string Email
+    );
+
+    public record ResetPasswordRequest(
+        [Required] string Token,
+        [Required, StringLength(128, MinimumLength = 8)] string NewPassword
+    );
 }
