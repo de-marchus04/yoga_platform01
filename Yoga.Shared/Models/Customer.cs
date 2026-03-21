@@ -26,6 +26,9 @@ namespace Yoga.Shared.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLoginAt { get; set; }
 
+        public int FailedLoginAttempts { get; set; } = 0;
+        public DateTime? LockoutEndUtc { get; set; }
+
         /// <summary>Active library subscription (null = no subscription).</summary>
         public CustomerSubscription? Subscription { get; set; }
         public ICollection<CustomerAccessGrant> AccessGrants { get; set; } = new List<CustomerAccessGrant>();

@@ -36,12 +36,35 @@ namespace Yoga.Api.Controllers
         public async Task<IActionResult> Login([FromBody] CustomerLoginRequest request)
         {
             var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == request.Email);
-            if (customer == null || !BCrypt.Net.BCrypt.Verify(request.Password, customer.PasswordHash))
+            if (customer == null)
                 return Unauthorized(new { message = "Invalid email or password" });
+
+            // Check lockout
+            if (customer.LockoutEndUtc.HasValue && customer.LockoutEndUtc.Value > DateTime.UtcNow)
+            {
+                var remaining = (int)Math.Ceiling((customer.LockoutEndUtc.Value - DateTime.UtcNow).TotalMinutes);
+                return Unauthorized(new { message = $"Account is temporarily locked. Try again in {remaining} min.", lockedUntil = customer.LockoutEndUtc.Value });
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, customer.PasswordHash))
+            {
+                customer.FailedLoginAttempts++;
+                if (customer.FailedLoginAttempts >= 3)
+                {
+                    customer.LockoutEndUtc = DateTime.UtcNow.AddMinutes(15);
+                    await _context.SaveChangesAsync();
+                    return Unauthorized(new { message = "Too many failed attempts. Account locked for 15 minutes.", lockedUntil = customer.LockoutEndUtc.Value });
+                }
+                await _context.SaveChangesAsync();
+                return Unauthorized(new { message = "Invalid email or password" });
+            }
 
             if (!customer.IsActive)
                 return Unauthorized(new { message = "Account is deactivated" });
 
+            // Successful login — reset lockout
+            customer.FailedLoginAttempts = 0;
+            customer.LockoutEndUtc = null;
             customer.LastLoginAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 

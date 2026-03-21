@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Yoga.Client",
   "resources": {
-    "hash": "sha256-/2PeUBK4aZAfZ/fn4qKgKVL30uCJI+6KbtNYTBLV1Qw=",
+    "hash": "sha256-pJTeuzcGjy6R50ahxnAs32QvTzusAsgzjKAHqt2o1GA=",
     "jsModuleNative": {
       "dotnet.native.8.0.25.p4nx7zxuej.js": "sha256-A16ka545FHaB+QXjyJ4exXh7XpBAAIFnX8YkC4xAng8="
     },
@@ -88,8 +88,8 @@
       "System.Threading.wasm": "sha256-4w1SO5VsR0E2+cryumNIyCRi4cuqpS1yED8yKUlCR8g=",
       "System.wasm": "sha256-YAgP7YUX/p1x+IKWxcnLijnLIaQCzIO4vunV/lu+p0s=",
       "System.Web.HttpUtility.wasm": "sha256-5XrgThYxb3vKqRj3lae6QfRNYK2xr8EhBMvgPkZXHBc=",
-      "Yoga.Client.wasm": "sha256-6lMjSw67Y2Y6LPLWb6HL4eger9hoktnohUVOMc82sgw=",
-      "Yoga.Shared.wasm": "sha256-z0O4rfEcnHR6ILB4FYr0YPxXwUY3adIf3+SQiJGhc8I="
+      "Yoga.Client.wasm": "sha256-B8zahxojmUgEjNzIdIhJL0zBzOYQW2cyf8ZwKlwIdz0=",
+      "Yoga.Shared.wasm": "sha256-COqwjOC62xYmItGUaXBjq+3hKtjRphq0DW+RNa3cXbQ="
     }
   },
   "cacheBootResources": true,
