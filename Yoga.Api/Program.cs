@@ -178,6 +178,20 @@ builder.Services.AddRateLimiter(opts =>
         o.Window = TimeSpan.FromMinutes(1);
         o.QueueLimit = 0;
     });
+    opts.AddFixedWindowLimiter("global", o =>
+    {
+        o.PermitLimit = 100;
+        o.Window = TimeSpan.FromMinutes(1);
+        o.QueueLimit = 0;
+    });
+    opts.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 200,
+                Window = TimeSpan.FromMinutes(1)
+            }));
 });
 
 var app = builder.Build();
@@ -250,6 +264,13 @@ app.Use(async (context, next) =>
     context.Response.Headers.TryAdd("X-Frame-Options", "DENY");
     context.Response.Headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
     context.Response.Headers.TryAdd("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    context.Response.Headers.TryAdd("Content-Security-Policy",
+        "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "font-src 'self' https://fonts.gstatic.com; " +
+        "img-src 'self' data: https: blob:; " +
+        "connect-src 'self' https://api.medisha.space wss://api.medisha.space; " +
+        "frame-ancestors 'none'");
     await next();
 });
 

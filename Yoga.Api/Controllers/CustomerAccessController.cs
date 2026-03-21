@@ -27,6 +27,8 @@ namespace Yoga.Api.Controllers
         public async Task<ActionResult<PaginatedResult<AccessGrantDto>>> GetAll(
             [FromQuery] Guid? customerId = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
             var query = _context.CustomerAccessGrants.Include(g => g.Customer).AsQueryable();
             if (customerId.HasValue) query = query.Where(g => g.CustomerId == customerId);
 

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Yoga.Shared.DTOs
 {
     // Dashboard
@@ -68,13 +70,16 @@ namespace Yoga.Shared.DTOs
     );
 
     public record CreateAdminUserRequest(
-        string Username,
-        string Password,
-        string? DisplayName,
-        string? Email
+        [Required, StringLength(100, MinimumLength = 3)] string Username,
+        [Required, StringLength(128, MinimumLength = 8)] string Password,
+        [StringLength(200)] string? DisplayName,
+        [EmailAddress, StringLength(255)] string? Email
     );
 
-    public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+    public record ChangePasswordRequest(
+        [Required, StringLength(128)] string CurrentPassword,
+        [Required, StringLength(128, MinimumLength = 8)] string NewPassword
+    );
 
     // Paginated response
     public record PaginatedResult<T>(List<T> Items, int TotalCount, int Page, int PageSize);

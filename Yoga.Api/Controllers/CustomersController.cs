@@ -21,6 +21,8 @@ namespace Yoga.Api.Controllers
         public async Task<ActionResult<PaginatedResult<CustomerDto>>> GetAll(
             [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
             var query = _context.Customers.Include(c => c.Subscription).AsQueryable();
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(c => c.FullName.Contains(search) || c.Email.Contains(search));

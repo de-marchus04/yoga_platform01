@@ -54,6 +54,8 @@ namespace Yoga.Api.Controllers
             [FromQuery] int pageSize = 20,
             [FromQuery] string? filter = null)
         {
+            page = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 100);
             var query = _context.Leads.AsQueryable();
 
             if (filter == "unprocessed")

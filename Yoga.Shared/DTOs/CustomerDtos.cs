@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Yoga.Shared.DTOs
 {
     // ── Customer ──
@@ -21,18 +23,24 @@ namespace Yoga.Shared.DTOs
     );
 
     public record CreateCustomerRequest(
-        string Email,
-        string Password,
-        string FullName,
-        string? Phone,
-        string? Messenger
+        [Required, EmailAddress, StringLength(255)] string Email,
+        [Required, StringLength(128, MinimumLength = 8)] string Password,
+        [Required, StringLength(200)] string FullName,
+        [StringLength(30)] string? Phone,
+        [StringLength(100)] string? Messenger
     );
 
     // ── Customer Auth ──
 
-    public record CustomerLoginRequest(string Email, string Password);
+    public record CustomerLoginRequest(
+        [Required, EmailAddress, StringLength(255)] string Email,
+        [Required, StringLength(128)] string Password
+    );
     public record CustomerLoginResponse(string Token, string Email, string FullName);
-    public record CustomerChangePasswordRequest(string CurrentPassword, string NewPassword);
+    public record CustomerChangePasswordRequest(
+        [Required, StringLength(128)] string CurrentPassword,
+        [Required, StringLength(128, MinimumLength = 8)] string NewPassword
+    );
 
     // ── Subscription ──
 
@@ -45,8 +53,8 @@ namespace Yoga.Shared.DTOs
     );
 
     public record CreateSubscriptionRequest(
-        Guid CustomerId,
-        string Tier, // "Premium" | "Vip"
+        [Required] Guid CustomerId,
+        [Required, StringLength(50)] string Tier, // "Premium" | "Vip"
         DateTime StartsAt,
         DateTime? EndsAt
     );
@@ -78,8 +86,8 @@ namespace Yoga.Shared.DTOs
     );
 
     public record CreateAccessGrantRequest(
-        Guid CustomerId,
-        string AccessType, // "Course" | "Consultation" | "Retreat" | "LiveEvent" | "LiveEventSeries"
+        [Required] Guid CustomerId,
+        [Required, StringLength(50)] string AccessType, // "Course" | "Consultation" | "Retreat" | "LiveEvent" | "LiveEventSeries"
         Guid? CourseId,
         Guid? ConsultationId,
         Guid? RetreatId,
@@ -87,7 +95,7 @@ namespace Yoga.Shared.DTOs
         DateTime? StartsAt,
         DateTime? EndsAt,
         Guid? SourceLeadId,
-        string? Notes
+        [StringLength(1000)] string? Notes
     );
 
     // ── Premium Resources ──
@@ -112,13 +120,13 @@ namespace Yoga.Shared.DTOs
     );
 
     public record CreatePremiumResourceRequest(
-        string Title,
-        string? Description,
-        string ResourceType,
-        string? MediaUrl,
+        [Required, StringLength(300)] string Title,
+        [StringLength(2000)] string? Description,
+        [Required, StringLength(50)] string ResourceType,
+        [StringLength(500)] string? MediaUrl,
         TimeSpan? Duration,
-        string? MinimumTier,
-        string? Category,
+        [StringLength(50)] string? MinimumTier,
+        [StringLength(100)] string? Category,
         int SortOrder,
         bool IsPrivateMedia = true
     );
@@ -155,25 +163,25 @@ namespace Yoga.Shared.DTOs
     );
 
     public record CreateLiveEventRequest(
-        string Title,
-        string? Description,
+        [Required, StringLength(300)] string Title,
+        [StringLength(5000)] string? Description,
         DateTime StartsAt,
         DateTime? EndsAt,
-        string? JoinUrl,
-        string AccessPolicy,
+        [StringLength(500)] string? JoinUrl,
+        [Required, StringLength(50)] string AccessPolicy,
         Guid? SeriesId,
         bool IsRecordingPrivate = true
     );
 
     public record UpdateLiveEventRequest(
-        string Title,
-        string? Description,
+        [Required, StringLength(300)] string Title,
+        [StringLength(5000)] string? Description,
         DateTime StartsAt,
         DateTime? EndsAt,
-        string? JoinUrl,
-        string? RecordingUrl,
-        string Status,
-        string AccessPolicy,
+        [StringLength(500)] string? JoinUrl,
+        [StringLength(500)] string? RecordingUrl,
+        [Required, StringLength(50)] string Status,
+        [Required, StringLength(50)] string AccessPolicy,
         Guid? SeriesId,
         bool IsPublished,
         bool IsRecordingPrivate = true
@@ -192,23 +200,23 @@ namespace Yoga.Shared.DTOs
     // ── Lead extension ──
 
     public record CreateCustomerFromLeadRequest(
-        Guid LeadId,
-        string Email,
-        string Password,
-        string FullName,
-        string? Phone,
-        string? Messenger
+        [Required] Guid LeadId,
+        [Required, EmailAddress, StringLength(255)] string Email,
+        [Required, StringLength(128, MinimumLength = 8)] string Password,
+        [Required, StringLength(200)] string FullName,
+        [StringLength(30)] string? Phone,
+        [StringLength(100)] string? Messenger
     );
 
     public record GrantAccessFromLeadRequest(
-        Guid LeadId,
-        Guid CustomerId,
-        string AccessType,
+        [Required] Guid LeadId,
+        [Required] Guid CustomerId,
+        [Required, StringLength(50)] string AccessType,
         Guid? CourseId,
         Guid? ConsultationId,
         Guid? RetreatId,
         Guid? LiveEventId,
         DateTime? EndsAt,
-        string? Notes
+        [StringLength(1000)] string? Notes
     );
 }
