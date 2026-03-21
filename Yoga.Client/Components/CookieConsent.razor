@@ -18,11 +18,13 @@
 
 @code {
     private bool showBanner;
+    private bool _checked;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (!_checked)
         {
+            _checked = true;
             var consent = await JS.InvokeAsync<string?>("localStorage.getItem", "cookie-consent");
             if (string.IsNullOrEmpty(consent))
             {

@@ -85,5 +85,16 @@ namespace Yoga.Client.Services
             if (r.IsSuccessStatusCode) return (true, null);
             return (false, "Недействительная или истёкшая ссылка");
         }
+
+        // ── Access Check ──
+        public async Task<AccessCheckResult?> CheckAccessAsync(Guid? courseId, Guid? consultationId)
+        {
+            var qs = new List<string>();
+            if (courseId != null) qs.Add($"courseId={courseId}");
+            if (consultationId != null) qs.Add($"consultationId={consultationId}");
+            var r = await _http.GetAsync($"api/my/access-check?{string.Join("&", qs)}");
+            if (!r.IsSuccessStatusCode) return null;
+            return await r.Content.ReadFromJsonAsync<AccessCheckResult>();
+        }
     }
 }

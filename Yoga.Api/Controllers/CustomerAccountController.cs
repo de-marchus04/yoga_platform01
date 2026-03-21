@@ -179,6 +179,25 @@ namespace Yoga.Api.Controllers
             return Ok(dto);
         }
 
+        [HttpGet("access-check")]
+        public async Task<IActionResult> AccessCheck([FromQuery] Guid? courseId, [FromQuery] Guid? consultationId)
+        {
+            var cid = GetCustomerId();
+            if (cid == null) return Unauthorized();
+
+            var now = DateTime.UtcNow;
+            var grant = await _context.CustomerAccessGrants
+                .Where(g => g.CustomerId == cid && g.Status == "Active"
+                    && g.StartsAt <= now && (g.EndsAt == null || g.EndsAt > now))
+                .Where(g => (courseId != null && g.CourseId == courseId)
+                          || (consultationId != null && g.ConsultationId == consultationId))
+                .Select(g => g.Id)
+                .FirstOrDefaultAsync();
+
+            var hasAccess = grant != default;
+            return Ok(new AccessCheckResult(hasAccess, hasAccess ? grant : null));
+        }
+
         private Guid? GetCustomerId()
         {
             var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value

@@ -2,6 +2,8 @@
 @inject ApiService Api
 @inject LocalizationService Loc
 @inject NavigationManager Nav
+@inject UserAuthService UserAuth
+@inject UserApiService UserApi
 @implements IDisposable
 
 <PageTitle>@(DisplayConsultationTitle() ?? Loc["nav.consultations"])</PageTitle>
@@ -169,6 +171,18 @@ else
 
     <RelatedBlog EntityId="item?.Id" Section="consultations" />
 
+    @if (hasAccess)
+    {
+        <section class="premium-access-section">
+            <div class="container" style="text-align:center;">
+                <span class="page-eyebrow">@P("Доступ открыт", "Доступ відкрито", "Access granted")</span>
+                <h2>@P("Вы записаны на эту консультацию", "Ви записані на цю консультацію", "You are enrolled in this consultation")</h2>
+                <p>@P("Перейдите в личный кабинет для доступа к материалам.", "Перейдіть до особистого кабінету для доступу до матеріалів.", "Go to your cabinet to access the materials.")</p>
+                <a href="/account/products" class="btn btn-primary">@P("Перейти к материалам", "Перейти до матеріалів", "Go to materials")</a>
+            </div>
+        </section>
+    }
+
     <section class="page-cta">
         <div class="container" style="text-align:center;">
             @if (!string.IsNullOrEmpty(item?.CtaHeading))
@@ -195,6 +209,7 @@ else
 
     private ConsultationDto? item;
     private bool loading = true;
+    private bool hasAccess;
 
     protected override async Task OnInitializedAsync()
     {
@@ -218,9 +233,15 @@ else
         }
 
         loading = true;
+        hasAccess = false;
         try
         {
             item = await Api.GetConsultationAsync(ApiConsultationSlug(canonicalSlug), Loc.CurrentLang);
+            if (item != null && await UserAuth.IsAuthenticatedAsync())
+            {
+                var check = await UserApi.CheckAccessAsync(null, item.Id);
+                hasAccess = check?.HasAccess ?? false;
+            }
         }
         catch { item = null; }
         loading = false;

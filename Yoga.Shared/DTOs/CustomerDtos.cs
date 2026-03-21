@@ -230,4 +230,8 @@ namespace Yoga.Shared.DTOs
         [Required] string Token,
         [Required, StringLength(128, MinimumLength = 8)] string NewPassword
     );
+
+    // ── Access Check ──
+
+    public record AccessCheckResult(bool HasAccess, Guid? GrantId);
 }

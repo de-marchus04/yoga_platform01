@@ -2188,6 +2188,41 @@ details[open] > .program-module-summary .program-module-toggle {
   line-height: 1.8;
 }
 
+.premium-access-section {
+  padding: 5rem 0;
+  background: linear-gradient(135deg, var(--section-bg-dark), rgba(var(--accent-rgb, 191,155,107), 0.08));
+  text-align: center;
+  border-top: 1px solid var(--accent);
+  border-bottom: 1px solid rgba(191,155,107,0.2);
+}
+
+.premium-access-section .page-eyebrow {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.premium-access-section h2 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: var(--text-on-dark);
+  margin-bottom: 1rem;
+}
+
+.premium-access-section p {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  color: rgba(224,220,212,0.6);
+  max-width: 480px;
+  margin: 0 auto 2rem;
+  line-height: 1.8;
+}
+
 /* ===================================================
    BLOG GRID + BLOG CARD
    =================================================== */
