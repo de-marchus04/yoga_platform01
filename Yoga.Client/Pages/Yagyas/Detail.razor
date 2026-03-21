@@ -2,90 +2,221 @@
 @inject LocalizationService Loc
 @inject ApiService ApiService
 @implements IDisposable
+@using Yoga.Shared.DTOs
 
-@if (item == null)
-{
-    <PageTitle>@Loc["page.yagya.detail.loading"]</PageTitle>
-}
-else
-{
-    <PageTitle>@item.Title</PageTitle>
-}
+<PageTitle>@(item?.Title ?? Loc["page.yagya.detail.loading"]) | shakti.ashram</PageTitle>
+<HeadContent>
+    @if (item != null)
+    {
+        <meta name="description" content="@Truncate(item.Description, 160)" />
+        <meta property="og:title" content="@item.Title — shakti.ashram" />
+        <meta property="og:description" content="@Truncate(item.Description, 200)" />
+        <meta property="og:type" content="website" />
+        @if (!string.IsNullOrEmpty(item.ImageUrl))
+        {
+            <meta property="og:image" content="@ApiService.ResolveMediaUrl(item.ImageUrl)" />
+        }
+    }
+</HeadContent>
 
 @if (loading)
 {
-    <section class="section"><div class="container"><p>@Loc["page.yagya.detail.loading"]</p></div></section>
+    <section class="retreat-detail-hero">
+        <div class="retreat-detail-hero-overlay" style="background:var(--background);"></div>
+        <div class="container retreat-detail-hero-content">
+            <div class="skeleton skeleton-title" style="height:1rem; width:15%; margin-bottom:1rem;"></div>
+            <div class="skeleton" style="height:3rem; width:70%; margin-bottom:1.5rem;"></div>
+            <div style="display:flex; gap:1rem;">
+                <div class="skeleton" style="height:2rem; width:120px; border-radius:30px;"></div>
+                <div class="skeleton" style="height:2rem; width:200px; border-radius:30px;"></div>
+            </div>
+        </div>
+    </section>
 }
 else if (item == null)
 {
-    <section class="section"><div class="container"><p>@Loc["page.yagya.detail.not_found"]</p></div></section>
+    <div style="min-height:65vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2rem; text-align:center;">
+        <h1>@Loc["page.yagya.detail.not_found"]</h1>
+        <a href="/yagyas" class="btn btn-outline">← @Loc["page.yagya.detail.back"]</a>
+    </div>
 }
 else
 {
-    <section class="page-hero page-hero-detail">
-        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrWhiteSpace(item.ImageUrl) ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=1600&q=80" : ApiService.ResolveMediaUrl(item.ImageUrl))');"></div>
-        <div class="page-hero-overlay"></div>
-        <div class="container page-hero-content">
-            <a href="/yagyas" class="back-link">← @Loc["page.yagya.detail.back"]</a>
+    var y = item!;
+    var heroImg = !string.IsNullOrWhiteSpace(y.ImageUrl)
+        ? ApiService.ResolveMediaUrl(y.ImageUrl)
+        : "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=1600&q=80";
+
+    <!-- ====== HERO ====== -->
+    <section class="retreat-detail-hero" style="background-image: url('@heroImg');">
+        <div class="retreat-detail-hero-overlay"></div>
+        <div class="container retreat-detail-hero-content">
+            <a href="/yagyas" class="retreat-back-link">← @Loc["page.yagya.detail.back"]</a>
             <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.yagyas.eyebrow"]</p>
-            <h1>@item.Title</h1>
-            <div class="section-divider" style="margin:2rem 0;"></div>
-            <p>📍 @item.Location</p>
-            <p>🗓 @item.StartDate.ToString("dd MMM yyyy") — @item.EndDate.ToString("dd MMM yyyy")</p>
-            @if (!string.IsNullOrWhiteSpace(item.PriceLabel))
-            {
-                <p>@item.PriceLabel</p>
-            }
-        </div>
-    </section>
-
-    <section class="section">
-        <div class="container split-section">
-            <div>
-                <p class="section-eyebrow">@Loc["page.yagya.detail.about_eyebrow"]</p>
-                <h2>@Loc["page.yagya.detail.about_h2"]</h2>
-                <p>@item.Description</p>
-            </div>
-            <div>
-                <p class="section-eyebrow">@Loc["page.yagya.detail.program_eyebrow"]</p>
-                <h2>@Loc["page.yagya.detail.program_h2"]</h2>
-                <p>@(string.IsNullOrWhiteSpace(item.Program) ? item.Description : item.Program)</p>
+            <h1>@y.Title</h1>
+            <div class="retreat-meta-pills">
+                <span class="meta-pill">📍 @y.Location</span>
+                <span class="meta-pill">🗓 @y.StartDate.ToString("dd MMM yyyy") — @y.EndDate.ToString("dd MMM yyyy")</span>
+                @if (!string.IsNullOrWhiteSpace(y.PriceLabel))
+                {
+                    <span class="meta-pill">💰 @y.PriceLabel</span>
+                }
+                @if (IsPast)
+                {
+                    <span class="meta-pill meta-pill-past">@P("Завершена", "Завершена", "Completed")</span>
+                }
             </div>
         </div>
     </section>
 
-    <section class="section" style="padding-top:0;">
-        <div class="container detail-cta-card">
-            <h3>@Loc["page.yagya.detail.booking_h3"]</h3>
-            <button class="btn btn-primary" @onclick="() => OpenModal(item.Title)">@Loc["page.yagyas.card.cta"]</button>
-        </div>
-    </section>
+    <!-- ====== BODY ====== -->
+    <section class="retreat-detail-section">
+        <div class="container retreat-detail-body">
 
-    @if (related.Any())
-    {
-        <section class="section" style="padding-top:0;">
-            <div class="container">
-                <p class="section-eyebrow">@Loc["page.yagya.detail.other_eyebrow"]</p>
-                <h2>@Loc["page.yagya.detail.other_h2"]</h2>
-                <div class="retreats-grid">
-                    @foreach (var other in related)
+            <div class="retreat-detail-content">
+
+                <!-- About -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@Loc["page.yagya.detail.about_eyebrow"]</p>
+                    <h2>@Loc["page.yagya.detail.about_h2"]</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    <p style="line-height:1.9; color:var(--text-muted);">@y.Description</p>
+                </div>
+
+                <!-- Programme -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@Loc["page.yagya.detail.program_eyebrow"]</p>
+                    <h2>@Loc["page.yagya.detail.program_h2"]</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    @if (!string.IsNullOrWhiteSpace(y.Program))
                     {
-                        <div class="retreat-card reveal">
-                            <div class="card-img-wrapper">
-                                <img src="@(string.IsNullOrWhiteSpace(other.ImageUrl) ? "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=600&q=80" : ApiService.ResolveMediaUrl(other.ImageUrl))" alt="@other.Title" class="card-img" loading="lazy" decoding="async" />
+                        <div class="retreat-program-days">@((MarkupString)y.Program)</div>
+                    }
+                    else
+                    {
+                        <div class="retreat-program-days">
+                            <div class="day-item reveal">
+                                <span class="day-chip">@P("Подготовка", "Підготовка", "Preparation")</span>
+                                <div>
+                                    <strong>@P("Настрой и намерение", "Настрій та намір", "Setting the intention")</strong>
+                                    <p>@P("Медитация, подготовка алтаря, общая молитва и формулирование намерения.", "Медитація, підготовка вівтаря, спільна молитва та формулювання наміру.", "Meditation, altar preparation, group prayer and setting intentions.")</p>
+                                </div>
                             </div>
-                            <div class="card-content">
-                                <h3>@other.Title</h3>
-                                <p class="location">📍 @other.Location</p>
-                                <p class="dates">🗓 @other.StartDate.ToString("dd MMM yyyy") — @other.EndDate.ToString("dd MMM yyyy")</p>
-                                <a href="/yagyas/@other.Id" class="btn btn-outline" style="width:100%; text-align:center;">@Loc["page.yagya.detail.other_cta"]</a>
+                            <div class="day-item reveal">
+                                <span class="day-chip">@P("Основная часть", "Основна частина", "Main ceremony")</span>
+                                <div>
+                                    <strong>@P("Огненная церемония", "Вогняна церемонія", "Fire ceremony")</strong>
+                                    <p>@P("Ведические мантры, подношения в священный огонь, групповая медитация.", "Ведичні мантри, підношення у священний вогонь, групова медитація.", "Vedic mantras, offerings into the sacred fire, group meditation.")</p>
+                                </div>
+                            </div>
+                            <div class="day-item reveal">
+                                <span class="day-chip">@P("Завершение", "Завершення", "Closing")</span>
+                                <div>
+                                    <strong>@P("Интеграция и благодарность", "Інтеграція та подяка", "Integration and gratitude")</strong>
+                                    <p>@P("Финальная медитация, благодарственная молитва, обмен впечатлениями.", "Фінальна медитація, подячна молитва, обмін враженнями.", "Final meditation, gratitude prayer, sharing experiences.")</p>
+                                </div>
                             </div>
                         </div>
                     }
                 </div>
+
+                <!-- What's included -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@P("Что входит", "Що входить", "What's included")</p>
+                    <h2>@P("В программу входит", "До програми входить", "Included in the program")</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    <ul class="retreat-included-list">
+                        <li>@P("Проведение ведической церемонии", "Проведення ведичної церемонії", "Vedic ceremony facilitation")</li>
+                        <li>@P("Все необходимые материалы для ритуала", "Всі необхідні матеріали для ритуалу", "All ritual materials provided")</li>
+                        <li>@P("Групповые медитации и мантры", "Групові медитації та мантри", "Group meditations and mantras")</li>
+                        <li>@P("Индивидуальное намерение и работа с запросом", "Індивідуальний намір та робота із запитом", "Personal intention setting")</li>
+                        <li>@P("Поддержка куратора на протяжении церемонии", "Підтримка куратора протягом церемонії", "Curator guidance throughout")</li>
+                    </ul>
+                </div>
+
+                <!-- Reviews -->
+                <div class="retreat-content-block reveal">
+                    <p class="section-eyebrow">@P("Отзывы", "Відгуки", "Testimonials")</p>
+                    <h2>@P("Что говорят участники", "Що кажуть учасники", "What participants say")</h2>
+                    <div class="section-divider" style="margin:1.5rem 0;"></div>
+                    <div class="retreat-reviews-grid">
+                        <div class="review-card reveal">
+                            <p class="review-quote">@P("«Ягья перевернула мое понимание практики. Энергия огня и мантр ощущалась физически.»", "«Ягья перевернула моє розуміння практики. Енергія вогню та мантр відчувалась фізично.»", "\"The yagya transformed my understanding of practice. The energy of fire and mantras was palpable.\"")</p>
+                            <p class="review-author">— @P("Наталья С.", "Наталія С.", "Natalia S.")</p>
+                        </div>
+                        <div class="review-card reveal">
+                            <p class="review-quote">@P("«Участвовала впервые — глубина и организация поразили. Обязательно вернусь.»", "«Брала участь вперше — глибина та організація вразили. Обов'язково повернуся.»", "\"First time participating — the depth and organization amazed me. I'll definitely return.\"")</p>
+                            <p class="review-author">— @P("Анна В.", "Анна В.", "Anna V.")</p>
+                        </div>
+                        <div class="review-card reveal">
+                            <p class="review-quote">@P("«После ягьи произошли значительные перемены. Чувствуется мощная поддержка традиции.»", "«Після ягьї сталися значні зміни. Відчувається потужна підтримка традиції.»", "\"After the yagya, significant changes occurred. The power of tradition is deeply felt.\"")</p>
+                            <p class="review-author">— @P("Михаил Д.", "Михайло Д.", "Michael D.")</p>
+                        </div>
+                    </div>
+                </div>
+
+                <RelatedBlog EntityId="item?.Id" Section="yagyas" />
+
+                <!-- Other yagyas -->
+                @if (related.Any())
+                {
+                    <div class="retreat-content-block reveal">
+                        <p class="section-eyebrow">@Loc["page.yagya.detail.other_eyebrow"]</p>
+                        <h2>@Loc["page.yagya.detail.other_h2"]</h2>
+                        <div class="section-divider" style="margin:1.5rem 0;"></div>
+                        <div class="retreat-other-grid">
+                            @foreach (var other in related)
+                            {
+                                var o = other;
+                                <div class="retreat-other-card reveal">
+                                    <img src="@(!string.IsNullOrWhiteSpace(o.ImageUrl) ? ApiService.ResolveMediaUrl(o.ImageUrl) : "https://images.unsplash.com/photo-1511275539165-cc46b1ee89bf?auto=format&fit=crop&w=600&q=80")"
+                                         alt="@o.Title" loading="lazy" />
+                                    <div class="retreat-other-body">
+                                        <h4>@o.Title</h4>
+                                        <p>📍 @o.Location</p>
+                                        <p>🗓 @o.StartDate.ToString("dd MMM yyyy")</p>
+                                        <a href="/yagyas/@o.Id" class="btn btn-outline btn-sm" style="display:inline-block; margin-top:1rem;">@Loc["page.yagya.detail.other_cta"]</a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
-        </section>
-    }
+
+            <!-- RIGHT: sticky booking sidebar -->
+            <aside class="retreat-booking-sidebar">
+                <div class="retreat-booking-card sticky-panel">
+                    @if (IsPast)
+                    {
+                        <div class="retreat-past-block">
+                            <p class="section-eyebrow" style="color:var(--text-muted);">@P("Завершена", "Завершена", "Completed")</p>
+                            <h3>@P("Эта ягья уже прошла", "Ця ягья вже відбулась", "This yagya has ended")</h3>
+                            <div class="section-divider" style="margin:1.25rem 0;"></div>
+                            <p style="color:var(--text-muted); font-size:0.92rem; line-height:1.75;">@P("Посмотрите актуальные ягьи, на которые можно записаться.", "Перегляньте актуальні ягьї, на які можна записатись.", "Browse current yagyas you can join.")</p>
+                            <a href="/yagyas" class="btn btn-outline" style="display:block; text-align:center; margin-top:2rem;">@P("Все ягьи", "Усі ягьї", "All yagyas")</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.yagyas.eyebrow"]</p>
+                        <h3 style="font-size:1.5rem; margin:0.75rem 0 1.25rem;">@Loc["page.yagya.detail.booking_h3"]</h3>
+                        <div class="section-divider" style="margin:0 0 1.75rem;"></div>
+                        <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.8; margin-bottom:2rem;">
+                            📍 @y.Location<br/>
+                            🗓 @y.StartDate.ToString("dd MMM yyyy") — @y.EndDate.ToString("dd MMM yyyy")
+                            @if (!string.IsNullOrWhiteSpace(y.PriceLabel))
+                            {
+                                <br/><text>💰 </text>@y.PriceLabel
+                            }
+                        </p>
+                        <button class="btn btn-primary" style="width:100%;" @onclick="OpenModal">@Loc["page.yagyas.card.cta"]</button>
+                    }
+                </div>
+            </aside>
+
+        </div>
+    </section>
 }
 
 @code {
@@ -95,6 +226,8 @@ else
     private List<YagyaDto> related = new();
     private bool loading = true;
 
+    private bool IsPast => item?.EndDate.ToUniversalTime() < DateTime.UtcNow;
+
     protected override async Task OnInitializedAsync()
     {
         Loc.OnLanguageChanged += Refresh;
@@ -103,7 +236,8 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadData();
+        if (item?.Id != Id)
+            await LoadData();
     }
 
     private async Task LoadData()
@@ -130,13 +264,22 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
-    private void OpenModal(string title)
+    private void OpenModal()
     {
-        ModalService.Show<LeadModal>(new Dictionary<string, object>
-        {
-            { "ContextTitle", title }
-        });
+        var parameters = new Dictionary<string, object>();
+        parameters["ContextTitle"] = item?.Title ?? "Ягья";
+        ModalService.Show<LeadModal>(parameters);
     }
 
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
+
     public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+
+    private static string Truncate(string? s, int max) =>
+        string.IsNullOrEmpty(s) ? "" : s.Length <= max ? s : s[..max] + "…";
 }

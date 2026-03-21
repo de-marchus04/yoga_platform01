@@ -79,7 +79,8 @@ namespace Yoga.Shared.DTOs
         string[] Sections,
         Guid? RelatedCourseId,
         Guid? RelatedConsultationId,
-        Guid? RelatedRetreatId
+        Guid? RelatedRetreatId,
+        string? Content = null
     );
 
     public record SitePageDto(

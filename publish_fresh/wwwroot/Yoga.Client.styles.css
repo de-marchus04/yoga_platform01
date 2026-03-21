@@ -285,6 +285,48 @@ select.form-control option[b-cpl9qf2xeg] {
         margin-bottom: 1.1rem;
     }
 }
+/* /Components/PhoneInput.razor.rz.scp.css */
+.phone-input-group[b-8021mvz658] {
+    display: flex;
+    gap: 0;
+    width: 100%;
+}
+
+.phone-input-code[b-8021mvz658] {
+    flex: 0 0 auto;
+    width: 110px;
+    padding: 0.55rem 0.5rem;
+    border: 1px solid var(--border, #d1c7b7);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    background: var(--surface, #faf8f5);
+    font-size: 0.92rem;
+    color: var(--text, #3a3226);
+    appearance: auto;
+    cursor: pointer;
+}
+
+.phone-input-number[b-8021mvz658] {
+    flex: 1;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border, #d1c7b7);
+    border-radius: 0 8px 8px 0;
+    background: var(--surface, #faf8f5);
+    font-size: 0.95rem;
+    color: var(--text, #3a3226);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.phone-input-number:focus[b-8021mvz658] {
+    border-color: var(--accent, #BFA07A);
+    box-shadow: 0 0 0 2px rgba(191,160,122,0.13);
+}
+
+.phone-input-code:focus[b-8021mvz658] {
+    border-color: var(--accent, #BFA07A);
+    outline: none;
+}
 /* /Components/ToastContainer.razor.rz.scp.css */
 .toast-container[b-18yv3daeop] {
     position: fixed;

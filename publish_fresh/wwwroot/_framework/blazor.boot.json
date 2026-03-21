@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "Yoga.Client",
   "resources": {
-    "hash": "sha256-pJTeuzcGjy6R50ahxnAs32QvTzusAsgzjKAHqt2o1GA=",
+    "hash": "sha256-5GhTBl/psX9hnurV1rR1ZZ9caTs3t/Sb0D/ziGdomNc=",
     "jsModuleNative": {
       "dotnet.native.8.0.25.p4nx7zxuej.js": "sha256-A16ka545FHaB+QXjyJ4exXh7XpBAAIFnX8YkC4xAng8="
     },
@@ -20,7 +20,7 @@
       "Microsoft.AspNetCore.Authorization.wasm": "sha256-AS06qpJ+QxAozkQeGnSZman3GTf4YYS13kasnPzA1Ho=",
       "Microsoft.AspNetCore.Components.Authorization.wasm": "sha256-0n9n/JtRi1Ai18WEQeNHq2WOtZm9mpl1pdOJEEP1DUA=",
       "Microsoft.AspNetCore.Components.Forms.wasm": "sha256-qSkY+jGKheek0pT91tfGiCAjK1dFo4NeT19jIlDzSSs=",
-      "Microsoft.AspNetCore.Components.wasm": "sha256-a1b6jCt8Gka3aOFL7CoB+Vv2mUdz+zEAdiFK0XXYH84=",
+      "Microsoft.AspNetCore.Components.wasm": "sha256-t87te+1blN0LSyxUQKWdKnY1pj6t82CA1KerBhmBWSQ=",
       "Microsoft.AspNetCore.Components.Web.wasm": "sha256-ytoNyB3zzxvQODn+9k0bmKT9LEJj8XgLBFezVyLftUM=",
       "Microsoft.AspNetCore.Components.WebAssembly.wasm": "sha256-dffMYtT38lLqGTOPX3g9vDbUl5a5qDX/WX94U69d0Qg=",
       "Microsoft.AspNetCore.Connections.Abstractions.wasm": "sha256-IXbiMfhx1A/o4v+kN1HxGkuuSJwuuilSiNhTEyGGcvI=",
@@ -73,7 +73,7 @@
       "System.Net.WebSockets.Client.wasm": "sha256-W51/an0H5xOBaneK7S99O+HGaumXaIzkU490il515Ls=",
       "System.Net.WebSockets.wasm": "sha256-5HVgvrjurjO1Icq0xIeWxW7SepjBoz6v4+7MGw4aByA=",
       "System.ObjectModel.wasm": "sha256-yVrilPkqgw8zMEGNYV6ClAntePKz5wFcg9g9bJPxmtc=",
-      "System.Private.CoreLib.wasm": "sha256-4lEK1UEJq5gOIPxwJQYoVjciS6cErYoo8UnIwfxuf9U=",
+      "System.Private.CoreLib.wasm": "sha256-474yhoayd8ogfhBZihqJ3vFAdRGwxwc4wuKmtJSAJ60=",
       "System.Private.Uri.wasm": "sha256-f3Eb2SbCKGmktvWSecERMjVQsbOi9wGCKTEAHtcWVXY=",
       "System.Runtime.InteropServices.JavaScript.wasm": "sha256-uHfWGfFm4cEiS7UR7aA7iLeh40iPLL9bl3K/WmX63sE=",
       "System.Runtime.Serialization.Primitives.wasm": "sha256-yIKFkWio5tXJuPCw/929pJMR/HKR/jM8w88/CjcSxCU=",
@@ -88,8 +88,8 @@
       "System.Threading.wasm": "sha256-4w1SO5VsR0E2+cryumNIyCRi4cuqpS1yED8yKUlCR8g=",
       "System.wasm": "sha256-YAgP7YUX/p1x+IKWxcnLijnLIaQCzIO4vunV/lu+p0s=",
       "System.Web.HttpUtility.wasm": "sha256-5XrgThYxb3vKqRj3lae6QfRNYK2xr8EhBMvgPkZXHBc=",
-      "Yoga.Client.wasm": "sha256-B8zahxojmUgEjNzIdIhJL0zBzOYQW2cyf8ZwKlwIdz0=",
-      "Yoga.Shared.wasm": "sha256-COqwjOC62xYmItGUaXBjq+3hKtjRphq0DW+RNa3cXbQ="
+      "Yoga.Client.wasm": "sha256-JALhsDBZLOgGJ6ksKtjbVIZX5m0u78zDu4mP4nc9ZMw=",
+      "Yoga.Shared.wasm": "sha256-TdX+TGu+74csSgrRAugB62+KS0Jl6lRyNc1IUFhiUpE="
     }
   },
   "cacheBootResources": true,

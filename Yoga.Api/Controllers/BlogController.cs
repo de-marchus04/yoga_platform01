@@ -89,7 +89,7 @@ namespace Yoga.Api.Controllers
 
             string F(string field) => ct.TryGetValue(field, out var v) ? v : string.Empty;
 
-            return Ok(new BlogPostDto(post.Id, post.Slug, post.Category, F("Title"), F("Excerpt"), F("Tag"), post.MediaUrl, post.PublishedAt, post.Sections, post.RelatedCourseId, post.RelatedConsultationId, post.RelatedRetreatId));
+            return Ok(new BlogPostDto(post.Id, post.Slug, post.Category, F("Title"), F("Excerpt"), F("Tag"), post.MediaUrl, post.PublishedAt, post.Sections, post.RelatedCourseId, post.RelatedConsultationId, post.RelatedRetreatId, F("Content")));
         }
 
         // GET: api/blog/all (Admin Only — all posts including inactive)

@@ -1,0 +1,183 @@
+@page "/blog/{Slug}"
+@inject LocalizationService Loc
+@inject ApiService ApiService
+@implements IDisposable
+@using Yoga.Shared.DTOs
+
+<PageTitle>@(post?.Title ?? Loc["page.blog.articles.title"]) | shakti.ashram</PageTitle>
+<HeadContent>
+    @if (post != null)
+    {
+        <meta name="description" content="@Truncate(post.Excerpt, 160)" />
+        <meta property="og:title" content="@post.Title — shakti.ashram" />
+        <meta property="og:description" content="@Truncate(post.Excerpt, 200)" />
+        <meta property="og:type" content="article" />
+        @if (!string.IsNullOrEmpty(post.MediaUrl))
+        {
+            <meta property="og:image" content="@ApiService.ResolveMediaUrl(post.MediaUrl)" />
+        }
+    }
+</HeadContent>
+
+@if (loading)
+{
+    <section class="page-hero">
+        <div class="page-hero-bg" style="background:var(--background);"></div>
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
+            <div class="skeleton" style="height:1rem; width:15%; margin-bottom:1rem;"></div>
+            <div class="skeleton" style="height:3rem; width:70%; margin-bottom:1.5rem;"></div>
+        </div>
+    </section>
+}
+else if (post == null)
+{
+    <div style="min-height:65vh; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2rem; text-align:center;">
+        <h1>@Loc["page.blog.not_found"]</h1>
+        <a href="/blog/articles" class="btn btn-outline">← @Loc["page.blog.back"]</a>
+    </div>
+}
+else
+{
+    var heroImage = !string.IsNullOrEmpty(post.MediaUrl)
+        ? ApiService.ResolveMediaUrl(post.MediaUrl)
+        : "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1600&q=80";
+
+    var isVideo = post.Category == "videos" && !string.IsNullOrEmpty(post.MediaUrl);
+    var backCategory = post.Category switch
+    {
+        "videos" => "/blog/videos",
+        "photos" => "/blog/photos",
+        _ => "/blog/articles"
+    };
+
+    <!-- ====== HERO ====== -->
+    <section class="retreat-detail-hero" style="background-image: url('@heroImage');">
+        <div class="retreat-detail-hero-overlay"></div>
+        <div class="container retreat-detail-hero-content">
+            <a href="@backCategory" class="retreat-back-link">← @Loc["page.blog.back"]</a>
+            @if (!string.IsNullOrEmpty(post.Tag))
+            {
+                <p class="section-eyebrow" style="color:var(--accent);">@post.Tag</p>
+            }
+            <h1>@post.Title</h1>
+            <div class="retreat-meta-pills">
+                <span class="meta-pill">📅 @post.PublishedAt.ToString("dd MMMM yyyy")</span>
+                @if (!string.IsNullOrEmpty(post.Tag))
+                {
+                    <span class="meta-pill">🏷 @post.Tag</span>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== BODY ====== -->
+    <section class="retreat-detail-section">
+        <div class="container" style="max-width:860px;">
+
+            @if (isVideo)
+            {
+                <div class="blog-detail-video reveal" style="margin-bottom:3rem;">
+                    @if (post.MediaUrl!.Contains("youtube.com") || post.MediaUrl.Contains("youtu.be"))
+                    {
+                        <div class="video-embed-wrapper">
+                            <iframe src="@GetYoutubeEmbedUrl(post.MediaUrl)" allowfullscreen loading="lazy"
+                                    style="border:0; width:100%; aspect-ratio:16/9; border-radius:12px;"></iframe>
+                        </div>
+                    }
+                    else
+                    {
+                        <video controls preload="metadata" style="width:100%; border-radius:12px;">
+                            <source src="@ApiService.ResolveMediaUrl(post.MediaUrl)" />
+                        </video>
+                    }
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(post.Content))
+            {
+                <div class="blog-detail-content reveal">
+                    @((MarkupString)post.Content)
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(post.Excerpt))
+            {
+                <div class="blog-detail-content reveal">
+                    <p style="font-size:1.1rem; line-height:2; color:var(--text-muted);">@post.Excerpt</p>
+                </div>
+            }
+
+            @if (post.Category == "photos" && !string.IsNullOrEmpty(post.MediaUrl))
+            {
+                <div class="blog-detail-photo reveal" style="margin:3rem 0;">
+                    <img src="@ApiService.ResolveMediaUrl(post.MediaUrl)" alt="@post.Title"
+                         style="width:100%; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.08);" loading="lazy" />
+                </div>
+            }
+
+            <div class="blog-detail-footer reveal" style="margin-top:4rem; padding-top:2rem; border-top:1px solid var(--border);">
+                <a href="@backCategory" class="btn btn-outline">← @Loc["page.blog.back"]</a>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public string Slug { get; set; } = "";
+
+    private BlogPostDto? post;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        await LoadData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (post?.Slug != Slug)
+            await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        loading = true;
+        try
+        {
+            post = await ApiService.GetBlogPostAsync(Slug, Loc.CurrentLang);
+        }
+        catch
+        {
+            post = null;
+        }
+        loading = false;
+    }
+
+    private async void Refresh()
+    {
+        await LoadData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static string GetYoutubeEmbedUrl(string url)
+    {
+        // Handle both youtube.com/watch?v=ID and youtu.be/ID
+        if (url.Contains("youtu.be/"))
+        {
+            var id = url.Split("youtu.be/", 2)[1].Split('?')[0].Split('&')[0];
+            return $"https://www.youtube-nocookie.com/embed/{id}";
+        }
+        if (url.Contains("v="))
+        {
+            var id = url.Split("v=", 2)[1].Split('&')[0];
+            return $"https://www.youtube-nocookie.com/embed/{id}";
+        }
+        return url;
+    }
+
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+
+    private static string Truncate(string? s, int max) =>
+        string.IsNullOrEmpty(s) ? "" : s.Length <= max ? s : s[..max] + "…";
+}
