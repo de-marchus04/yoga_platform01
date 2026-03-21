@@ -1,0 +1,104 @@
+@* Reusable phone input with country code selector *@
+
+<div class="phone-input-group">
+    <select class="phone-input-code" @bind="SelectedCode" @bind:after="OnChanged">
+        @foreach (var c in Countries)
+        {
+            <option value="@c.Code">@c.Flag @c.Code</option>
+        }
+    </select>
+    <input type="tel"
+           class="phone-input-number"
+           placeholder="@Placeholder"
+           value="@Number"
+           @oninput="OnNumberInput"
+           maxlength="15"
+           inputmode="numeric" />
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "XXX XXX XXXX";
+
+    private string SelectedCode { get; set; } = "+7";
+    private string Number { get; set; } = "";
+
+    private static readonly CountryDial[] Countries = new[]
+    {
+        new CountryDial("🇷🇺", "+7", "Russia"),
+        new CountryDial("🇺🇦", "+380", "Ukraine"),
+        new CountryDial("🇺🇸", "+1", "USA"),
+        new CountryDial("🇬🇧", "+44", "UK"),
+        new CountryDial("🇩🇪", "+49", "Germany"),
+        new CountryDial("🇫🇷", "+33", "France"),
+        new CountryDial("🇮🇱", "+972", "Israel"),
+        new CountryDial("🇹🇷", "+90", "Turkey"),
+        new CountryDial("🇮🇳", "+91", "India"),
+        new CountryDial("🇲🇪", "+382", "Montenegro"),
+        new CountryDial("🇷🇸", "+381", "Serbia"),
+        new CountryDial("🇵🇱", "+48", "Poland"),
+        new CountryDial("🇨🇿", "+420", "Czech Republic"),
+        new CountryDial("🇪🇸", "+34", "Spain"),
+        new CountryDial("🇮🇹", "+39", "Italy"),
+        new CountryDial("🇧🇾", "+375", "Belarus"),
+        new CountryDial("🇰🇿", "+7", "Kazakhstan"),
+        new CountryDial("🇬🇪", "+995", "Georgia"),
+        new CountryDial("🇦🇲", "+374", "Armenia"),
+        new CountryDial("🇦🇿", "+994", "Azerbaijan"),
+        new CountryDial("🇧🇷", "+55", "Brazil"),
+        new CountryDial("🇹🇭", "+66", "Thailand"),
+        new CountryDial("🇮🇩", "+62", "Indonesia"),
+    };
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrWhiteSpace(Value)) return;
+
+        // Parse existing value like "+7 9161234567"
+        foreach (var c in Countries.OrderByDescending(x => x.Code.Length))
+        {
+            var stripped = Value.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
+            if (stripped.StartsWith(c.Code))
+            {
+                SelectedCode = c.Code;
+                Number = stripped[c.Code.Length..];
+                return;
+            }
+        }
+
+        // Fallback: if starts with +, try to split
+        if (Value.StartsWith("+"))
+        {
+            var digits = new string(Value.Where(char.IsDigit).ToArray());
+            if (digits.Length > 1)
+            {
+                SelectedCode = "+" + digits[0];
+                Number = digits[1..];
+                return;
+            }
+        }
+
+        Number = Value;
+    }
+
+    private async Task OnNumberInput(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? "";
+        Number = new string(raw.Where(c => char.IsDigit(c) || c == ' ').ToArray());
+        await EmitValue();
+    }
+
+    private async Task OnChanged()
+    {
+        await EmitValue();
+    }
+
+    private async Task EmitValue()
+    {
+        var full = string.IsNullOrWhiteSpace(Number) ? "" : $"{SelectedCode} {Number.Trim()}";
+        await ValueChanged.InvokeAsync(full);
+    }
+
+    private record CountryDial(string Flag, string Code, string Name);
+}

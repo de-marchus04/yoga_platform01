@@ -44,7 +44,14 @@
 
                 <div class="form-group">
                     <label for="lead-contact">@Loc["form.contact"]</label>
-                    <InputText id="lead-contact" @bind-Value="leadModel.ContactDetails" class="form-control" />
+                    @if (leadModel.Messager == "Phone")
+                    {
+                        <PhoneInput Value="@leadModel.ContactDetails" ValueChanged="v => leadModel.ContactDetails = v" />
+                    }
+                    else
+                    {
+                        <InputText id="lead-contact" @bind-Value="leadModel.ContactDetails" class="form-control" />
+                    }
                     <ValidationMessage For="@(() => leadModel.ContactDetails)" />
                 </div>
 

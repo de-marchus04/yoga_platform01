@@ -42,7 +42,7 @@
             <div class="form-row">
                 <div class="admin-form-group">
                     <label>Телефон</label>
-                    <input class="admin-input" @bind="phone" />
+                    <PhoneInput Value="@phone" ValueChanged="v => { phone = v; }" />
                 </div>
                 <div class="admin-form-group">
                     <label>Мессенджер</label>

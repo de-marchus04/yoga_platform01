@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +34,11 @@ namespace Yoga.Api.Controllers
         [EnableRateLimiting("leads")]
         public async Task<IActionResult> CreateLead([FromBody] Lead lead)
         {
+            if (!string.IsNullOrWhiteSpace(lead.ContactDetails) &&
+                lead.Messager == "Phone" &&
+                !IsValidPhone(lead.ContactDetails))
+                return BadRequest(new { message = "Invalid phone number format." });
+
             lead.Id = Guid.NewGuid();
             lead.CreatedAt = DateTime.UtcNow;
             lead.IsProcessed = false;
@@ -349,6 +355,12 @@ namespace Yoga.Api.Controllers
             var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                       ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
             return Guid.TryParse(sub, out var id) ? id : null;
+        }
+
+        private static bool IsValidPhone(string phone)
+        {
+            var digits = Regex.Replace(phone, @"[^\d]", "");
+            return digits.Length >= 7 && digits.Length <= 15 && Regex.IsMatch(phone.Trim(), @"^\+\d");
         }
     }
 }

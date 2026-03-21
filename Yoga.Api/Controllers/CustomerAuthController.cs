@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -107,6 +108,9 @@ namespace Yoga.Api.Controllers
 
             var customer = await _context.Customers.FindAsync(customerId);
             if (customer == null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(dto.Phone) && !IsValidPhone(dto.Phone))
+                return BadRequest(new { message = "Invalid phone number format." });
 
             customer.FullName = dto.FullName;
             customer.Phone = dto.Phone;
@@ -221,6 +225,12 @@ namespace Yoga.Api.Controllers
             var sub = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
                       ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return Guid.TryParse(sub, out var id) ? id : null;
+        }
+
+        private static bool IsValidPhone(string phone)
+        {
+            var digits = Regex.Replace(phone, @"[^\d]", "");
+            return digits.Length >= 7 && digits.Length <= 15 && Regex.IsMatch(phone.Trim(), @"^\+\d");
         }
     }
 }
