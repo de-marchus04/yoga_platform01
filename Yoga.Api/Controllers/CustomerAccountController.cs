@@ -212,6 +212,7 @@ namespace Yoga.Api.Controllers
             var consultIds = grants.Where(g => g.ConsultationId != null).Select(g => g.ConsultationId!.Value).Distinct().ToList();
             var retreatIds = grants.Where(g => g.RetreatId != null).Select(g => g.RetreatId!.Value).Distinct().ToList();
             var eventIds = grants.Where(g => g.LiveEventId != null).Select(g => g.LiveEventId!.Value).Distinct().ToList();
+            var yagyaIds = grants.Where(g => g.YagyaId != null).Select(g => g.YagyaId!.Value).Distinct().ToList();
 
             // Slugs from entity tables
             var courseSlugs = courseIds.Any()
@@ -226,9 +227,12 @@ namespace Yoga.Api.Controllers
             var eventTitles = eventIds.Any()
                 ? await _context.LiveEvents.Where(e => eventIds.Contains(e.Id)).ToDictionaryAsync(e => e.Id, e => e.Title)
                 : new();
+            var yagyaTitles = yagyaIds.Any()
+                ? await _context.Yagyas.Where(y => yagyaIds.Contains(y.Id)).ToDictionaryAsync(y => y.Id, y => y.Title)
+                : new();
 
             // Translated titles
-            var allIds = courseIds.Cast<Guid>().Concat(consultIds).ToList();
+            var allIds = courseIds.Cast<Guid>().Concat(consultIds).Concat(yagyaIds).ToList();
             var translations = allIds.Any()
                 ? await _context.Translations
                     .Where(t => allIds.Contains(t.EntityId) && t.Field == "Title" && t.Language == lang)
@@ -244,7 +248,9 @@ namespace Yoga.Api.Controllers
                 ConsultationName: g.ConsultationId != null && translations.TryGetValue(g.ConsultationId.Value, out var conN) ? conN : null,
                 ConsultationSlug: g.ConsultationId != null && consultSlugs.TryGetValue(g.ConsultationId.Value, out var conS) ? conS : null,
                 RetreatTitle: g.RetreatId != null && retreatTitles.TryGetValue(g.RetreatId.Value, out var rt) ? rt : null,
-                LiveEventTitle: g.LiveEventId != null && eventTitles.TryGetValue(g.LiveEventId.Value, out var et) ? et : null
+                LiveEventTitle: g.LiveEventId != null && eventTitles.TryGetValue(g.LiveEventId.Value, out var et) ? et : null,
+                YagyaId: g.YagyaId,
+                YagyaTitle: g.YagyaId != null ? (translations.TryGetValue(g.YagyaId.Value, out var yt) ? yt : (yagyaTitles.TryGetValue(g.YagyaId.Value, out var yft) ? yft : null)) : null
             )).ToList();
         }
 

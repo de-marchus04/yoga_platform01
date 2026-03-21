@@ -39,7 +39,7 @@ namespace Yoga.Api.Controllers
                     g.Id, g.CustomerId, g.Customer.FullName, g.AccessType.ToString(),
                     g.CourseId, g.ConsultationId, g.RetreatId, g.LiveEventId,
                     g.StartsAt, g.EndsAt, g.Status, g.SourceLeadId, g.Notes, g.CreatedAt,
-                    null, null, null, null, null, null
+                    null, null, null, null, null, null, g.YagyaId, null
                 )).ToListAsync();
 
             return Ok(new PaginatedResult<AccessGrantDto>(items, total, page, pageSize));
@@ -62,6 +62,7 @@ namespace Yoga.Api.Controllers
                 ConsultationId = req.ConsultationId,
                 RetreatId = req.RetreatId,
                 LiveEventId = req.LiveEventId,
+                YagyaId = req.YagyaId,
                 StartsAt = req.StartsAt ?? DateTime.UtcNow,
                 EndsAt = req.EndsAt,
                 SourceLeadId = req.SourceLeadId,
@@ -85,6 +86,7 @@ namespace Yoga.Api.Controllers
                     grant.ConsultationId,
                     grant.RetreatId,
                     grant.LiveEventId,
+                    grant.YagyaId,
                     grant.SourceLeadId,
                     grant.StartsAt,
                     grant.EndsAt
@@ -114,7 +116,8 @@ namespace Yoga.Api.Controllers
                     grant.CourseId,
                     grant.ConsultationId,
                     grant.RetreatId,
-                    grant.LiveEventId
+                    grant.LiveEventId,
+                    grant.YagyaId
                 }));
             await _context.SaveChangesAsync();
             return Ok();

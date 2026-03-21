@@ -82,16 +82,19 @@ namespace Yoga.Shared.DTOs
         string? ConsultationName = null,
         string? ConsultationSlug = null,
         string? RetreatTitle = null,
-        string? LiveEventTitle = null
+        string? LiveEventTitle = null,
+        Guid? YagyaId = null,
+        string? YagyaTitle = null
     );
 
     public record CreateAccessGrantRequest(
         [Required] Guid CustomerId,
-        [Required, StringLength(50)] string AccessType, // "Course" | "Consultation" | "Retreat" | "LiveEvent" | "LiveEventSeries"
+        [Required, StringLength(50)] string AccessType, // "Course" | "Consultation" | "Retreat" | "LiveEvent" | "LiveEventSeries" | "Yagya"
         Guid? CourseId,
         Guid? ConsultationId,
         Guid? RetreatId,
         Guid? LiveEventId,
+        Guid? YagyaId,
         DateTime? StartsAt,
         DateTime? EndsAt,
         Guid? SourceLeadId,

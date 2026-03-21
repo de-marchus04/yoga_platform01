@@ -82,6 +82,7 @@ else
         "Retreat" => "🏔",
         "LiveEvent" => "🎬",
         "LiveEventSeries" => "📡",
+        "Yagya" => "🔥",
         _ => "📦"
     };
 
@@ -92,6 +93,7 @@ else
         "Retreat" => "Ретрит",
         "LiveEvent" => "Трансляция",
         "LiveEventSeries" => "Цикл трансляций",
+        "Yagya" => "Ягья",
         _ => type
     };
 
@@ -104,6 +106,7 @@ else
         "Retreat" => g.RetreatTitle ?? "Ретрит",
         "LiveEvent" => g.LiveEventTitle ?? "Трансляция",
         "LiveEventSeries" => g.LiveEventTitle ?? "Цикл трансляций",
+        "Yagya" => g.YagyaTitle ?? "Ягья",
         _ => "Продукт"
     };
 
@@ -112,6 +115,7 @@ else
         "Course" when g.CourseId.HasValue && g.Status == "Active" => $"/account/course/{g.CourseId}",
         "Consultation" when g.ConsultationSlug != null => $"/consultations/{CanonicalConsultationSlug(g.ConsultationSlug)}",
         "Retreat" when g.RetreatId.HasValue => $"/retreats/{g.RetreatId}",
+        "Yagya" when g.YagyaId.HasValue => $"/yagyas/{g.YagyaId}",
         _ => null
     };
 

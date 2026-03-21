@@ -17,6 +17,7 @@ namespace Yoga.Shared.Models
         public Guid? ConsultationId { get; set; }
         public Guid? RetreatId { get; set; }
         public Guid? LiveEventId { get; set; }
+        public Guid? YagyaId { get; set; }
 
         public DateTime StartsAt { get; set; } = DateTime.UtcNow;
         public DateTime? EndsAt { get; set; }
@@ -38,6 +39,7 @@ namespace Yoga.Shared.Models
         Consultation = 2,
         Retreat = 3,
         LiveEvent = 4,
-        LiveEventSeries = 5
+        LiveEventSeries = 5,
+        Yagya = 6
     }
 }
