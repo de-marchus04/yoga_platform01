@@ -38,13 +38,25 @@ namespace Yoga.Api.Services
             await SendAsync(toEmail, "Сброс пароля — Shakti Ashram", html);
         }
 
-        public async Task SendWelcomeAsync(string toEmail, string toName)
+        public async Task SendWelcomeAsync(string toEmail, string toName, string? tempPassword = null)
         {
+            var credentialsBlock = !string.IsNullOrEmpty(tempPassword)
+                ? $"""
+                <div style="background:#f8f6f3;border-radius:8px;padding:16px 20px;margin:20px 0">
+                    <p style="margin:0 0 8px;font-weight:500">Данные для входа:</p>
+                    <p style="margin:0">Email: <strong>{toEmail}</strong></p>
+                    <p style="margin:0">Пароль: <strong>{tempPassword}</strong></p>
+                    <p style="margin:8px 0 0;font-size:0.85rem;color:#888">Рекомендуем сменить пароль после первого входа.</p>
+                </div>
+                """
+                : "";
+
             var html = $"""
             <div style="font-family:'Jost',Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:40px 24px;color:#1e1c1a">
                 <h2 style="font-family:'Cormorant Garamond',Georgia,serif;color:#8C6B3A;font-weight:500;margin-bottom:16px">Добро пожаловать!</h2>
                 <p>Здравствуйте, {toName}!</p>
                 <p>Ваш аккаунт в Shakti Ashram успешно создан. Теперь вы можете войти в личный кабинет:</p>
+                {credentialsBlock}
                 <div style="text-align:center;margin:32px 0">
                     <a href="https://www.medisha.space/account/login" style="display:inline-block;padding:14px 32px;background:#8C6B3A;color:#fff;text-decoration:none;border-radius:8px;font-weight:500">Войти в кабинет</a>
                 </div>

@@ -21,12 +21,14 @@ namespace Yoga.Api.Controllers
         private readonly AppDbContext _context;
         private readonly ITelegramService _telegramService;
         private readonly IAuditTrailService _auditTrail;
+        private readonly IEmailService _emailService;
 
-        public LeadsController(AppDbContext context, ITelegramService telegramService, IAuditTrailService auditTrail)
+        public LeadsController(AppDbContext context, ITelegramService telegramService, IAuditTrailService auditTrail, IEmailService emailService)
         {
             _context = context;
             _telegramService = telegramService;
             _auditTrail = auditTrail;
+            _emailService = emailService;
         }
 
         // POST: api/leads (Public - anyone can submit a lead)
@@ -45,6 +47,36 @@ namespace Yoga.Api.Controllers
 
             _context.Leads.Add(lead);
             await _context.SaveChangesAsync();
+
+            // Auto-create customer account if contact is a valid email
+            if (IsValidEmail(lead.ContactDetails))
+            {
+                var emailLower = lead.ContactDetails.Trim().ToLowerInvariant();
+                var existing = await _context.Customers.AnyAsync(c => c.Email == emailLower);
+                if (!existing)
+                {
+                    var tempPassword = GeneratePassword();
+                    var customer = new Customer
+                    {
+                        Email = emailLower,
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword),
+                        FullName = lead.Name,
+                        Messenger = lead.Messager
+                    };
+                    _context.Customers.Add(customer);
+                    lead.CustomerId = customer.Id;
+                    await _context.SaveChangesAsync();
+
+                    _ = _emailService.SendWelcomeAsync(emailLower, lead.Name, tempPassword);
+                }
+                else
+                {
+                    // Link lead to existing customer
+                    var existingCustomer = await _context.Customers.FirstAsync(c => c.Email == emailLower);
+                    lead.CustomerId = existingCustomer.Id;
+                    await _context.SaveChangesAsync();
+                }
+            }
 
             // Send async notification to Telegram
             _ = _telegramService.SendLeadNotificationAsync(lead);
@@ -361,6 +393,21 @@ namespace Yoga.Api.Controllers
         {
             var digits = Regex.Replace(phone, @"[^\d]", "");
             return digits.Length >= 7 && digits.Length <= 15 && Regex.IsMatch(phone.Trim(), @"^\+\d");
+        }
+
+        private static bool IsValidEmail(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+            return Regex.IsMatch(value.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        }
+
+        private static string GeneratePassword()
+        {
+            const string chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+            var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            var bytes = new byte[10];
+            rng.GetBytes(bytes);
+            return new string(bytes.Select(b => chars[b % chars.Length]).ToArray());
         }
     }
 }
