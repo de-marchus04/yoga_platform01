@@ -66,6 +66,7 @@ else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
     };
 
     private string _prevValue = "";
+    private string _rawInput = "";
 
     protected override void OnParametersSet()
     {
@@ -92,6 +93,7 @@ else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
     private async Task OnNumberInput(ChangeEventArgs e)
     {
         var raw = e.Value?.ToString() ?? "";
+        _rawInput = raw;
         Number = new string(raw.Where(c => char.IsDigit(c) || c == ' ').ToArray());
         var wasValid = IsPhoneValid;
         Validate();
@@ -116,7 +118,9 @@ else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
 
         if (digits.Length == 0)
         {
-            ErrorMessage = "";
+            ErrorMessage = !string.IsNullOrEmpty(_rawInput)
+                ? "Введите цифры номера телефона."
+                : "";
             IsPhoneValid = false;
         }
         else if (digits.Length < country.MinDigits)

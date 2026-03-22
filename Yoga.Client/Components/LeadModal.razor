@@ -27,8 +27,15 @@
 
                 <div class="form-group">
                     <label for="lead-name">@Loc["form.name"]</label>
-                    <InputText id="lead-name" @bind-Value="leadModel.Name" class="form-control" />
-                    <ValidationMessage For="@(() => leadModel.Name)" />
+                    <InputText id="lead-name" @bind-Value="leadModel.Name" class="@NameFieldClass" @oninput="OnNameInput" />
+                    @if (_nameTouched && !_nameIsValid)
+                    {
+                        <div class="field-validation-hint error">@_nameError</div>
+                    }
+                    else if (_nameTouched && _nameIsValid)
+                    {
+                        <div class="field-validation-hint ok">✓ Имя принято</div>
+                    }
                 </div>
 
                 <div class="form-group">
@@ -110,11 +117,55 @@
     private bool isSubmitted = false;
     private bool contactIsValid = true;
     private bool usernameMode = false; // Telegram/Viber: phone vs @username
+    private bool _nameTouched = false;
+    private bool _nameIsValid = false;
+    private string _nameError = "";
+
+    private string NameFieldClass => _nameTouched && !_nameIsValid
+        ? "form-control input-error"
+        : "form-control";
 
     private bool IsSubmitDisabled =>
         isSubmitting ||
+        (_nameTouched && !_nameIsValid) ||
+        (!_nameTouched && string.IsNullOrWhiteSpace(leadModel.Name)) ||
         (leadModel.Messager is "Phone" or "WhatsApp" or "Email" && !contactIsValid) ||
         (leadModel.Messager is "Telegram" or "Viber" && !usernameMode && !contactIsValid);
+
+    private void OnNameInput(ChangeEventArgs e)
+    {
+        _nameTouched = true;
+        var val = e.Value?.ToString() ?? "";
+        var (valid, msg) = ValidateName(val);
+        _nameIsValid = valid;
+        _nameError = msg;
+    }
+
+    private static (bool valid, string message) ValidateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return (false, "Введите ваше имя.");
+        var trimmed = name.Trim();
+        if (trimmed.Length < 2)
+            return (false, "Имя слишком короткое.");
+        if (!System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^[\p{L}\s\-']+$"))
+            return (false, "Имя может содержать только буквы, пробел и дефис.");
+        // at least one vowel
+        const string vowels = "аеёиоуыьъэюяйАЕЁИОУЫЬЪЭЮЯЙaeiouyAEIOUY";
+        if (!trimmed.Any(c => vowels.Contains(c)))
+            return (false, "Пожалуйста, введите настоящее имя.");
+        // no consonant cluster longer than 3
+        var vowelSet = new HashSet<char>(vowels);
+        int run = 0, maxRun = 0;
+        foreach (var ch in trimmed.ToLower().Where(char.IsLetter))
+        {
+            if (vowelSet.Contains(ch)) run = 0;
+            else { run++; if (run > maxRun) maxRun = run; }
+        }
+        if (maxRun > 3)
+            return (false, "Пожалуйста, введите настоящее имя.");
+        return (true, "");
+    }
 
     private void OnMessengerChanged()
     {
