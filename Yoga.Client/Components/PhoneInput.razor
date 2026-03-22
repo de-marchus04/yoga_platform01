@@ -65,8 +65,14 @@ else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
         new CountryDial("🇮🇩", "+62",  "Indonesia",       9, 12, "812 3456 7890"),
     };
 
+    private string _prevValue = "";
+
     protected override void OnParametersSet()
     {
+        // Only re-parse if Value changed from outside (avoids re-render loop)
+        if (Value == _prevValue) return;
+        _prevValue = Value;
+
         if (string.IsNullOrWhiteSpace(Value)) return;
 
         foreach (var c in Countries.OrderByDescending(x => x.Code.Length))
@@ -87,14 +93,20 @@ else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
     {
         var raw = e.Value?.ToString() ?? "";
         Number = new string(raw.Where(c => char.IsDigit(c) || c == ' ').ToArray());
+        var wasValid = IsPhoneValid;
         Validate();
         await EmitValue();
+        if (IsPhoneValid != wasValid)
+            await IsValidChanged.InvokeAsync(IsPhoneValid);
     }
 
     private async Task OnCountryChanged()
     {
+        var wasValid = IsPhoneValid;
         Validate();
         await EmitValue();
+        if (IsPhoneValid != wasValid)
+            await IsValidChanged.InvokeAsync(IsPhoneValid);
     }
 
     private void Validate()
@@ -122,7 +134,6 @@ else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
             ErrorMessage = "";
             IsPhoneValid = true;
         }
-        IsValidChanged.InvokeAsync(IsPhoneValid);
     }
 
     private async Task EmitValue()
