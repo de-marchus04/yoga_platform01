@@ -122,11 +122,8 @@ namespace Yoga.Api.Controllers
 
         private static string? NullIfEmpty(string s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
-        private static string ResolveCourseSlug(string slug) => slug.Trim().ToLowerInvariant() switch
-        {
-            "pranavidya" => "pranayama",
-            _ => slug.Trim().ToLowerInvariant()
-        };
+        // DB slug is "pranavidya" — no remapping needed; keep helper for future aliases
+        private static string ResolveCourseSlug(string slug) => slug.Trim().ToLowerInvariant();
 
         /// <summary>
         /// POST /api/courses — create a new course (admin).

@@ -712,11 +712,8 @@ else
         _ => slug
     };
 
-    private static string ApiCourseSlug(string slug) => slug switch
-    {
-        "pranavidya" => "pranayama",
-        _ => slug
-    };
+    // DB slug is now "pranavidya" — no remapping needed
+    private static string ApiCourseSlug(string slug) => slug;
 
     private string CourseDisplayLabel() => Loc.CurrentLang switch
     {
