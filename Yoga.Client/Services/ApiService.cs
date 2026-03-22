@@ -160,5 +160,22 @@ namespace Yoga.Client.Services
         {
             return await GetSafeAsync<SitePageDto>($"api/sitepages/{slug}?lang={lang}");
         }
+
+        // Email domain validation
+        public async Task<bool> ValidateEmailDomainAsync(string domain)
+        {
+            try
+            {
+                var result = await GetSafeAsync<EmailValidationResult>(
+                    $"api/validate-email?domain={Uri.EscapeDataString(domain)}");
+                return result?.Valid ?? true; // lenient on error
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
+        private record EmailValidationResult(bool Valid, string? Reason = null);
     }
 }

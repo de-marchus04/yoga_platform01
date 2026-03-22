@@ -33,11 +33,12 @@
 
                 <div class="form-group">
                     <label for="lead-messenger">@Loc["form.messenger"]</label>
-                    <InputSelect id="lead-messenger" @bind-Value="leadModel.Messager" class="form-control">
+                    <InputSelect id="lead-messenger" @bind-Value="leadModel.Messager" @bind-Value:after="OnMessengerChanged" class="form-control">
                         <option value="Telegram">Telegram</option>
                         <option value="WhatsApp">WhatsApp</option>
                         <option value="Viber">Viber</option>
                         <option value="Phone">@Loc["form.phone_call"]</option>
+                        <option value="Email">Email</option>
                     </InputSelect>
                     <ValidationMessage For="@(() => leadModel.Messager)" />
                 </div>
@@ -46,13 +47,21 @@
                     <label for="lead-contact">@Loc["form.contact"]</label>
                     @if (leadModel.Messager == "Phone")
                     {
-                        <PhoneInput Value="@leadModel.ContactDetails" ValueChanged="v => leadModel.ContactDetails = v" />
+                        <PhoneInput Value="@leadModel.ContactDetails"
+                                    ValueChanged="v => leadModel.ContactDetails = v"
+                                    IsValidChanged="v => contactIsValid = v" />
+                    }
+                    else if (leadModel.Messager == "Email")
+                    {
+                        <EmailInput Value="@leadModel.ContactDetails"
+                                    ValueChanged="v => leadModel.ContactDetails = v"
+                                    IsValidChanged="v => contactIsValid = v" />
                     }
                     else
                     {
                         <InputText id="lead-contact" @bind-Value="leadModel.ContactDetails" class="form-control" />
+                        <ValidationMessage For="@(() => leadModel.ContactDetails)" />
                     }
-                    <ValidationMessage For="@(() => leadModel.ContactDetails)" />
                 </div>
 
                 <div class="form-group">
@@ -61,7 +70,7 @@
                     <ValidationMessage For="@(() => leadModel.Comment)" />
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100" disabled="@isSubmitting">
+                <button type="submit" class="btn btn-primary w-100" disabled="@IsSubmitDisabled">
                     @(isSubmitting ? Loc["form.submitting"] : Loc["form.submit"])
                 </button>
             </EditForm>
@@ -84,6 +93,18 @@
     private Yoga.Shared.Models.Lead leadModel = new() { Messager = "Telegram" };
     private bool isSubmitting = false;
     private bool isSubmitted = false;
+    private bool contactIsValid = true; // true for Telegram/WhatsApp/Viber (model validation handles them)
+
+    private bool IsSubmitDisabled =>
+        isSubmitting ||
+        (leadModel.Messager is "Phone" or "Email" && !contactIsValid);
+
+    private void OnMessengerChanged()
+    {
+        // Reset contact details and validity when switching messenger type
+        leadModel.ContactDetails = "";
+        contactIsValid = leadModel.Messager is not ("Phone" or "Email");
+    }
 
     private async Task HandleSubmit()
     {

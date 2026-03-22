@@ -201,6 +201,12 @@ builder.Services.AddRateLimiter(opts =>
         o.Window = TimeSpan.FromMinutes(1);
         o.QueueLimit = 0;
     });
+    opts.AddFixedWindowLimiter("validation", o =>
+    {
+        o.PermitLimit = 30;
+        o.Window = TimeSpan.FromMinutes(1);
+        o.QueueLimit = 0;
+    });
     opts.AddFixedWindowLimiter("global", o =>
     {
         o.PermitLimit = 100;

@@ -1,84 +1,85 @@
-@* Reusable phone input with country code selector *@
+@* Reusable phone input with per-country format validation *@
 
 <div class="phone-input-group">
-    <select class="phone-input-code" @bind="SelectedCode" @bind:after="OnChanged">
+    <select class="phone-input-code" @bind="SelectedCountryName" @bind:after="OnCountryChanged">
         @foreach (var c in Countries)
         {
-            <option value="@c.Code">@c.Flag @c.Code</option>
+            <option value="@c.Name">@c.Flag @c.Code — @c.Name</option>
         }
     </select>
     <input type="tel"
-           class="phone-input-number"
-           placeholder="@Placeholder"
+           class="phone-input-number @(HasError ? "input-error" : "")"
+           placeholder="@CurrentCountry.Placeholder"
            value="@Number"
            @oninput="OnNumberInput"
            maxlength="15"
            inputmode="numeric" />
 </div>
+@if (HasError)
+{
+    <div class="phone-validation-hint error">@ErrorMessage</div>
+}
+else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
+{
+    <div class="phone-validation-hint ok">✓ Формат верный</div>
+}
 
 @code {
     [Parameter] public string Value { get; set; } = "";
     [Parameter] public EventCallback<string> ValueChanged { get; set; }
-    [Parameter] public string Placeholder { get; set; } = "XXX XXX XXXX";
+    [Parameter] public EventCallback<bool> IsValidChanged { get; set; }
 
-    private string SelectedCode { get; set; } = "+7";
+    private string SelectedCountryName { get; set; } = "Russia";
     private string Number { get; set; } = "";
+    private string ErrorMessage { get; set; } = "";
+    private bool IsPhoneValid = false;
+    private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    private CountryDial CurrentCountry =>
+        Countries.FirstOrDefault(c => c.Name == SelectedCountryName) ?? Countries[0];
 
     private static readonly CountryDial[] Countries = new[]
     {
-        new CountryDial("🇷🇺", "+7", "Russia"),
-        new CountryDial("🇺🇦", "+380", "Ukraine"),
-        new CountryDial("🇺🇸", "+1", "USA"),
-        new CountryDial("🇬🇧", "+44", "UK"),
-        new CountryDial("🇩🇪", "+49", "Germany"),
-        new CountryDial("🇫🇷", "+33", "France"),
-        new CountryDial("🇮🇱", "+972", "Israel"),
-        new CountryDial("🇹🇷", "+90", "Turkey"),
-        new CountryDial("🇮🇳", "+91", "India"),
-        new CountryDial("🇲🇪", "+382", "Montenegro"),
-        new CountryDial("🇷🇸", "+381", "Serbia"),
-        new CountryDial("🇵🇱", "+48", "Poland"),
-        new CountryDial("🇨🇿", "+420", "Czech Republic"),
-        new CountryDial("🇪🇸", "+34", "Spain"),
-        new CountryDial("🇮🇹", "+39", "Italy"),
-        new CountryDial("🇧🇾", "+375", "Belarus"),
-        new CountryDial("🇰🇿", "+7", "Kazakhstan"),
-        new CountryDial("🇬🇪", "+995", "Georgia"),
-        new CountryDial("🇦🇲", "+374", "Armenia"),
-        new CountryDial("🇦🇿", "+994", "Azerbaijan"),
-        new CountryDial("🇧🇷", "+55", "Brazil"),
-        new CountryDial("🇹🇭", "+66", "Thailand"),
-        new CountryDial("🇮🇩", "+62", "Indonesia"),
+        new CountryDial("🇷🇺", "+7",   "Russia",         10, 10, "999 999-99-99"),
+        new CountryDial("🇺🇦", "+380", "Ukraine",         9,  9,  "50 123 45 67"),
+        new CountryDial("🇺🇸", "+1",   "USA",            10, 10, "201 555 0123"),
+        new CountryDial("🇬🇧", "+44",  "UK",              9, 10, "7700 900 077"),
+        new CountryDial("🇩🇪", "+49",  "Germany",         9, 12, "151 23456789"),
+        new CountryDial("🇫🇷", "+33",  "France",          9,  9,  "6 12 34 56 78"),
+        new CountryDial("🇮🇱", "+972", "Israel",          7,  9,  "50 234 5678"),
+        new CountryDial("🇹🇷", "+90",  "Turkey",         10, 10, "531 234 5678"),
+        new CountryDial("🇮🇳", "+91",  "India",          10, 10, "98765 43210"),
+        new CountryDial("🇲🇪", "+382", "Montenegro",      8,  8,  "67 123 456"),
+        new CountryDial("🇷🇸", "+381", "Serbia",          8,  9,  "60 1234567"),
+        new CountryDial("🇵🇱", "+48",  "Poland",          9,  9,  "512 345 678"),
+        new CountryDial("🇨🇿", "+420", "Czech Republic",  9,  9,  "601 123 456"),
+        new CountryDial("🇪🇸", "+34",  "Spain",           9,  9,  "612 345 678"),
+        new CountryDial("🇮🇹", "+39",  "Italy",           9, 11, "312 345 6789"),
+        new CountryDial("🇧🇾", "+375", "Belarus",         9,  9,  "29 123 45 67"),
+        new CountryDial("🇰🇿", "+7",   "Kazakhstan",     10, 10, "701 234 5678"),
+        new CountryDial("🇬🇪", "+995", "Georgia",         9,  9,  "555 12 34 56"),
+        new CountryDial("🇦🇲", "+374", "Armenia",         8,  8,  "77 123 456"),
+        new CountryDial("🇦🇿", "+994", "Azerbaijan",      9,  9,  "50 123 45 67"),
+        new CountryDial("🇧🇷", "+55",  "Brazil",         10, 11, "11 98765 4321"),
+        new CountryDial("🇹🇭", "+66",  "Thailand",        9,  9,  "81 234 5678"),
+        new CountryDial("🇮🇩", "+62",  "Indonesia",       9, 12, "812 3456 7890"),
     };
 
     protected override void OnParametersSet()
     {
         if (string.IsNullOrWhiteSpace(Value)) return;
 
-        // Parse existing value like "+7 9161234567"
         foreach (var c in Countries.OrderByDescending(x => x.Code.Length))
         {
             var stripped = Value.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "");
             if (stripped.StartsWith(c.Code))
             {
-                SelectedCode = c.Code;
+                SelectedCountryName = c.Name;
                 Number = stripped[c.Code.Length..];
+                Validate();
                 return;
             }
         }
-
-        // Fallback: if starts with +, try to split
-        if (Value.StartsWith("+"))
-        {
-            var digits = new string(Value.Where(char.IsDigit).ToArray());
-            if (digits.Length > 1)
-            {
-                SelectedCode = "+" + digits[0];
-                Number = digits[1..];
-                return;
-            }
-        }
-
         Number = Value;
     }
 
@@ -86,19 +87,49 @@
     {
         var raw = e.Value?.ToString() ?? "";
         Number = new string(raw.Where(c => char.IsDigit(c) || c == ' ').ToArray());
+        Validate();
         await EmitValue();
     }
 
-    private async Task OnChanged()
+    private async Task OnCountryChanged()
     {
+        Validate();
         await EmitValue();
+    }
+
+    private void Validate()
+    {
+        var digits = new string(Number.Where(char.IsDigit).ToArray());
+        var country = CurrentCountry;
+
+        if (digits.Length == 0)
+        {
+            ErrorMessage = "";
+            IsPhoneValid = false;
+        }
+        else if (digits.Length < country.MinDigits)
+        {
+            ErrorMessage = $"Мин. {country.MinDigits} цифр для {country.Name} ({country.Code}).";
+            IsPhoneValid = false;
+        }
+        else if (digits.Length > country.MaxDigits)
+        {
+            ErrorMessage = $"Макс. {country.MaxDigits} цифр для {country.Name} ({country.Code}).";
+            IsPhoneValid = false;
+        }
+        else
+        {
+            ErrorMessage = "";
+            IsPhoneValid = true;
+        }
+        IsValidChanged.InvokeAsync(IsPhoneValid);
     }
 
     private async Task EmitValue()
     {
-        var full = string.IsNullOrWhiteSpace(Number) ? "" : $"{SelectedCode} {Number.Trim()}";
+        var full = string.IsNullOrWhiteSpace(Number) ? "" : $"{CurrentCountry.Code} {Number.Trim()}";
         await ValueChanged.InvokeAsync(full);
     }
 
-    private record CountryDial(string Flag, string Code, string Name);
+    private record CountryDial(string Flag, string Code, string Name, int MinDigits, int MaxDigits, string Placeholder);
 }

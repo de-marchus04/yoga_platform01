@@ -1,0 +1,126 @@
+@* Email input with format validation (Latin chars, @, domain) + server-side DNS check *@
+@inject ApiService Api
+@using System.Text.RegularExpressions
+
+<div class="email-input-wrapper">
+    <input type="email"
+           class="form-control @(HasError ? "input-error" : "")"
+           value="@Value"
+           @oninput="OnInput"
+           @onblur="OnBlur"
+           placeholder="you@example.com"
+           autocomplete="email"
+           inputmode="email" />
+    @if (isChecking)
+    {
+        <div class="phone-validation-hint checking">Проверяем домен...</div>
+    }
+    else if (HasError)
+    {
+        <div class="phone-validation-hint error">@ErrorMessage</div>
+    }
+    else if (!string.IsNullOrEmpty(Value) && isVerified)
+    {
+        <div class="phone-validation-hint ok">✓ Email корректен</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+    [Parameter] public EventCallback<bool> IsValidChanged { get; set; }
+
+    private string ErrorMessage = "";
+    private bool isChecking = false;
+    private bool isVerified = false;
+    private bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
+    // Strict: only ASCII printable, Latin chars, proper email structure
+    private static readonly Regex EmailRegex = new(
+        @"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$",
+        RegexOptions.Compiled);
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString() ?? "";
+        await ValueChanged.InvokeAsync(val);
+        isVerified = false;
+        // Validate format as user types (once it looks like it could be an email)
+        if (!string.IsNullOrWhiteSpace(val) && val.Contains('@'))
+            ValidateFormat(val);
+        else
+            ErrorMessage = "";
+    }
+
+    private async Task OnBlur()
+    {
+        if (string.IsNullOrWhiteSpace(Value)) return;
+        ValidateFormat(Value);
+        if (!HasError)
+            await CheckDomain(Value);
+    }
+
+    private void ValidateFormat(string email)
+    {
+        // Must be ASCII only (no Cyrillic, no Unicode)
+        if (email.Any(c => c > 127))
+        {
+            SetError("Email должен быть написан латиницей.");
+            return;
+        }
+        // Exactly one @
+        if (!email.Contains('@') || email.Count(c => c == '@') > 1)
+        {
+            SetError("Некорректный формат email.");
+            return;
+        }
+        var parts = email.Split('@');
+        if (parts[0].Length == 0)
+        {
+            SetError("Заполните имя почтового ящика до @.");
+            return;
+        }
+        if (!parts[1].Contains('.') || parts[1].StartsWith('.') || parts[1].EndsWith('.'))
+        {
+            SetError("Некорректный домен после @.");
+            return;
+        }
+        if (!EmailRegex.IsMatch(email))
+        {
+            SetError("Некорректный формат email. Используйте только латиницу.");
+            return;
+        }
+        // Format ok — clear error but still pending domain check
+        ErrorMessage = "";
+    }
+
+    private async Task CheckDomain(string email)
+    {
+        var domain = email.Split('@').Last();
+        isChecking = true;
+        isVerified = false;
+        StateHasChanged();
+
+        var valid = await Api.ValidateEmailDomainAsync(domain);
+        isChecking = false;
+
+        if (!valid)
+        {
+            SetError("Домен не существует. Проверьте адрес почты.");
+        }
+        else
+        {
+            ErrorMessage = "";
+            isVerified = true;
+            await IsValidChanged.InvokeAsync(true);
+        }
+        StateHasChanged();
+    }
+
+    private void SetError(string msg)
+    {
+        ErrorMessage = msg;
+        isVerified = false;
+        IsValidChanged.InvokeAsync(false);
+    }
+}

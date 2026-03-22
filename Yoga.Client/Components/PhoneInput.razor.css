@@ -6,13 +6,13 @@
 
 .phone-input-code {
     flex: 0 0 auto;
-    width: 110px;
+    width: 200px;
     padding: 0.55rem 0.5rem;
     border: 1px solid var(--border, #d1c7b7);
     border-right: none;
     border-radius: 8px 0 0 8px;
     background: var(--surface, #faf8f5);
-    font-size: 0.92rem;
+    font-size: 0.85rem;
     color: var(--text, #3a3226);
     appearance: auto;
     cursor: pointer;
@@ -38,4 +38,37 @@
 .phone-input-code:focus {
     border-color: var(--accent, #BFA07A);
     outline: none;
+}
+
+.phone-input-number.input-error {
+    border-color: #c0392b;
+    box-shadow: 0 0 0 2px rgba(192,57,43,0.13);
+}
+
+.phone-validation-hint {
+    font-size: 0.82rem;
+    margin-top: 4px;
+    padding: 2px 0;
+}
+
+.phone-validation-hint.error {
+    color: #c0392b;
+}
+
+.phone-validation-hint.ok {
+    color: #27ae60;
+}
+
+.phone-validation-hint.checking {
+    color: var(--text-muted, #8a7a6a);
+    font-style: italic;
+}
+
+.email-input-wrapper {
+    width: 100%;
+}
+
+.email-input-wrapper .form-control.input-error {
+    border-color: #c0392b;
+    box-shadow: 0 0 0 2px rgba(192,57,43,0.13);
 }
