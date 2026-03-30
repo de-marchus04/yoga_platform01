@@ -22,7 +22,7 @@
       "destination": "https://api.medisha.space/health/$1"
     },
     {
-      "source": "/((?!_framework|css|js|images|fonts|sample-data|i18n|favicon\\.png|icon-192\\.png|robots\\.txt|sitemap\\.xml|app\\.css|appsettings\\.json|appsettings\\.Development\\.json|Yoga\\.Client\\.styles\\.css).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
