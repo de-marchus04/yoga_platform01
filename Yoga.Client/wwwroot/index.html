@@ -203,6 +203,17 @@
             }
         };
     </script>
+    <script>
+        // Show fallback message if Blazor fails to boot (e.g. WASM blocked, crash in startup)
+        window.addEventListener('unhandledrejection', function () {
+            setTimeout(function () {
+                var app = document.getElementById('app');
+                if (app && app.children.length < 2) {
+                    app.innerHTML = '<div style="text-align:center;padding:3rem;font-family:\'Cormorant Garamond\',serif;color:#8C6B3A;font-size:1.2rem;letter-spacing:2px">Ошибка загрузки.<br><a href="/" style="color:#8C6B3A">Обновить страницу</a></div>';
+                }
+            }, 3000);
+        });
+    </script>
 </body>
 
 </html>

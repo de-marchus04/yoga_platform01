@@ -30,8 +30,16 @@ public class LocalizationService
         if (_initialized) return;
         _initialized = true;
 
-        var saved = await js.InvokeAsync<string?>("localStorage.getItem", "yl-lang");
-        CurrentLang = saved is "ru" or "uk" or "en" ? saved : "ru";
+        try
+        {
+            var saved = await js.InvokeAsync<string?>("localStorage.getItem", "yl-lang");
+            CurrentLang = saved is "ru" or "uk" or "en" ? saved : "ru";
+        }
+        catch
+        {
+            // localStorage unavailable (Safari Private Mode, blocked cookies, etc.) — use default
+            CurrentLang = "ru";
+        }
         await LoadAsync(CurrentLang);
     }
 

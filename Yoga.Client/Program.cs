@@ -80,7 +80,8 @@ var localizationInitTask = locService.InitAsync(jsRuntime);
 var localizationCompletedTask = await Task.WhenAny(localizationInitTask, Task.Delay(TimeSpan.FromSeconds(10)));
 if (localizationCompletedTask == localizationInitTask)
 {
-    await localizationInitTask;
+    try { await localizationInitTask; }
+    catch { /* Localization init failed — app continues with static fallback */ }
 }
 
 await host.RunAsync();
