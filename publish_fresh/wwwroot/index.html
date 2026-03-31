@@ -38,6 +38,9 @@
             <span class="brand-wordmark" style="font-style: italic;">
                 <span class="brand-prefix">sha</span><span class="brand-rest">kti.ashram</span>
             </span>
+            <div id="loading-bar" style="margin:1.5rem auto 0;width:120px;height:2px;background:rgba(140,107,58,0.2);border-radius:1px;overflow:hidden">
+                <div id="loading-fill" style="width:0%;height:100%;background:#8C6B3A;transition:width 0.3s"></div>
+            </div>
         </div>
     </div>
 
@@ -156,8 +159,21 @@
     </script>
 
     <script>
-        // Start Blazor manually so we can catch startup failures
-        Blazor.start().catch(function () {
+        // Start Blazor with resource loading progress
+        var _total = 0, _loaded = 0;
+        Blazor.start({
+            loadBootResource: function (type, name, defaultUri, integrity) {
+                if (type !== 'dotnetjs') {
+                    _total++;
+                    return fetch(defaultUri, { integrity: integrity, cache: 'default' }).then(function (r) {
+                        _loaded++;
+                        var fill = document.getElementById('loading-fill');
+                        if (fill) fill.style.width = Math.round(_loaded / _total * 100) + '%';
+                        return r;
+                    });
+                }
+            }
+        }).catch(function (err) {
             var app = document.getElementById('app');
             if (app) {
                 app.innerHTML = '<div style="text-align:center;padding:3rem;font-family:\'Cormorant Garamond\',serif;color:#8C6B3A;font-size:1.2rem;letter-spacing:2px">Ошибка загрузки.<br><a href="/" style="color:#8C6B3A">Обновить страницу</a></div>';
