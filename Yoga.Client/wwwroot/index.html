@@ -41,7 +41,6 @@
             <div id="loading-bar" style="margin:1.5rem auto 0;width:120px;height:2px;background:rgba(140,107,58,0.2);border-radius:1px;overflow:hidden">
                 <div id="loading-fill" style="width:0%;height:100%;background:#8C6B3A;transition:width 0.3s"></div>
             </div>
-            <div id="loading-info" style="margin-top:0.5rem;font-size:0.75rem;color:rgba(140,107,58,0.5);font-family:monospace;letter-spacing:0"></div>
         </div>
     </div>
 
@@ -161,37 +160,23 @@
 
     <script>
         // Start Blazor with resource loading progress
-        var _total = 0, _loaded = 0, _failed = [];
+        var _total = 0, _loaded = 0;
         Blazor.start({
             loadBootResource: function (type, name, defaultUri, integrity) {
                 if (type !== 'dotnetjs') {
                     _total++;
-                    var myName = name;
                     return fetch(defaultUri, { cache: 'no-cache' }).then(function (r) {
                         _loaded++;
-                        var pct = Math.round(_loaded / _total * 100);
                         var fill = document.getElementById('loading-fill');
-                        if (fill) fill.style.width = pct + '%';
-                        var info = document.getElementById('loading-info');
-                        if (info) info.textContent = pct + '% (' + _loaded + '/' + _total + ')';
+                        if (fill) fill.style.width = Math.round(_loaded / _total * 100) + '%';
                         return r;
-                    }).catch(function (err) {
-                        _failed.push(myName);
-                        _loaded++;
-                        var info = document.getElementById('loading-info');
-                        if (info) info.textContent = 'ERR: ' + myName + ' — ' + (err.message || err);
-                        throw err;
                     });
                 }
             }
         }).catch(function (err) {
             var app = document.getElementById('app');
             if (app) {
-                var msg = 'Ошибка загрузки.';
-                if (_failed.length) msg += '<br>Failed: ' + _failed.join(', ');
-                msg += '<br><small>' + (err.message || err) + '</small>';
-                msg += '<br><a href="/" style="color:#8C6B3A">Обновить страницу</a>';
-                app.innerHTML = '<div style="text-align:center;padding:3rem;font-family:\'Cormorant Garamond\',serif;color:#8C6B3A;font-size:1.1rem;letter-spacing:1px">' + msg + '</div>';
+                app.innerHTML = '<div style="text-align:center;padding:3rem;font-family:\'Cormorant Garamond\',serif;color:#8C6B3A;font-size:1.2rem;letter-spacing:2px">Ошибка загрузки.<br><a href="/" style="color:#8C6B3A">Обновить страницу</a></div>';
             }
         });
     </script>
