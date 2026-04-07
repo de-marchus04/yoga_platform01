@@ -24,20 +24,20 @@
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    },
-    {
-      "source": "/retreats/11111111-1111-1111-1111-111111111111",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex"
-        }
-      ]
     }
   ],
   "headers": [
     {
       "source": "/_framework/blazor.boot.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/Yoga.Client.styles.css",
       "headers": [
         {
           "key": "Cache-Control",
@@ -55,6 +55,15 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=604800, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/retreats/11111111-1111-1111-1111-111111111111",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
         }
       ]
     }

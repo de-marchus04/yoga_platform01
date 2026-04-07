@@ -37,6 +37,24 @@
       ]
     },
     {
+      "source": "/Yoga.Client.styles.css",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/app.css",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
       "source": "/_framework/(.*).wasm",
       "headers": [
         {
