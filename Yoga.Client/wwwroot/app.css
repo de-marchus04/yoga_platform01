@@ -33,6 +33,8 @@
   --border-radius:   0px;
   --container-width: 1240px;
   --transition-speed: 0.3s ease;
+  --card-bg:         #FFFFFF;
+  --border:          rgba(26, 26, 26, 0.1);
 }
 
 /* --- RESET & GLOBALS --- */
@@ -676,6 +678,8 @@ textarea:focus-visible {
   --section-bg-warm:  #2D2720;
   --format-bg-online: #1C1A14;
   --text-on-dark:     #E0DCD4;
+  --card-bg:          #1A1814;
+  --border:           rgba(232, 228, 220, 0.14);
 }
 
 /* Section-specific backgrounds are handled via --section-bg-dark / --section-bg-warm CSS vars. */
@@ -846,6 +850,17 @@ textarea:focus-visible {
 /* .section-eyebrow inside any photo-hero is always accent – regardless of theme */
 .page-hero-content .section-eyebrow {
   color: var(--accent);
+}
+
+/* Intro paragraph under hero title — readable line length on list pages */
+.page-hero-intro {
+  max-width: 36rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 300;
+  line-height: 1.75;
+  color: rgba(224, 220, 212, 0.72);
+  margin: 0;
 }
 
 @media (max-width: 768px) {
@@ -3121,6 +3136,195 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 /* ===================================================
+   RETREATS — hub landing & sub-navigation
+   =================================================== */
+.retreats-hub {
+  padding: 7rem 0 6rem;
+  background: var(--background);
+}
+
+.retreats-hub .section-eyebrow {
+  margin-bottom: 1rem;
+}
+
+.retreats-hub h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  font-weight: 300;
+  font-style: italic;
+  color: var(--charcoal);
+  margin: 0 0 1.5rem;
+  line-height: 1.1;
+}
+
+.retreats-hub-intro {
+  max-width: 38rem;
+  color: var(--text-muted);
+  font-size: 0.98rem;
+  line-height: 1.8;
+  font-weight: 300;
+  margin: 0 0 3rem;
+}
+
+.retreats-hub-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--divider);
+  border-left: 1px solid var(--divider);
+}
+
+.retreats-hub-tile {
+  border-right: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+  padding: 2.75rem 2rem;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s ease;
+}
+
+.retreats-hub-tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+.retreats-hub-tile:hover::before {
+  transform: scaleX(1);
+}
+
+.retreats-hub-tile:hover {
+  background: var(--accent-light);
+}
+
+.retreats-hub-tile h2 {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--charcoal);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.retreats-hub-tile-desc {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.75;
+  font-weight: 300;
+  flex: 1;
+  margin: 0;
+}
+
+.retreats-hub-tile-cta {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: 0.5rem;
+  transition: letter-spacing 0.3s ease;
+}
+
+.retreats-hub-tile:hover .retreats-hub-tile-cta {
+  letter-spacing: 4px;
+}
+
+@media (max-width: 768px) {
+  .retreats-hub-tiles {
+    grid-template-columns: 1fr;
+  }
+
+  .retreats-hub {
+    padding: 5rem 0 4rem;
+  }
+}
+
+.retreats-subnav {
+  background: var(--background);
+  border-bottom: 1px solid var(--divider);
+}
+
+.retreats-subnav-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.75rem;
+  padding: 1rem 2rem 0;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .retreats-subnav-inner {
+    padding: 0.85rem 1.35rem 0;
+    gap: 0.5rem 1.25rem;
+  }
+}
+
+.retreats-subnav-link {
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.65rem 0 1rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.retreats-subnav-link:hover {
+  color: var(--accent);
+}
+
+.retreats-subnav-link.active {
+  color: var(--charcoal);
+  border-bottom-color: var(--accent);
+}
+
+[data-theme="dark"] .retreats-subnav-link.active {
+  color: var(--text-main);
+}
+
+.retreats-empty-state {
+  max-width: 40rem;
+  margin: 3rem auto 0;
+  padding: 3rem 2rem;
+  text-align: center;
+  border: 1px solid var(--divider);
+  background: var(--card-bg, var(--white));
+}
+
+.retreats-empty-state .section-eyebrow {
+  margin-bottom: 1.25rem;
+}
+
+.retreats-empty-body {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.85;
+  font-weight: 300;
+  margin: 0 0 2rem;
+}
+
+.retreats-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* ===================================================
    RETREAT CARDS — global styles for listing pages
    =================================================== */
 .retreats-section {
@@ -3229,6 +3433,61 @@ details[open] > .program-module-summary .program-module-toggle {
 
 .retreat-card-actions .btn { flex: 1; text-align: center; }
 
+.card-meta-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.card-meta-icon {
+  flex-shrink: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: 0.12em;
+  color: var(--accent);
+}
+
+.card-meta-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* First card as full-width showcase (listing pages) */
+.retreats-grid--with-featured .retreat-card--featured {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 280px;
+}
+
+.retreats-grid--with-featured .retreat-card--featured .card-img-wrapper {
+  flex: 0 0 50%;
+  max-width: 50%;
+  height: auto;
+  min-height: 280px;
+}
+
+.retreats-grid--with-featured .retreat-card--featured .card-content {
+  flex: 1;
+  justify-content: center;
+  padding: 2.5rem 2.25rem;
+}
+
+@media (max-width: 900px) {
+  .retreats-grid--with-featured .retreat-card--featured {
+    flex-direction: column;
+  }
+
+  .retreats-grid--with-featured .retreat-card--featured .card-img-wrapper {
+    flex: none;
+    max-width: none;
+    width: 100%;
+    height: 240px;
+    min-height: 0;
+  }
+}
+
 /* ===================================================
    RETREAT DETAIL PAGE
    =================================================== */
@@ -3254,6 +3513,24 @@ details[open] > .program-module-summary .program-module-toggle {
   position: relative;
   z-index: 1;
   padding-bottom: 5rem;
+}
+
+/* Stack title above flexible spacer so meta pills sit near the bottom of the hero */
+.retreat-detail-hero-stack {
+  display: flex;
+  flex-direction: column;
+  min-height: 78vh;
+  justify-content: flex-end;
+}
+
+.retreat-detail-hero-spacer {
+  flex: 1 1 auto;
+  min-height: 1.5rem;
+}
+
+.retreat-detail-hero-meta {
+  flex-shrink: 0;
+  padding-top: 0.25rem;
 }
 
 /* Photo-overlay hero text must always be light regardless of active theme */
@@ -3297,13 +3574,13 @@ details[open] > .program-module-summary .program-module-toggle {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.25rem;
+  margin-top: 0;
 }
 
 .meta-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   padding: 0.45rem 1.1rem;
   border: 1px solid rgba(224,220,212,0.2);
   border-radius: 2rem;
@@ -3316,6 +3593,21 @@ details[open] > .program-module-summary .program-module-toggle {
 .meta-pill-past {
   border-color: rgba(160,140,100,0.45);
   color: var(--accent);
+}
+
+.meta-pill-icon {
+  display: inline-flex;
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.95;
+}
+
+.meta-pill-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* Body */
@@ -3344,7 +3636,7 @@ details[open] > .program-module-summary .program-module-toggle {
 
 .sticky-panel {
   position: sticky;
-  top: 6rem;
+  top: calc(var(--mobile-header-height, 4.5rem) + 1rem);
 }
 
 .retreat-booking-card {
@@ -3401,6 +3693,52 @@ details[open] > .program-module-summary .program-module-toggle {
   font-size: 0.9rem;
   margin-top: 0.4rem;
   line-height: 1.65;
+}
+
+[data-theme="dark"] .day-item {
+  border-bottom-color: rgba(232, 228, 220, 0.14);
+}
+
+[data-theme="dark"] .day-chip {
+  background: rgba(200, 170, 132, 0.12);
+  border: 1px solid rgba(200, 170, 132, 0.22);
+}
+
+.retreat-booking-price {
+  font-family: var(--font-serif);
+  font-size: 1.65rem;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--charcoal);
+  margin: 0 0 1.25rem;
+  line-height: 1.2;
+}
+
+.retreat-booking-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.retreat-booking-meta .card-meta-line {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.retreat-booking-hint {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.75;
+  margin: 0 0 1.75rem;
+}
+
+.retreat-other-body .card-meta-line {
+  margin-bottom: 0.15rem;
 }
 
 /* Included list */

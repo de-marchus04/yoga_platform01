@@ -53,17 +53,28 @@ else
     <section class="retreat-detail-hero"
              style="background-image: url('@(r.ImageUrl != null ? ApiService.ResolveMediaUrl(r.ImageUrl) : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1600&q=80")');">
         <div class="retreat-detail-hero-overlay"></div>
-        <div class="container retreat-detail-hero-content">
-            <a href="/retreats/actual" class="retreat-back-link">← @Loc["page.retreat.detail.back"]</a>
-            <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.retreats.eyebrow"]</p>
-            <h1>@r.Title</h1>
-            <div class="retreat-meta-pills">
-                <span class="meta-pill">📍 @r.Location</span>
-                <span class="meta-pill">🗓 @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")</span>
-                @if (IsPast)
-                {
-                    <span class="meta-pill meta-pill-past">@Loc["page.retreat.past.badge"]</span>
-                }
+        <div class="container retreat-detail-hero-content retreat-detail-hero-stack">
+            <div class="retreat-detail-hero-text">
+                <a href="/retreats/actual" class="retreat-back-link">← @Loc["page.retreat.detail.back"]</a>
+                <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.retreats.eyebrow"]</p>
+                <h1>@r.Title</h1>
+            </div>
+            <div class="retreat-detail-hero-spacer" aria-hidden="true"></div>
+            <div class="retreat-detail-hero-meta">
+                <div class="retreat-meta-pills">
+                    <span class="meta-pill">
+                        <span class="meta-pill-icon"><RetreatMetaSvg Kind="pin" /></span>
+                        @r.Location
+                    </span>
+                    <span class="meta-pill">
+                        <span class="meta-pill-icon"><RetreatMetaSvg Kind="calendar" /></span>
+                        @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")
+                    </span>
+                    @if (IsPast)
+                    {
+                        <span class="meta-pill meta-pill-past">@Loc["page.retreat.past.badge"]</span>
+                    }
+                </div>
             </div>
         </div>
     </section>
@@ -190,8 +201,14 @@ else
                                          alt="@o.Title" loading="lazy" />
                                     <div class="retreat-other-body">
                                         <h4>@o.Title</h4>
-                                        <p>📍 @o.Location</p>
-                                        <p>🗓 @o.StartDate.ToString("dd MMM yyyy")</p>
+                                        <p class="card-meta-line">
+                                            <span class="card-meta-icon"><RetreatMetaSvg Kind="pin" /></span>
+                                            @o.Location
+                                        </p>
+                                        <p class="card-meta-line">
+                                            <span class="card-meta-icon"><RetreatMetaSvg Kind="calendar" /></span>
+                                            @o.StartDate.ToString("dd MMM yyyy")
+                                        </p>
                                         <a href="/retreats/@o.Id" class="btn btn-outline btn-sm" style="display:inline-block; margin-top:1rem;">@Loc["page.retreat.detail.other_cta"]</a>
                                     </div>
                                 </div>
@@ -220,11 +237,22 @@ else
                         <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.retreats.eyebrow"]</p>
                         <h3 style="font-size:1.5rem; margin:0.75rem 0 1.25rem;">@Loc["page.retreat.detail.booking_h3"]</h3>
                         <div class="section-divider" style="margin:0 0 1.75rem;"></div>
-                        <p style="color:var(--text-muted); font-size:0.85rem; line-height:1.8; margin-bottom:2rem;">
-                            📍 @r.Location<br/>
-                            🗓 @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")
-                        </p>
-                        <button class="btn btn-primary" style="width:100%;" @onclick="OpenModal">@Loc["page.retreats.card.cta"]</button>
+                        @if (!string.IsNullOrWhiteSpace(r.PriceLabel))
+                        {
+                            <p class="retreat-booking-price">@r.PriceLabel</p>
+                        }
+                        <div class="retreat-booking-meta">
+                            <p class="card-meta-line">
+                                <span class="card-meta-icon"><RetreatMetaSvg Kind="pin" /></span>
+                                @r.Location
+                            </p>
+                            <p class="card-meta-line">
+                                <span class="card-meta-icon"><RetreatMetaSvg Kind="calendar" /></span>
+                                @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")
+                            </p>
+                        </div>
+                        <p class="retreat-booking-hint">@Loc["page.retreat.detail.booking_format"]</p>
+                        <button type="button" class="btn btn-primary" style="width:100%;" @onclick="OpenModal">@Loc["form.submit"]</button>
                     }
                 </div>
             </aside>

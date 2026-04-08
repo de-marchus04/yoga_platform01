@@ -1,9 +1,30 @@
 @page "/retreats"
-@inject NavigationManager Nav
+@inject LocalizationService Loc
 
-@code {
-    protected override void OnInitialized()
-    {
-        Nav.NavigateTo("/retreats/actual", replace: true);
-    }
-}
+<PageTitle>@Loc["page.retreats.hub.title"] | shakti.ashram</PageTitle>
+
+<section class="retreats-hub">
+    <div class="container">
+        <p class="section-eyebrow">@Loc["page.retreats.eyebrow"]</p>
+        <h1>@Loc["page.retreats.hub.title"]</h1>
+        <div class="section-divider" style="margin:1.5rem 0 2rem;"></div>
+        <p class="retreats-hub-intro">@Loc["page.retreats.hub.intro"]</p>
+        <div class="retreats-hub-tiles">
+            <a href="/retreats/actual" class="retreats-hub-tile reveal">
+                <h2>@Loc["page.retreats.hub.tile.actual"]</h2>
+                <p class="retreats-hub-tile-desc">@Loc["page.retreats.hub.tile.actual.desc"]</p>
+                <span class="retreats-hub-tile-cta">@Loc["page.retreats.tab.actual"] →</span>
+            </a>
+            <a href="/retreats/upcoming" class="retreats-hub-tile reveal">
+                <h2>@Loc["page.retreats.hub.tile.upcoming"]</h2>
+                <p class="retreats-hub-tile-desc">@Loc["page.retreats.hub.tile.upcoming.desc"]</p>
+                <span class="retreats-hub-tile-cta">@Loc["page.retreats.tab.upcoming"] →</span>
+            </a>
+            <a href="/retreats/past" class="retreats-hub-tile reveal">
+                <h2>@Loc["page.retreats.hub.tile.past"]</h2>
+                <p class="retreats-hub-tile-desc">@Loc["page.retreats.hub.tile.past.desc"]</p>
+                <span class="retreats-hub-tile-cta">@Loc["page.retreats.tab.past"] →</span>
+            </a>
+        </div>
+    </div>
+</section>

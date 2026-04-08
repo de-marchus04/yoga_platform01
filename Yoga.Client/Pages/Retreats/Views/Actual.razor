@@ -12,9 +12,11 @@
         <p class="section-eyebrow" style="color:var(--accent);">@F("Eyebrow", Loc["page.retreats.eyebrow"])</p>
         <h1>@F("ActualH1", Loc["page.retreats.actual.h1"])</h1>
         <div class="section-divider" style="margin:2rem 0;"></div>
-        <p>@F("ActualIntro", Loc["page.retreats.actual.intro"])</p>
+        <p class="page-hero-intro">@F("ActualIntro", Loc["page.retreats.actual.intro"])</p>
     </div>
 </section>
+
+<RetreatsSubnav Active="actual" />
 
 <section class="retreats-section">
     <div class="container">
@@ -24,17 +26,19 @@
         }
         else if (!retreats.Any())
         {
-            <div class="empty-state">
-                <p>Актуальные ретриты очищены для нового наполнения. Сюда нужно добавить текущие поездки с датами, местом проведения, описанием программы, изображением и CTA для заявки.</p>
-            </div>
+            <RetreatsEmptyState BodyKey="page.retreats.empty.actual" />
         }
         else
         {
-            <div class="retreats-grid">
+            <div class="retreats-grid retreats-grid--with-featured">
+                @{
+                    var i = 0;
+                }
                 @foreach (var retreat in retreats)
                 {
                     <RetreatCard Retreat="@retreat"
                                  IsPast="false"
+                                 Featured="@(i++ == 0)"
                                  DetailText="@Loc["page.retreat.card.detail"]"
                                  CtaText="@F("CardCta", Loc["page.retreats.card.cta"])"
                                  HasCta="true"

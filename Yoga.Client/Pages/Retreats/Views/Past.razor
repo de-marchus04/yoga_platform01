@@ -12,9 +12,11 @@
         <p class="section-eyebrow" style="color:var(--accent);">@F("Eyebrow", Loc["page.retreats.eyebrow"])</p>
         <h1>@F("PastH1", Loc["page.retreats.past.h1"])</h1>
         <div class="section-divider" style="margin:2rem 0;"></div>
-        <p>@F("PastIntro", Loc["page.retreats.past.intro"])</p>
+        <p class="page-hero-intro">@F("PastIntro", Loc["page.retreats.past.intro"])</p>
     </div>
 </section>
+
+<RetreatsSubnav Active="past" />
 
 <section class="retreats-section">
     <div class="container">
@@ -24,9 +26,7 @@
         }
         else if (!retreats.Any())
         {
-            <div class="empty-state">
-                <p>Архив прошедших ретритов очищен. Сюда нужно добавлять кейсы завершённых программ, чтобы подтверждать опыт, географию и историю проекта без перегрузки главного каталога.</p>
-            </div>
+            <RetreatsEmptyState BodyKey="page.retreats.empty.past" />
         }
         else
         {

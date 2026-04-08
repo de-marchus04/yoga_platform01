@@ -1,0 +1,15 @@
+@namespace Yoga.Client.Components.UI
+@inject LocalizationService Loc
+
+<div class="retreats-empty-state">
+    <p class="section-eyebrow">@Loc["page.retreats.empty.eyebrow"]</p>
+    <p class="retreats-empty-body">@Loc[BodyKey]</p>
+    <div class="retreats-empty-actions">
+        <a href="/" class="btn btn-outline">@Loc["page.retreats.empty.cta_home"]</a>
+        <a href="/contacts" class="btn btn-outline">@Loc["page.retreats.empty.cta_contact"]</a>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string BodyKey { get; set; } = "";
+}
