@@ -165,7 +165,7 @@
             loadBootResource: function (type, name, defaultUri, integrity) {
                 if (type !== 'dotnetjs') {
                     _total++;
-                    return fetch(defaultUri, { cache: 'no-cache' }).then(function (r) {
+                    return fetch(defaultUri).then(function (r) {
                         _loaded++;
                         var fill = document.getElementById('loading-fill');
                         if (fill) fill.style.width = Math.round(_loaded / _total * 100) + '%';
