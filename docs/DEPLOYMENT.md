@@ -53,13 +53,11 @@ Required GitHub Actions variable for frontend deploy:
 
 - `FRONTEND_PUBLIC_API_BASE_URL=https://your-public-api-origin`
 
-Recommended for frontend deploy (avoids smoke failures):
+Post-deploy smoke tests avoid hitting protected `*.vercel.app` URLs:
 
-- `FRONTEND_SMOKE_URL=https://www.your-public-site.com` — URL used for post-deploy **curl** checks. If unset, the workflow uses the `*.vercel.app` URL returned by the CLI; with **Vercel Deployment Protection** enabled, that URL often returns **401** to anonymous requests and the job fails even though the deploy succeeded. Pointing smoke at your real public domain (after the production alias updates) fixes this.
-
-Optional GitHub Actions **secret** (alternative to `FRONTEND_SMOKE_URL` for protected `*.vercel.app` URLs):
-
-- `VERCEL_PROTECTION_BYPASS_SECRET` — from Vercel → Project → **Settings** → **Deployment Protection** → generate an **Automation Bypass** secret; the workflow sends it as header `x-vercel-protection-bypass`. See [Vercel: bypass for automation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation).
+- If `FRONTEND_PUBLIC_API_BASE_URL` is `https://api.example.com`, the workflow **automatically** smoke-checks `https://www.example.com` (no extra variable required).
+- Override with optional variable `FRONTEND_SMOKE_URL` if your public site is not `www.` on the same host.
+- Optional secret `VERCEL_PROTECTION_BYPASS_SECRET` — Vercel → **Deployment Protection** → automation bypass; sent as `x-vercel-protection-bypass` on curls. See [Vercel docs](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation).
 
 Required GitHub Actions **secret** for frontend deploy:
 

@@ -144,25 +144,41 @@ jobs:
             *) DEPLOYMENT_URL="https://$DEPLOYMENT_URL" ;;
           esac
 
-          # Prefer public production domain for smoke: *.vercel.app often returns 401 when Vercel Deployment Protection is enabled.
+          # *.vercel.app often returns 401 (Deployment Protection). Prefer public site:
+          # 1) FRONTEND_SMOKE_URL if set, else 2) auto https://api.host -> https://www.host from API variable.
+          DERIVED_SMOKE=""
+          api_base="${FRONTEND_PUBLIC_API_BASE_URL%/}"
+          case "$api_base" in
+            https://api.*)
+              host="${api_base#https://api.}"
+              DERIVED_SMOKE="https://www.$host"
+              ;;
+            http://api.*)
+              host="${api_base#http://api.}"
+              DERIVED_SMOKE="http://www.$host"
+              ;;
+          esac
+
           if [ -n "$FRONTEND_SMOKE_URL" ]; then
             SMOKE_URL="$FRONTEND_SMOKE_URL"
             case "$SMOKE_URL" in
               https://*) ;;
+              http://*) ;;
               *) SMOKE_URL="https://$SMOKE_URL" ;;
             esac
-            echo "Smoke checking public URL $SMOKE_URL (FRONTEND_SMOKE_URL; deployment was $DEPLOYMENT_URL)"
+            echo "Smoke checking $SMOKE_URL (FRONTEND_SMOKE_URL; deploy URL $DEPLOYMENT_URL)"
+          elif [ -n "$DERIVED_SMOKE" ]; then
+            SMOKE_URL="$DERIVED_SMOKE"
+            echo "Smoke checking $SMOKE_URL (auto from FRONTEND_PUBLIC_API_BASE_URL; deploy URL $DEPLOYMENT_URL)"
           else
             SMOKE_URL="$DEPLOYMENT_URL"
-            echo "Smoke checking $SMOKE_URL"
+            echo "Smoke checking $SMOKE_URL (no FRONTEND_SMOKE_URL and API is not https://api.* — set FRONTEND_SMOKE_URL or VERCEL_PROTECTION_BYPASS_SECRET if you get 401)"
           fi
 
           CURL_EXTRA=(--fail --silent --show-error --location)
           if [ -n "$VERCEL_PROTECTION_BYPASS_SECRET" ]; then
             CURL_EXTRA+=(-H "x-vercel-protection-bypass: $VERCEL_PROTECTION_BYPASS_SECRET")
-            echo "Using Vercel protection bypass header for curl"
-          elif [ "$SMOKE_URL" = "$DEPLOYMENT_URL" ] && echo "$SMOKE_URL" | grep -q '\.vercel\.app'; then
-            echo "::warning::Smoke target is a *.vercel.app URL without VERCEL_PROTECTION_BYPASS_SECRET. If curl returns 401, set GitHub Variable FRONTEND_SMOKE_URL to your public site (e.g. https://www.medisha.space) or add secret VERCEL_PROTECTION_BYPASS_SECRET from Vercel → Project → Settings → Deployment Protection."
+            echo "Using x-vercel-protection-bypass for curl"
           fi
 
           for route in / /about /contacts /retreats /privacy /terms /account/login; do
