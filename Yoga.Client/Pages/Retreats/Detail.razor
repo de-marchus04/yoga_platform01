@@ -24,8 +24,8 @@
 
 @if (retreat == null && !notFound)
 {
-    <section class="rd2-hero">
-        <div class="rd2-hero-overlay" style="background:var(--background);"></div>
+    <section class="rd2-hero" style="background:var(--section-bg-dark);">
+        <div class="rd2-hero-overlay"></div>
         <div class="container rd2-hero-content">
             <div class="skeleton skeleton-title" style="height:1rem; width:15%; margin-bottom:1rem;"></div>
             <div class="skeleton" style="height:3rem; width:70%; margin-bottom:1.5rem;"></div>
@@ -42,7 +42,7 @@ else if (notFound)
         <div style="max-width:780px;">
             <h1>@P("Страница ретрита очищена", "Сторінку ретриту очищено", "The retreat page has been cleared")</h1>
             <div class="section-divider" style="margin:2rem auto;"></div>
-            <p style="color:var(--text-muted);">@P("Сюда нужно добавить полноценное описание ретрита: локацию, даты, формат участия, программу по дням, ключевые визуалы, социальное доказательство и CTA для отправки заявки.", "Сюди потрібно додати повноцінний опис ретриту: локацію, дати, формат участі, програму по днях, ключові візуали, соціальний доказ і CTA для відправки заявки.", "Use this page for the full retreat offer: location, dates, participation format, day-by-day program, key visuals, social proof, and an application CTA.")</p>
+            <p style="color:var(--text-muted);">@P("Сюда нужно добавить полноценное описание ретрита.", "Сюди потрібно додати повноцінний опис ретриту.", "Add a full retreat description here.")</p>
         </div>
         <a href="/retreats/actual" class="btn btn-outline">← @Loc["page.retreat.detail.back"]</a>
     </div>
@@ -50,113 +50,96 @@ else if (notFound)
 else
 {
     var r = retreat!;
-    var heroUrl = r.ImageUrl != null
-        ? ApiService.ResolveMediaUrl(r.ImageUrl)
-        : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1600&q=80";
-    var durationDays = (r.EndDate - r.StartDate).Days;
+    var heroImg = r.ImageUrl != null ? ApiService.ResolveMediaUrl(r.ImageUrl) : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1600&q=80";
+    var duration = (r.EndDate - r.StartDate).Days;
 
-    <!-- ====== BREADCRUMB ====== -->
-    <nav class="rd2-breadcrumb">
-        <div class="container">
-            <a href="/retreats/actual">@Loc["page.retreat.detail.back"]</a>
-            <span class="rd2-breadcrumb-sep">/</span>
-            <span class="rd2-breadcrumb-current">@r.Title</span>
-        </div>
-    </nav>
-
-    <!-- ====== IMMERSIVE HERO (100vh) ====== -->
-    <section class="rd2-hero" style="background-image: url('@heroUrl');">
+    <!-- 1. IMMERSIVE HERO -->
+    <section class="rd2-hero" style="background-image: url('@heroImg');">
         <div class="rd2-hero-overlay"></div>
+        <nav class="rd2-breadcrumb" aria-label="breadcrumb">
+            <a href="/">@Loc["nav.home"]</a> <span>/</span>
+            <a href="/retreats/actual">@Loc["nav.retreats"]</a> <span>/</span>
+            <span>@Truncate(r.Title, 40)</span>
+        </nav>
         <div class="container rd2-hero-content">
-            <div class="rd2-hero-center">
-                <p class="rd2-hero-eyebrow">@Loc["page.retreats.eyebrow"]</p>
-                <h1 class="rd2-hero-title">@r.Title</h1>
-                @if (!string.IsNullOrWhiteSpace(r.Description))
+            <p class="rd2-hero-eyebrow">@Loc["page.retreats.eyebrow"]</p>
+            <h1 class="rd2-hero-title">@r.Title</h1>
+            @if (!string.IsNullOrEmpty(r.Description))
+            {
+                <p class="rd2-hero-subtitle">@Truncate(r.Description, 120)</p>
+            }
+            <div class="rd2-hero-pills">
+                <span class="rd2-pill">
+                    <span class="rd2-pill-icon"><RetreatMetaSvg Kind="pin" /></span>
+                    @r.Location
+                </span>
+                <span class="rd2-pill">
+                    <span class="rd2-pill-icon"><RetreatMetaSvg Kind="calendar" /></span>
+                    @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")
+                </span>
+                @if (!string.IsNullOrWhiteSpace(r.PriceLabel))
                 {
-                    <p class="rd2-hero-subtitle">@Truncate(r.Description, 140)</p>
+                    <span class="rd2-pill rd2-pill-price">@r.PriceLabel</span>
+                }
+                @if (IsPast)
+                {
+                    <span class="rd2-pill rd2-pill-past">@Loc["page.retreat.past.badge"]</span>
                 }
             </div>
-            <div class="rd2-hero-bottom">
-                <div class="rd2-hero-pills">
-                    <span class="rd2-pill">
-                        <span class="rd2-pill-icon"><RetreatMetaSvg Kind="pin" /></span>
-                        @r.Location
-                    </span>
-                    <span class="rd2-pill">
-                        <span class="rd2-pill-icon"><RetreatMetaSvg Kind="calendar" /></span>
-                        @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")
-                    </span>
-                    @if (!string.IsNullOrWhiteSpace(r.PriceLabel))
-                    {
-                        <span class="rd2-pill rd2-pill-price">@r.PriceLabel</span>
-                    }
-                    @if (IsPast)
-                    {
-                        <span class="rd2-pill rd2-pill-past">@Loc["page.retreat.past.badge"]</span>
-                    }
-                </div>
-                <div class="rd2-scroll-indicator" aria-hidden="true">
-                    <span class="rd2-chevron"></span>
-                </div>
-            </div>
+        </div>
+        <div class="rd2-scroll-indicator" aria-hidden="true">
+            <span>@Loc["rd.scroll"]</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg>
         </div>
     </section>
 
-    <!-- ====== STICKY BOOKING BAR ====== -->
+    <!-- 2. STICKY BOOKING BAR (desktop) -->
     @if (!IsPast)
     {
         <div class="rd2-sticky-bar">
-            <div class="container rd2-sticky-bar-inner">
+            <div class="container rd2-sticky-inner">
                 <span class="rd2-sticky-title">@Truncate(r.Title, 50)</span>
                 @if (!string.IsNullOrWhiteSpace(r.PriceLabel))
                 {
                     <span class="rd2-sticky-price">@r.PriceLabel</span>
                 }
-                <button type="button" class="btn btn-primary btn-sm" @onclick="OpenModal">@Loc["form.submit"]</button>
+                <button type="button" class="btn btn-primary rd2-sticky-btn" @onclick="OpenModal">@Loc["rd.sticky.cta"]</button>
             </div>
         </div>
     }
 
-    <!-- ====== QUICK FACTS STRIP ====== -->
-    <section class="rd2-facts reveal">
-        <div class="container rd2-facts-inner">
-            <div class="rd2-fact-item">
-                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                <div>
-                    <span class="rd2-fact-label">@Loc["rd.facts.duration"]</span>
-                    <span class="rd2-fact-value">@durationDays @Loc["rd.facts.days"]</span>
-                </div>
+    <!-- 3. QUICK FACTS STRIP -->
+    <section class="rd2-facts">
+        <div class="container rd2-facts-grid">
+            <div class="rd2-fact">
+                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span class="rd2-fact-label">@Loc["rd.facts.duration"]</span>
+                <span class="rd2-fact-value">@duration @Loc["rd.facts.days"]</span>
             </div>
-            <div class="rd2-fact-item">
+            <div class="rd2-fact">
                 <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <div>
-                    <span class="rd2-fact-label">@Loc["rd.facts.group"]</span>
-                    <span class="rd2-fact-value">@Loc["rd.facts.group_size"]</span>
-                </div>
+                <span class="rd2-fact-label">@Loc["rd.facts.group"]</span>
+                <span class="rd2-fact-value">@Loc["rd.facts.group_value"]</span>
             </div>
-            <div class="rd2-fact-item">
-                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                <div>
-                    <span class="rd2-fact-label">@Loc["rd.facts.level"]</span>
-                    <span class="rd2-fact-value">@Loc["rd.facts.level_value"]</span>
-                </div>
+            <div class="rd2-fact">
+                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <span class="rd2-fact-label">@Loc["rd.facts.level"]</span>
+                <span class="rd2-fact-value">@Loc["rd.facts.level_value"]</span>
             </div>
-            <div class="rd2-fact-item">
-                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
-                <div>
-                    <span class="rd2-fact-label">@Loc["rd.facts.language"]</span>
-                    <span class="rd2-fact-value">@Loc["rd.facts.language_value"]</span>
-                </div>
+            <div class="rd2-fact">
+                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span class="rd2-fact-label">@Loc["rd.facts.language"]</span>
+                <span class="rd2-fact-value">@Loc["rd.facts.language_value"]</span>
             </div>
         </div>
     </section>
 
-    <!-- ====== ABOUT SECTION ====== -->
-    <section class="rd2-about reveal">
-        <div class="container rd2-about-inner">
+    <!-- 4. ABOUT SECTION -->
+    <section class="rd2-about">
+        <div class="container rd2-about-grid reveal">
             <div class="rd2-about-text">
-                <p class="section-eyebrow">@Loc["page.retreat.detail.about_eyebrow"]</p>
-                <h2>@Loc["page.retreat.detail.about_h2"]</h2>
+                <p class="section-eyebrow">@Loc["rd.about.eyebrow"]</p>
+                <h2>@Loc["rd.about.h2"]</h2>
                 <div class="section-divider" style="margin:1.5rem 0;"></div>
                 <div class="rd2-about-prose">
                     @foreach (var block in SplitDescriptionBlocks(r.Description))
@@ -165,305 +148,215 @@ else
                     }
                 </div>
                 <div class="rd2-for-whom">
-                    <h3>@Loc["rd.about.for_whom"]</h3>
-                    <ul class="rd2-check-list">
-                        <li><span class="rd2-check">✓</span> @Loc["rd.about.whom1"]</li>
-                        <li><span class="rd2-check">✓</span> @Loc["rd.about.whom2"]</li>
-                        <li><span class="rd2-check">✓</span> @Loc["rd.about.whom3"]</li>
-                        <li><span class="rd2-check">✓</span> @Loc["rd.about.whom4"]</li>
+                    <h4>@Loc["rd.about.for_whom"]</h4>
+                    <ul>
+                        <li>@Loc["rd.about.whom1"]</li>
+                        <li>@Loc["rd.about.whom2"]</li>
+                        <li>@Loc["rd.about.whom3"]</li>
+                        <li>@Loc["rd.about.whom4"]</li>
                     </ul>
                 </div>
             </div>
             <div class="rd2-about-photo">
-                <img src="https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=800&q=80"
-                     alt="@Loc["page.retreat.detail.about_eyebrow"]" loading="lazy" />
+                <img src="https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=800&q=80" alt="@r.Title" loading="lazy" />
             </div>
         </div>
     </section>
 
-    <!-- ====== FACILITATOR ====== -->
+    <!-- 5. FACILITATOR -->
     <section class="rd2-facilitator reveal">
         <div class="container rd2-facilitator-inner">
-            <div class="rd2-facilitator-photo">
-                <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80"
-                     alt="Александр Украинцев" loading="lazy" />
-            </div>
-            <div class="rd2-facilitator-text">
-                <p class="section-eyebrow">@Loc["rd.facilitator.eyebrow"]</p>
-                <h2>@Loc["rd.facilitator.name"]</h2>
+            <p class="section-eyebrow">@Loc["rd.facilitator.eyebrow"]</p>
+            <h2>@Loc["rd.facilitator.h2"]</h2>
+            <div class="section-divider" style="margin:1.5rem auto;"></div>
+            <div class="rd2-facilitator-card">
+                <div class="rd2-facilitator-avatar">АУ</div>
+                <h3>@Loc["rd.facilitator.name"]</h3>
                 <p class="rd2-facilitator-role">@Loc["rd.facilitator.role"]</p>
-                <div class="section-divider" style="margin:1.25rem 0;"></div>
                 <p class="rd2-facilitator-bio">@Loc["rd.facilitator.bio"]</p>
                 <blockquote class="rd2-facilitator-quote">
-                    <p>@Loc["rd.facilitator.quote"]</p>
+                    <p>«@Loc["rd.facilitator.quote"]»</p>
                 </blockquote>
             </div>
         </div>
     </section>
 
-    <!-- ====== ITINERARY ACCORDION ====== -->
-    <section class="rd2-itinerary reveal">
-        <div class="container">
-            <p class="section-eyebrow">@Loc["page.retreat.detail.program_eyebrow"]</p>
-            <h2>@Loc["page.retreat.detail.program_h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 2.5rem;"></div>
-
+    <!-- 6. ITINERARY ACCORDION -->
+    <section class="rd2-itinerary">
+        <div class="container reveal">
+            <p class="section-eyebrow">@Loc["rd.itinerary.eyebrow"]</p>
+            <h2>@Loc["rd.itinerary.h2"]</h2>
+            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
             @if (!string.IsNullOrWhiteSpace(r.Program))
             {
-                <div class="rd2-itinerary-custom">@((MarkupString)r.Program)</div>
+                <div class="rd2-program-html">@((MarkupString)r.Program)</div>
             }
             else
             {
-                <div class="rd2-itinerary-days">
-                    <details class="rd2-day" open>
-                        <summary>
-                            <span class="rd2-day-chip">@Loc["rd.itinerary.day"] 1</span>
-                            <span class="rd2-day-title">@Loc["rd.itinerary.d1.title"]</span>
-                            <span class="rd2-day-arrow"></span>
-                        </summary>
-                        <div class="rd2-day-body">
-                            <div class="rd2-timeline-item">
-                                <span class="rd2-timeline-time">@Loc["rd.itinerary.afternoon"]</span>
-                                <p>@Loc["rd.itinerary.d1.afternoon"]</p>
-                            </div>
-                            <div class="rd2-timeline-item">
-                                <span class="rd2-timeline-time">@Loc["rd.itinerary.evening"]</span>
-                                <p>@Loc["rd.itinerary.d1.evening"]</p>
-                            </div>
-                        </div>
-                    </details>
-
-                    <details class="rd2-day">
-                        <summary>
-                            <span class="rd2-day-chip">@Loc["rd.itinerary.day"] 2–6</span>
-                            <span class="rd2-day-title">@Loc["rd.itinerary.d2.title"]</span>
-                            <span class="rd2-day-arrow"></span>
-                        </summary>
-                        <div class="rd2-day-body">
-                            <div class="rd2-timeline-item">
-                                <span class="rd2-timeline-time">@Loc["rd.itinerary.morning"]</span>
-                                <p>@Loc["rd.itinerary.d2.morning"]</p>
-                            </div>
-                            <div class="rd2-timeline-item">
-                                <span class="rd2-timeline-time">@Loc["rd.itinerary.afternoon"]</span>
-                                <p>@Loc["rd.itinerary.d2.afternoon"]</p>
-                            </div>
-                            <div class="rd2-timeline-item">
-                                <span class="rd2-timeline-time">@Loc["rd.itinerary.evening"]</span>
-                                <p>@Loc["rd.itinerary.d2.evening"]</p>
-                            </div>
-                        </div>
-                    </details>
-
-                    <details class="rd2-day">
-                        <summary>
-                            <span class="rd2-day-chip">@Loc["rd.itinerary.day"] @durationDays</span>
-                            <span class="rd2-day-title">@Loc["rd.itinerary.dlast.title"]</span>
-                            <span class="rd2-day-arrow"></span>
-                        </summary>
-                        <div class="rd2-day-body">
-                            <div class="rd2-timeline-item">
-                                <span class="rd2-timeline-time">@Loc["rd.itinerary.morning"]</span>
-                                <p>@Loc["rd.itinerary.dlast.morning"]</p>
-                            </div>
-                            <div class="rd2-timeline-item">
-                                <span class="rd2-timeline-time">@Loc["rd.itinerary.afternoon"]</span>
-                                <p>@Loc["rd.itinerary.dlast.afternoon"]</p>
-                            </div>
-                        </div>
-                    </details>
-                </div>
+                <details class="rd2-day" open>
+                    <summary><span class="rd2-day-chip">@P("День 1", "День 1", "Day 1")</span> <span>@P("Прибытие и встреча", "Прибуття та зустріч", "Arrival & welcome")</span></summary>
+                    <div class="rd2-day-content">
+                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.afternoon"]</span><p>@P("Заселение, знакомство группы", "Заселення, знайомство групи", "Check-in, group introduction")</p></div>
+                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.evening"]</span><p>@P("Вечерняя медитация при свечах", "Вечірня медитація при свічках", "Evening candlelight meditation")</p></div>
+                    </div>
+                </details>
+                <details class="rd2-day">
+                    <summary><span class="rd2-day-chip">@P("Дни 2–6", "Дні 2–6", "Days 2–6")</span> <span>@P("Практики и погружение", "Практики та занурення", "Practices & immersion")</span></summary>
+                    <div class="rd2-day-content">
+                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.morning"]</span><p>@P("Утренняя пранаяма и йога", "Ранкова пранаяма та йога", "Morning pranayama & yoga")</p></div>
+                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.afternoon"]</span><p>@P("Авторские лекции, экскурсии, время для себя", "Авторські лекції, екскурсії, час для себе", "Author talks, excursions, free time")</p></div>
+                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.evening"]</span><p>@P("Групповая медитация, беседы у костра", "Групова медитація, бесіди біля вогнища", "Group meditation, fireside talks")</p></div>
+                    </div>
+                </details>
+                <details class="rd2-day">
+                    <summary><span class="rd2-day-chip">@P("День 7", "День 7", "Day 7")</span> <span>@P("Интеграция и отъезд", "Інтеграція та від'їзд", "Integration & departure")</span></summary>
+                    <div class="rd2-day-content">
+                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.morning"]</span><p>@P("Финальный круг, церемония благодарности", "Фінальне коло, церемонія подяки", "Final circle, gratitude ceremony")</p></div>
+                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.afternoon"]</span><p>@P("Индивидуальная беседа с куратором, возвращение", "Індивідуальна бесіда з куратором, повернення", "Personal talk with facilitator, departure")</p></div>
+                    </div>
+                </details>
             }
         </div>
     </section>
 
-    <!-- ====== GALLERY (BENTO) ====== -->
-    <section class="rd2-gallery reveal">
-        <div class="container">
+    <!-- 7. GALLERY (Bento) -->
+    <section class="rd2-gallery-section">
+        <div class="container reveal">
             <p class="section-eyebrow">@Loc["page.retreat.detail.gallery_eyebrow"]</p>
             <h2>@Loc["page.retreat.detail.gallery_h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 2.5rem;"></div>
-            <div class="rd2-gallery-grid">
-                @for (int i = 0; i < GalleryImages.Count; i++)
+            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
+            <div class="rd2-gallery">
+                @{ int gi = 0; }
+                @foreach (var img in GalleryImages)
                 {
-                    var idx = i;
-                    <div class="rd2-gallery-item @(idx == 0 ? "rd2-gallery-featured" : "")" @onclick="() => OpenLightbox(idx)">
-                        <img src="@GalleryImages[idx]" alt="@r.Title — @(idx + 1)" loading="lazy" />
-                        <div class="rd2-gallery-hover">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                        </div>
+                    var idx = gi;
+                    <div class="rd2-gallery-item @(gi == 0 ? "rd2-gallery-featured" : "")" @onclick="() => OpenLightbox(idx)">
+                        <img src="@img" alt="@r.Title" loading="lazy" />
                     </div>
+                    gi++;
                 }
             </div>
         </div>
     </section>
 
-    <!-- ====== LIGHTBOX ====== -->
-    @if (showLightbox)
-    {
-        <div class="rd2-lightbox" @onclick="CloseLightbox">
-            <div class="rd2-lightbox-inner" @onclick:stopPropagation="true">
-                <button class="rd2-lightbox-close" @onclick="CloseLightbox" aria-label="Close">&times;</button>
-                <button class="rd2-lightbox-prev" @onclick="PrevImage" aria-label="Previous">&#8249;</button>
-                <img src="@GalleryImages[lightboxIndex]" alt="@r.Title" />
-                <button class="rd2-lightbox-next" @onclick="NextImage" aria-label="Next">&#8250;</button>
-                <span class="rd2-lightbox-counter">@(lightboxIndex + 1) / @GalleryImages.Count</span>
-            </div>
-        </div>
-    }
-
-    <!-- ====== INCLUDED / NOT INCLUDED ====== -->
-    <section class="rd2-inclusions reveal">
-        <div class="container">
-            <p class="section-eyebrow">@Loc["page.retreat.detail.included_eyebrow"]</p>
-            <h2>@Loc["page.retreat.detail.included_h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 2.5rem;"></div>
+    <!-- 8. INCLUDED / NOT INCLUDED -->
+    <section class="rd2-inclusions">
+        <div class="container reveal">
+            <p class="section-eyebrow">@Loc["rd.included.eyebrow"]</p>
+            <h2>@Loc["rd.included.h2"]</h2>
+            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
             <div class="rd2-inclusions-grid">
-                <div class="rd2-inclusions-col rd2-inclusions-yes">
-                    <h3>@Loc["rd.inclusions.included"]</h3>
-                    <ul>
-                        <li><span class="rd2-incl-icon rd2-incl-yes">✓</span> @Loc["page.retreat.detail.included.1"]</li>
-                        <li><span class="rd2-incl-icon rd2-incl-yes">✓</span> @Loc["page.retreat.detail.included.2"]</li>
-                        <li><span class="rd2-incl-icon rd2-incl-yes">✓</span> @Loc["page.retreat.detail.included.3"]</li>
-                        <li><span class="rd2-incl-icon rd2-incl-yes">✓</span> @Loc["page.retreat.detail.included.4"]</li>
-                        <li><span class="rd2-incl-icon rd2-incl-yes">✓</span> @Loc["page.retreat.detail.included.5"]</li>
-                        <li><span class="rd2-incl-icon rd2-incl-yes">✓</span> @Loc["page.retreat.detail.included.6"]</li>
-                        <li><span class="rd2-incl-icon rd2-incl-yes">✓</span> @Loc["page.retreat.detail.included.7"]</li>
+                <div>
+                    <h4 class="rd2-inc-heading rd2-inc-yes">@Loc["rd.included.col1"]</h4>
+                    <ul class="rd2-inc-list rd2-inc-list-yes">
+                        <li>@Loc["page.retreat.detail.included.1"]</li>
+                        <li>@Loc["page.retreat.detail.included.2"]</li>
+                        <li>@Loc["page.retreat.detail.included.3"]</li>
+                        <li>@Loc["page.retreat.detail.included.4"]</li>
+                        <li>@Loc["page.retreat.detail.included.5"]</li>
+                        <li>@Loc["page.retreat.detail.included.6"]</li>
+                        <li>@Loc["page.retreat.detail.included.7"]</li>
                     </ul>
                 </div>
-                <div class="rd2-inclusions-col rd2-inclusions-no">
-                    <h3>@Loc["rd.inclusions.not_included"]</h3>
-                    <ul>
-                        <li><span class="rd2-incl-icon rd2-incl-no">✕</span> @Loc["rd.inclusions.not1"]</li>
-                        <li><span class="rd2-incl-icon rd2-incl-no">✕</span> @Loc["rd.inclusions.not2"]</li>
-                        <li><span class="rd2-incl-icon rd2-incl-no">✕</span> @Loc["rd.inclusions.not3"]</li>
+                <div>
+                    <h4 class="rd2-inc-heading rd2-inc-no">@Loc["rd.included.col2"]</h4>
+                    <ul class="rd2-inc-list rd2-inc-list-no">
+                        <li>@Loc["rd.excluded.1"]</li>
+                        <li>@Loc["rd.excluded.2"]</li>
+                        <li>@Loc["rd.excluded.3"]</li>
                     </ul>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ====== ACCOMMODATION ====== -->
-    <section class="rd2-accommodation reveal">
-        <div class="container rd2-accommodation-inner">
+    <!-- 9. ACCOMMODATION -->
+    <section class="rd2-accommodation">
+        <div class="container rd2-accommodation-grid reveal">
             <div class="rd2-accommodation-photo">
-                <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80"
-                     alt="@Loc["rd.accommodation.title"]" loading="lazy" />
+                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" alt="Accommodation" loading="lazy" />
             </div>
             <div class="rd2-accommodation-text">
                 <p class="section-eyebrow">@Loc["rd.accommodation.eyebrow"]</p>
-                <h2>@Loc["rd.accommodation.title"]</h2>
+                <h3>@Loc["rd.accommodation.h2"]</h3>
                 <div class="section-divider" style="margin:1.25rem 0;"></div>
-                <p>@Loc["rd.accommodation.text"]</p>
+                <p>@Loc["rd.accommodation.desc"]</p>
+                <div class="rd2-amenity-tags">
+                    <span class="rd2-amenity">@Loc["rd.accommodation.amenity1"]</span>
+                    <span class="rd2-amenity">@Loc["rd.accommodation.amenity2"]</span>
+                    <span class="rd2-amenity">@Loc["rd.accommodation.amenity3"]</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- ====== REVIEWS CAROUSEL ====== -->
-    <section class="rd2-reviews reveal">
-        <div class="container">
-            <p class="section-eyebrow">@Loc["page.retreat.detail.reviews_eyebrow"]</p>
-            <h2>@Loc["page.retreat.detail.reviews_h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 2.5rem;"></div>
+    <!-- 10. REVIEWS CAROUSEL -->
+    <section class="rd2-reviews">
+        <div class="container reveal">
+            <p class="section-eyebrow">@Loc["rd.reviews.eyebrow"]</p>
+            <h2>@Loc["rd.reviews.h2"]</h2>
+            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
             <div class="rd2-reviews-track">
                 <div class="rd2-review-card">
-                    <div class="rd2-review-avatar">ЕМ</div>
-                    <div class="rd2-review-stars">★★★★★</div>
-                    <p class="rd2-review-quote">@Loc["rd.reviews.r1.text"]</p>
-                    <p class="rd2-review-author">@Loc["rd.reviews.r1.author"]</p>
+                    <div class="rd2-review-header">
+                        <div class="rd2-review-avatar">ЕМ</div>
+                        <div><span class="rd2-review-stars">★★★★★</span><span class="rd2-review-name">@P("Елена М.", "Олена М.", "Elena M.")</span></div>
+                    </div>
+                    <p class="rd2-review-quote">@P("После этого ретрита я вернулась другим человеком. Тишина, природа, глубина практик — всё на своём месте.", "Після цього ретриту я повернулася іншою людиною.", "After this retreat I came back a different person.")</p>
                 </div>
                 <div class="rd2-review-card">
-                    <div class="rd2-review-avatar">ИВ</div>
-                    <div class="rd2-review-stars">★★★★★</div>
-                    <p class="rd2-review-quote">@Loc["rd.reviews.r2.text"]</p>
-                    <p class="rd2-review-author">@Loc["rd.reviews.r2.author"]</p>
+                    <div class="rd2-review-header">
+                        <div class="rd2-review-avatar">ИВ</div>
+                        <div><span class="rd2-review-stars">★★★★★</span><span class="rd2-review-name">@P("Ирина В.", "Ірина В.", "Irina V.")</span></div>
+                    </div>
+                    <p class="rd2-review-quote">@P("Первый раз попала на подобную программу и сразу поняла: это именно то, чего не хватало годами.", "Вперше потрапила на подібну програму і одразу зрозуміла: це саме те, чого не вистачало роками.", "First time at such a program and I immediately knew: this is exactly what I'd been missing.")</p>
                 </div>
                 <div class="rd2-review-card">
-                    <div class="rd2-review-avatar">ДК</div>
-                    <div class="rd2-review-stars">★★★★★</div>
-                    <p class="rd2-review-quote">@Loc["rd.reviews.r3.text"]</p>
-                    <p class="rd2-review-author">@Loc["rd.reviews.r3.author"]</p>
-                </div>
-                <div class="rd2-review-card">
-                    <div class="rd2-review-avatar">АС</div>
-                    <div class="rd2-review-stars">★★★★★</div>
-                    <p class="rd2-review-quote">@Loc["rd.reviews.r4.text"]</p>
-                    <p class="rd2-review-author">@Loc["rd.reviews.r4.author"]</p>
+                    <div class="rd2-review-header">
+                        <div class="rd2-review-avatar">ДК</div>
+                        <div><span class="rd2-review-stars">★★★★★</span><span class="rd2-review-name">@P("Дмитрий К.", "Дмитро К.", "Dmitry K.")</span></div>
+                    </div>
+                    <p class="rd2-review-quote">@P("Организация на высоте, куратор всегда рядом. Тело и ум получили именно тот отдых, который нужен.", "Організація на висоті, куратор завжди поруч.", "Top-notch organization, the facilitator is always near.")</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ====== FAQ ACCORDION ====== -->
-    <section class="rd2-faq reveal">
-        <div class="container">
+    <!-- 11. FAQ ACCORDION -->
+    <section class="rd2-faq">
+        <div class="container reveal">
             <p class="section-eyebrow">@Loc["rd.faq.eyebrow"]</p>
-            <h2>@Loc["rd.faq.title"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 2.5rem;"></div>
-            <div class="rd2-faq-list">
-                <details class="rd2-faq-item">
-                    <summary>@Loc["rd.faq.q1"]</summary>
-                    <p>@Loc["rd.faq.a1"]</p>
-                </details>
-                <details class="rd2-faq-item">
-                    <summary>@Loc["rd.faq.q2"]</summary>
-                    <p>@Loc["rd.faq.a2"]</p>
-                </details>
-                <details class="rd2-faq-item">
-                    <summary>@Loc["rd.faq.q3"]</summary>
-                    <p>@Loc["rd.faq.a3"]</p>
-                </details>
-                <details class="rd2-faq-item">
-                    <summary>@Loc["rd.faq.q4"]</summary>
-                    <p>@Loc["rd.faq.a4"]</p>
-                </details>
-                <details class="rd2-faq-item">
-                    <summary>@Loc["rd.faq.q5"]</summary>
-                    <p>@Loc["rd.faq.a5"]</p>
-                </details>
-                <details class="rd2-faq-item">
-                    <summary>@Loc["rd.faq.q6"]</summary>
-                    <p>@Loc["rd.faq.a6"]</p>
-                </details>
-            </div>
+            <h2>@Loc["rd.faq.h2"]</h2>
+            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
+            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q1"]</summary><p>@Loc["rd.faq.a1"]</p></details>
+            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q2"]</summary><p>@Loc["rd.faq.a2"]</p></details>
+            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q3"]</summary><p>@Loc["rd.faq.a3"]</p></details>
+            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q4"]</summary><p>@Loc["rd.faq.a4"]</p></details>
+            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q5"]</summary><p>@Loc["rd.faq.a5"]</p></details>
         </div>
     </section>
 
-    <!-- ====== RELATED BLOG ====== -->
     <RelatedBlog EntityId="retreat?.Id" Section="retreats" />
 
-    <!-- ====== OTHER RETREATS ====== -->
+    <!-- 12. OTHER RETREATS -->
     @if (otherRetreats.Any())
     {
-        <section class="rd2-others reveal">
-            <div class="container">
+        <section class="rd2-others">
+            <div class="container reveal">
                 <p class="section-eyebrow">@Loc["page.retreat.detail.other_eyebrow"]</p>
                 <h2>@Loc["page.retreat.detail.other_h2"]</h2>
-                <div class="section-divider" style="margin:1.5rem 0 2.5rem;"></div>
+                <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
                 <div class="rd2-others-grid">
                     @foreach (var other in otherRetreats)
                     {
                         var o = other;
                         <a href="@RetreatUrls.DetailPath(o)" class="rd2-other-card reveal">
-                            <div class="rd2-other-img">
-                                <img src="@(o.ImageUrl != null ? ApiService.ResolveMediaUrl(o.ImageUrl) : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
-                                     alt="@o.Title" loading="lazy" />
-                            </div>
+                            <img src="@(o.ImageUrl != null ? ApiService.ResolveMediaUrl(o.ImageUrl) : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
+                                 alt="@o.Title" loading="lazy" />
                             <div class="rd2-other-body">
                                 <h4>@o.Title</h4>
-                                <p class="rd2-other-meta">
-                                    <span class="rd2-other-meta-icon"><RetreatMetaSvg Kind="pin" /></span>
-                                    @o.Location
-                                </p>
-                                <p class="rd2-other-meta">
-                                    <span class="rd2-other-meta-icon"><RetreatMetaSvg Kind="calendar" /></span>
-                                    @o.StartDate.ToString("dd MMM yyyy") — @o.EndDate.ToString("dd MMM yyyy")
-                                </p>
-                                @if (!string.IsNullOrWhiteSpace(o.PriceLabel))
-                                {
-                                    <span class="rd2-other-price">@o.PriceLabel</span>
-                                }
-                                <span class="rd2-other-cta">@Loc["page.retreat.detail.other_cta"] →</span>
+                                <p class="card-meta-line"><span class="card-meta-icon"><RetreatMetaSvg Kind="pin" /></span> @o.Location</p>
+                                <p class="card-meta-line"><span class="card-meta-icon"><RetreatMetaSvg Kind="calendar" /></span> @o.StartDate.ToString("dd MMM yyyy")</p>
                             </div>
                         </a>
                     }
@@ -472,776 +365,39 @@ else
         </section>
     }
 
-    <!-- ====== CTA FOOTER ====== -->
+    <!-- 13. CTA FOOTER -->
     @if (!IsPast)
     {
-        <section class="rd2-cta-footer" style="background-image: url('@heroUrl');">
-            <div class="rd2-cta-footer-overlay"></div>
-            <div class="container rd2-cta-footer-content">
-                <h2>@Loc["rd.cta.heading"]</h2>
-                <p>@Loc["rd.cta.subheading"]</p>
-                <button type="button" class="btn btn-primary btn-lg" @onclick="OpenModal">@Loc["form.submit"]</button>
+        <section class="rd2-cta-footer" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1800&q=80');">
+            <div class="rd2-cta-overlay"></div>
+            <div class="rd2-cta-content">
+                <h2>@Loc["rd.cta.h2"]</h2>
+                <p>@Loc["rd.cta.text"]</p>
+                <button type="button" class="btn btn-primary" @onclick="OpenModal">@Loc["rd.sticky.cta"]</button>
             </div>
         </section>
     }
 
-    <!-- ====== MOBILE FIXED CTA ====== -->
+    <!-- 14. MOBILE FIXED CTA -->
     @if (!IsPast)
     {
         <div class="rd2-mobile-cta">
-            <button type="button" class="btn btn-primary" @onclick="OpenModal">@Loc["form.submit"]</button>
+            <button type="button" class="btn btn-primary" style="width:100%;" @onclick="OpenModal">@Loc["rd.mobile.cta"]</button>
+        </div>
+    }
+
+    <!-- LIGHTBOX -->
+    @if (showLightbox)
+    {
+        <div class="rd2-lightbox" @onclick="CloseLightbox">
+            <button class="rd2-lb-close" @onclick="CloseLightbox" @onclick:stopPropagation="true">✕</button>
+            <button class="rd2-lb-prev" @onclick="PrevImage" @onclick:stopPropagation="true">‹</button>
+            <img src="@GalleryImages[lightboxIndex]" alt="" @onclick:stopPropagation="true" />
+            <button class="rd2-lb-next" @onclick="NextImage" @onclick:stopPropagation="true">›</button>
+            <span class="rd2-lb-counter">@(lightboxIndex + 1) / @GalleryImages.Count</span>
         </div>
     }
 }
-
-
-<style>
-    /* ===== BREADCRUMB ===== */
-    .rd2-breadcrumb {
-        padding: 1rem 0;
-        font-size: 0.85rem;
-        color: var(--text-muted);
-    }
-    .rd2-breadcrumb a {
-        color: var(--accent);
-        text-decoration: none;
-    }
-    .rd2-breadcrumb a:hover { text-decoration: underline; }
-    .rd2-breadcrumb-sep { margin: 0 0.5rem; opacity: 0.4; }
-    .rd2-breadcrumb-current { opacity: 0.7; }
-
-    /* ===== IMMERSIVE HERO ===== */
-    .rd2-hero {
-        position: relative;
-        min-height: 100vh;
-        display: flex;
-        align-items: flex-end;
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        overflow: hidden;
-    }
-    @@media (max-width: 768px) {
-        .rd2-hero { background-attachment: scroll; }
-    }
-    .rd2-hero-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.15) 100%);
-        z-index: 1;
-    }
-    .rd2-hero-content {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        min-height: 100vh;
-        padding-bottom: 3rem;
-        padding-top: 6rem;
-        color: #fff;
-    }
-    .rd2-hero-center {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        max-width: 900px;
-        margin: 0 auto;
-    }
-    .rd2-hero-eyebrow {
-        font-size: 0.8rem;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: var(--accent);
-        margin-bottom: 1rem;
-    }
-    .rd2-hero-title {
-        font-family: 'Cormorant Garamond', 'Georgia', serif;
-        font-style: italic;
-        font-size: clamp(2.4rem, 5.5vw, 4.5rem);
-        font-weight: 400;
-        line-height: 1.15;
-        margin: 0 0 1.25rem;
-        text-shadow: 0 2px 20px rgba(0,0,0,0.4);
-    }
-    .rd2-hero-subtitle {
-        font-size: 1.1rem;
-        line-height: 1.6;
-        opacity: 0.85;
-        max-width: 600px;
-        margin: 0 auto;
-    }
-    .rd2-hero-bottom {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem;
-    }
-    .rd2-hero-pills {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.75rem;
-    }
-    .rd2-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1.1rem;
-        border-radius: 100px;
-        background: rgba(255,255,255,0.12);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255,255,255,0.18);
-        font-size: 0.88rem;
-        color: #fff;
-        white-space: nowrap;
-    }
-    .rd2-pill-icon { display: flex; align-items: center; }
-    .rd2-pill-icon :deep(svg) { width: 16px; height: 16px; }
-    .rd2-pill-price {
-        background: var(--accent);
-        color: #fff;
-        border-color: var(--accent);
-        font-weight: 600;
-    }
-    .rd2-pill-past {
-        background: rgba(180,80,80,0.7);
-        border-color: rgba(180,80,80,0.5);
-    }
-
-    /* Scroll indicator */
-    .rd2-scroll-indicator { animation: rd2-bounce 2s ease-in-out infinite; }
-    .rd2-chevron {
-        display: block;
-        width: 28px;
-        height: 28px;
-        border-right: 2px solid rgba(255,255,255,0.6);
-        border-bottom: 2px solid rgba(255,255,255,0.6);
-        transform: rotate(45deg);
-    }
-    @@keyframes rd2-bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(10px); }
-    }
-
-    /* ===== STICKY BOOKING BAR ===== */
-    .rd2-sticky-bar {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background: var(--background);
-        border-bottom: 1px solid var(--border);
-        padding: 0.65rem 0;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-    .rd2-sticky-bar-inner {
-        display: flex;
-        align-items: center;
-        gap: 1.25rem;
-    }
-    .rd2-sticky-title {
-        flex: 1;
-        font-weight: 600;
-        font-size: 0.95rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .rd2-sticky-price {
-        font-weight: 700;
-        font-size: 1.05rem;
-        color: var(--accent);
-        white-space: nowrap;
-    }
-    @@media (max-width: 768px) {
-        .rd2-sticky-bar { display: none; }
-    }
-
-    /* ===== QUICK FACTS ===== */
-    .rd2-facts {
-        background: var(--surface, #1a1a2e);
-        padding: 2.5rem 0;
-    }
-    .rd2-facts-inner {
-        display: flex;
-        justify-content: center;
-        gap: 3rem;
-        flex-wrap: wrap;
-    }
-    .rd2-fact-item {
-        display: flex;
-        align-items: center;
-        gap: 0.85rem;
-        color: var(--text);
-    }
-    .rd2-fact-icon {
-        width: 36px;
-        height: 36px;
-        flex-shrink: 0;
-        opacity: 0.7;
-    }
-    .rd2-fact-label {
-        display: block;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-muted);
-    }
-    .rd2-fact-value {
-        display: block;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    /* ===== ABOUT ===== */
-    .rd2-about { padding: 5rem 0; }
-    .rd2-about-inner {
-        display: grid;
-        grid-template-columns: 1.5fr 1fr;
-        gap: 4rem;
-        align-items: start;
-    }
-    @@media (max-width: 768px) {
-        .rd2-about-inner { grid-template-columns: 1fr; gap: 2rem; }
-    }
-    .rd2-about-prose p {
-        line-height: 1.85;
-        margin-bottom: 1.25rem;
-        color: var(--text-muted);
-    }
-    .rd2-about-photo img {
-        width: 100%;
-        border-radius: 16px;
-        object-fit: cover;
-        aspect-ratio: 3/4;
-    }
-    .rd2-for-whom { margin-top: 2.5rem; }
-    .rd2-for-whom h3 { margin-bottom: 1rem; font-size: 1.15rem; }
-    .rd2-check-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    .rd2-check-list li {
-        display: flex;
-        align-items: baseline;
-        gap: 0.75rem;
-        line-height: 1.6;
-    }
-    .rd2-check {
-        color: #4caf50;
-        font-weight: 700;
-        font-size: 1.1rem;
-        flex-shrink: 0;
-    }
-
-    /* ===== FACILITATOR ===== */
-    .rd2-facilitator {
-        padding: 5rem 0;
-        background: var(--surface, #1a1a2e);
-    }
-    .rd2-facilitator-inner {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 3rem;
-        align-items: center;
-    }
-    @@media (max-width: 768px) {
-        .rd2-facilitator-inner {
-            grid-template-columns: 1fr;
-            text-align: center;
-        }
-    }
-    .rd2-facilitator-photo img {
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 3px solid var(--accent);
-    }
-    @@media (max-width: 768px) {
-        .rd2-facilitator-photo img { margin: 0 auto; }
-    }
-    .rd2-facilitator-role {
-        color: var(--accent);
-        font-size: 0.9rem;
-        margin-top: -0.25rem;
-    }
-    .rd2-facilitator-bio {
-        line-height: 1.8;
-        color: var(--text-muted);
-    }
-    .rd2-facilitator-quote {
-        margin: 1.75rem 0 0;
-        padding: 1.25rem 1.5rem;
-        border-left: 3px solid var(--accent);
-        font-style: italic;
-        color: var(--text-muted);
-        background: rgba(255,255,255,0.03);
-        border-radius: 0 8px 8px 0;
-    }
-    .rd2-facilitator-quote p { margin: 0; }
-
-    /* ===== ITINERARY ===== */
-    .rd2-itinerary { padding: 5rem 0; }
-    .rd2-itinerary-days {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    .rd2-day {
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        overflow: hidden;
-        transition: border-color 0.3s;
-    }
-    .rd2-day[open] { border-color: var(--accent); }
-    .rd2-day summary {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1.25rem 1.5rem;
-        cursor: pointer;
-        list-style: none;
-        user-select: none;
-    }
-    .rd2-day summary::-webkit-details-marker { display: none; }
-    .rd2-day-chip {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.3rem 0.85rem;
-        border-radius: 100px;
-        background: var(--accent);
-        color: #fff;
-        font-size: 0.78rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .rd2-day-title {
-        flex: 1;
-        font-weight: 600;
-        font-size: 1.05rem;
-    }
-    .rd2-day-arrow {
-        width: 10px;
-        height: 10px;
-        border-right: 2px solid var(--text-muted);
-        border-bottom: 2px solid var(--text-muted);
-        transform: rotate(45deg);
-        transition: transform 0.3s;
-        flex-shrink: 0;
-    }
-    .rd2-day[open] .rd2-day-arrow { transform: rotate(-135deg); }
-    .rd2-day-body {
-        padding: 0 1.5rem 1.5rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    .rd2-timeline-item {
-        display: flex;
-        gap: 1rem;
-        align-items: baseline;
-    }
-    .rd2-timeline-time {
-        flex-shrink: 0;
-        width: 80px;
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--accent);
-        font-weight: 600;
-    }
-    .rd2-timeline-item p {
-        margin: 0;
-        line-height: 1.7;
-        color: var(--text-muted);
-    }
-
-    /* ===== GALLERY (BENTO) ===== */
-    .rd2-gallery { padding: 5rem 0; background: var(--surface, #1a1a2e); }
-    .rd2-gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-auto-rows: 220px;
-        gap: 1rem;
-    }
-    @@media (max-width: 768px) {
-        .rd2-gallery-grid {
-            grid-template-columns: repeat(2, 1fr);
-            grid-auto-rows: 180px;
-        }
-    }
-    .rd2-gallery-featured {
-        grid-row: span 2;
-        grid-column: span 1;
-    }
-    .rd2-gallery-item {
-        position: relative;
-        border-radius: 12px;
-        overflow: hidden;
-        cursor: pointer;
-    }
-    .rd2-gallery-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.45s ease;
-    }
-    .rd2-gallery-item:hover img { transform: scale(1.05); }
-    .rd2-gallery-hover {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0,0,0,0.3);
-        opacity: 0;
-        transition: opacity 0.3s;
-        color: #fff;
-    }
-    .rd2-gallery-item:hover .rd2-gallery-hover { opacity: 1; }
-
-    /* ===== LIGHTBOX ===== */
-    .rd2-lightbox {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: rgba(0,0,0,0.92);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: rd2-fade-in 0.25s ease;
-    }
-    @@keyframes rd2-fade-in { from { opacity: 0; } to { opacity: 1; } }
-    .rd2-lightbox-inner {
-        position: relative;
-        max-width: 90vw;
-        max-height: 90vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .rd2-lightbox-inner img {
-        max-width: 90vw;
-        max-height: 85vh;
-        object-fit: contain;
-        border-radius: 8px;
-    }
-    .rd2-lightbox-close {
-        position: absolute;
-        top: -2.5rem;
-        right: -0.5rem;
-        background: none;
-        border: none;
-        color: #fff;
-        font-size: 2.5rem;
-        cursor: pointer;
-        line-height: 1;
-    }
-    .rd2-lightbox-prev,
-    .rd2-lightbox-next {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(255,255,255,0.12);
-        border: none;
-        color: #fff;
-        font-size: 2.5rem;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.2s;
-    }
-    .rd2-lightbox-prev:hover,
-    .rd2-lightbox-next:hover { background: rgba(255,255,255,0.25); }
-    .rd2-lightbox-prev { left: -4rem; }
-    .rd2-lightbox-next { right: -4rem; }
-    @@media (max-width: 768px) {
-        .rd2-lightbox-prev { left: 0.5rem; }
-        .rd2-lightbox-next { right: 0.5rem; }
-    }
-    .rd2-lightbox-counter {
-        position: absolute;
-        bottom: -2rem;
-        left: 50%;
-        transform: translateX(-50%);
-        color: rgba(255,255,255,0.6);
-        font-size: 0.85rem;
-    }
-
-    /* ===== INCLUSIONS ===== */
-    .rd2-inclusions { padding: 5rem 0; }
-    .rd2-inclusions-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 3rem;
-    }
-    @@media (max-width: 768px) {
-        .rd2-inclusions-grid { grid-template-columns: 1fr; gap: 2rem; }
-    }
-    .rd2-inclusions-col h3 { margin-bottom: 1.25rem; font-size: 1.1rem; }
-    .rd2-inclusions-col ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-    }
-    .rd2-inclusions-col li {
-        display: flex;
-        align-items: baseline;
-        gap: 0.75rem;
-        line-height: 1.65;
-    }
-    .rd2-incl-icon {
-        flex-shrink: 0;
-        font-weight: 700;
-        font-size: 1rem;
-        width: 22px;
-        text-align: center;
-    }
-    .rd2-incl-yes { color: #4caf50; }
-    .rd2-incl-no { color: #888; }
-
-    /* ===== ACCOMMODATION ===== */
-    .rd2-accommodation { padding: 5rem 0; background: var(--surface, #1a1a2e); }
-    .rd2-accommodation-inner {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4rem;
-        align-items: center;
-    }
-    @@media (max-width: 768px) {
-        .rd2-accommodation-inner { grid-template-columns: 1fr; gap: 2rem; }
-    }
-    .rd2-accommodation-photo img {
-        width: 100%;
-        border-radius: 16px;
-        object-fit: cover;
-        aspect-ratio: 4/3;
-    }
-    .rd2-accommodation-text p {
-        line-height: 1.8;
-        color: var(--text-muted);
-    }
-
-    /* ===== REVIEWS ===== */
-    .rd2-reviews { padding: 5rem 0; }
-    .rd2-reviews-track {
-        display: flex;
-        gap: 1.5rem;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 1rem;
-        scrollbar-width: thin;
-    }
-    .rd2-review-card {
-        flex: 0 0 320px;
-        scroll-snap-align: start;
-        background: var(--surface, #1a1a2e);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 2rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    .rd2-review-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: var(--accent);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.85rem;
-    }
-    .rd2-review-stars {
-        color: #f5a623;
-        font-size: 0.95rem;
-        letter-spacing: 2px;
-    }
-    .rd2-review-quote {
-        flex: 1;
-        font-style: italic;
-        line-height: 1.7;
-        color: var(--text-muted);
-    }
-    .rd2-review-author {
-        font-weight: 600;
-        font-size: 0.88rem;
-    }
-
-    /* ===== FAQ ===== */
-    .rd2-faq { padding: 5rem 0; background: var(--surface, #1a1a2e); }
-    .rd2-faq-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        max-width: 800px;
-    }
-    .rd2-faq-item {
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        overflow: hidden;
-        transition: border-color 0.3s;
-    }
-    .rd2-faq-item[open] { border-color: var(--accent); }
-    .rd2-faq-item summary {
-        padding: 1.15rem 1.5rem;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 1rem;
-        list-style: none;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .rd2-faq-item summary::-webkit-details-marker { display: none; }
-    .rd2-faq-item summary::after {
-        content: '+';
-        font-size: 1.4rem;
-        color: var(--accent);
-        transition: transform 0.3s;
-        flex-shrink: 0;
-        margin-left: 1rem;
-    }
-    .rd2-faq-item[open] summary::after {
-        content: '−';
-    }
-    .rd2-faq-item p {
-        padding: 0 1.5rem 1.25rem;
-        margin: 0;
-        line-height: 1.75;
-        color: var(--text-muted);
-    }
-
-    /* ===== OTHER RETREATS ===== */
-    .rd2-others { padding: 5rem 0; }
-    .rd2-others-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-    }
-    .rd2-other-card {
-        display: block;
-        text-decoration: none;
-        color: inherit;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        overflow: hidden;
-        transition: transform 0.3s, box-shadow 0.3s;
-    }
-    .rd2-other-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 36px rgba(0,0,0,0.15);
-    }
-    .rd2-other-img img {
-        width: 100%;
-        aspect-ratio: 16/9;
-        object-fit: cover;
-    }
-    .rd2-other-body {
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    .rd2-other-body h4 { margin: 0 0 0.25rem; font-size: 1.15rem; }
-    .rd2-other-meta {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        margin: 0;
-    }
-    .rd2-other-meta-icon { display: flex; align-items: center; }
-    .rd2-other-meta-icon :deep(svg) { width: 14px; height: 14px; }
-    .rd2-other-price {
-        font-weight: 700;
-        color: var(--accent);
-        font-size: 1rem;
-        margin-top: 0.25rem;
-    }
-    .rd2-other-cta {
-        display: inline-block;
-        margin-top: 0.5rem;
-        font-weight: 600;
-        color: var(--accent);
-        font-size: 0.9rem;
-    }
-
-    /* ===== CTA FOOTER ===== */
-    .rd2-cta-footer {
-        position: relative;
-        padding: 6rem 0;
-        background-size: cover;
-        background-position: center;
-        text-align: center;
-    }
-    .rd2-cta-footer-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-    }
-    .rd2-cta-footer-content {
-        position: relative;
-        z-index: 2;
-        color: #fff;
-    }
-    .rd2-cta-footer-content h2 {
-        font-family: 'Cormorant Garamond', 'Georgia', serif;
-        font-size: clamp(1.8rem, 4vw, 3rem);
-        font-weight: 400;
-        margin-bottom: 1rem;
-    }
-    .rd2-cta-footer-content p {
-        font-size: 1.1rem;
-        opacity: 0.85;
-        margin-bottom: 2rem;
-        max-width: 520px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    /* ===== MOBILE FIXED CTA ===== */
-    .rd2-mobile-cta {
-        display: none;
-    }
-    @@media (max-width: 768px) {
-        .rd2-mobile-cta {
-            display: block;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 200;
-            padding: 0.85rem 1rem;
-            background: var(--background);
-            border-top: 1px solid var(--border);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
-        }
-        .rd2-mobile-cta .btn { width: 100%; }
-    }
-</style>
-
 
 @code {
     [Parameter] public Guid Id { get; set; }
@@ -1358,6 +514,11 @@ else
         };
     }
 
+    private void OpenLightbox(int index) { lightboxIndex = index; showLightbox = true; }
+    private void CloseLightbox() => showLightbox = false;
+    private void NextImage() => lightboxIndex = (lightboxIndex + 1) % GalleryImages.Count;
+    private void PrevImage() => lightboxIndex = (lightboxIndex - 1 + GalleryImages.Count) % GalleryImages.Count;
+
     private async void Refresh()
     {
         _loadedForSlug = null;
@@ -1376,20 +537,6 @@ else
         }
         ModalService.Show<LeadModal>(parameters);
     }
-
-    private void OpenLightbox(int index)
-    {
-        lightboxIndex = index;
-        showLightbox = true;
-    }
-
-    private void CloseLightbox() => showLightbox = false;
-
-    private void NextImage() =>
-        lightboxIndex = (lightboxIndex + 1) % GalleryImages.Count;
-
-    private void PrevImage() =>
-        lightboxIndex = (lightboxIndex - 1 + GalleryImages.Count) % GalleryImages.Count;
 
     private string P(string ru, string uk, string en) => Loc.CurrentLang switch
     {
