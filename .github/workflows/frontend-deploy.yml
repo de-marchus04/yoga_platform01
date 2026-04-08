@@ -89,16 +89,41 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          npx vercel whoami --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
+          npx --yes vercel@38.0.0 whoami --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
 
       - name: Deploy static frontend to Vercel
         id: vercel_deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          FORCE_COLOR: "0"
         run: |
           cd publish/wwwroot
-          deployment_url="$(npx vercel deploy --prod --yes --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN")"
-          echo "deployment_url=$deployment_url" >> "$GITHUB_OUTPUT"
+          set -uo pipefail
+          # Vercel CLI prints build logs + a line like "Production: https://….vercel.app".
+          # Capturing raw stdout breaks GITHUB_OUTPUT and smoke checks; extract one HTTPS URL.
+          set +e
+          VC_OUT="$(npx --yes vercel@38.0.0 deploy --prod --yes --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN" 2>&1)"
+          VC_EXIT=$?
+          set -e
+          printf '%s\n' "$VC_OUT"
+          if [ "$VC_EXIT" -ne 0 ]; then
+            echo "Vercel deploy failed (exit $VC_EXIT)." >&2
+            exit "$VC_EXIT"
+          fi
+          deployment_url="$(printf '%s\n' "$VC_OUT" | grep -oiE 'production:\s*https://[^ ]+' | tail -1 | sed -E 's/^production:\s*//i' || true)"
+          if [ -z "$deployment_url" ]; then
+            deployment_url="$(printf '%s\n' "$VC_OUT" | grep -oE 'https://[a-zA-Z0-9][a-zA-Z0-9.-]*\.vercel\.app' | tail -1 || true)"
+          fi
+          if [ -z "$deployment_url" ]; then
+            echo "Could not parse production URL from Vercel CLI output." >&2
+            exit 1
+          fi
+          {
+            echo "deployment_url<<VC_URL_EOF"
+            echo "$deployment_url"
+            echo "VC_URL_EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Parsed deployment_url=$deployment_url"
 
       - name: Smoke check published frontend and API
         env:
@@ -116,7 +141,7 @@ jobs:
 
           echo "Smoke checking $DEPLOYMENT_URL"
 
-          for route in / /about /contacts /privacy /terms /account/login; do
+          for route in / /about /contacts /retreats /privacy /terms /account/login; do
             curl --fail --silent --show-error --location "$DEPLOYMENT_URL$route" > /dev/null
           done
 
