@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
 
 env:
-  VERCEL_ORG_ID: team_4ZeZHmzGdjhTB9NdH82pbzjN
-  VERCEL_PROJECT_ID: prj_xZU60Fn5Iud595WIGVXWZB9a0Xxr
   FRONTEND_PUBLIC_API_BASE_URL: ${{ vars.FRONTEND_PUBLIC_API_BASE_URL }}
+  # Pin CLI so logs stay parseable across releases
+  VERCEL_CLI_VERSION: "41.4.1"
 
 permissions:
   actions: read
@@ -35,6 +35,18 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Resolve Vercel org and project IDs
+        id: vercel_ids
+        env:
+          V_ORG: ${{ vars.VERCEL_ORG_ID }}
+          V_PRJ: ${{ vars.VERCEL_PROJECT_ID }}
+        run: |
+          ORG="${V_ORG:-team_4ZeZHmzGdjhTB9NdH82pbzjN}"
+          PRJ="${V_PRJ:-prj_xZU60Fn5Iud595WIGVXWZB9a0Xxr}"
+          echo "vercel_org_id=$ORG" >> "$GITHUB_OUTPUT"
+          echo "vercel_project_id=$PRJ" >> "$GITHUB_OUTPUT"
+          echo "Using Vercel org=$ORG project=$PRJ (override with repo Variables VERCEL_ORG_ID / VERCEL_PROJECT_ID)"
+
       - name: Build frontend
         run: |
           dotnet restore Yoga.Client/Yoga.Client.csproj
@@ -61,6 +73,12 @@ jobs:
       - name: Inject public API URL into frontend runtime config
         run: python3 scripts/inject_public_api_url.py publish/wwwroot/appsettings.json "$FRONTEND_PUBLIC_API_BASE_URL"
 
+      - name: Link Vercel project (for CLI)
+        run: |
+          mkdir -p publish/wwwroot/.vercel
+          printf '%s\n' "{\"orgId\":\"${{ steps.vercel_ids.outputs.vercel_org_id }}\",\"projectId\":\"${{ steps.vercel_ids.outputs.vercel_project_id }}\"}" > publish/wwwroot/.vercel/project.json
+          cat publish/wwwroot/.vercel/project.json
+
       - name: Verify static bundle
         run: |
           test -f publish/wwwroot/index.html
@@ -68,24 +86,53 @@ jobs:
           test -d publish/wwwroot/_framework
           grep -q '"PublicBaseUrl": "https://' publish/wwwroot/appsettings.json
 
+      - name: Verify Vercel token
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN" || { echo "Missing secret VERCEL_TOKEN." >&2; exit 1; }
+          npx --yes "vercel@${VERCEL_CLI_VERSION}" whoami --token "$VERCEL_TOKEN" || {
+            echo "::error::VERCEL_TOKEN rejected (invalid or expired). Create a new token at https://vercel.com/account/tokens"
+            exit 1
+          }
+
       - name: Deploy static frontend to Vercel
-        id: vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ env.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
-          working-directory: publish/wwwroot
-          vercel-args: "--prod --yes"
-          scope: ${{ env.VERCEL_ORG_ID }}
-          github-comment: false
+        id: vercel_deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -uo pipefail
+          cd publish/wwwroot
+          set +e
+          VC_OUT="$(npx --yes "vercel@${VERCEL_CLI_VERSION}" deploy --prod --yes --token "$VERCEL_TOKEN" --scope "${{ steps.vercel_ids.outputs.vercel_org_id }}" 2>&1)"
+          VC_EXIT=$?
+          set -e
+          printf '%s\n' "$VC_OUT"
+          if [ "$VC_EXIT" -ne 0 ]; then
+            echo "::error::Vercel deploy failed. If you see 'scope-not-accessible' or 'do not have access to the specified account', the VERCEL_TOKEN must be created while logged into Vercel as a member of that team, or set GitHub Variables VERCEL_ORG_ID / VERCEL_PROJECT_ID to match a project your token can access. See docs/DEPLOYMENT.md#vercel-scope-not-accessible."
+            exit "$VC_EXIT"
+          fi
+          deployment_url="$(printf '%s\n' "$VC_OUT" | grep -oiE 'production:\s*https://[^ ]+' | tail -1 | sed -E 's/^production:\s*//i' || true)"
+          if [ -z "$deployment_url" ]; then
+            deployment_url="$(printf '%s\n' "$VC_OUT" | grep -oE 'https://[a-zA-Z0-9][a-zA-Z0-9.-]*\.vercel\.app' | tail -1 || true)"
+          fi
+          if [ -z "$deployment_url" ]; then
+            echo "::error::Could not parse deployment URL from Vercel output."
+            exit 1
+          fi
+          {
+            echo "deployment_url<<VC_URL_EOF"
+            echo "$deployment_url"
+            echo "VC_URL_EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Parsed deployment_url=$deployment_url"
 
       - name: Smoke check deployed frontend (required)
         env:
-          DEPLOYMENT_URL: ${{ steps.vercel.outputs.preview-url }}
+          DEPLOYMENT_URL: ${{ steps.vercel_deploy.outputs.deployment_url }}
         run: |
           test -n "$DEPLOYMENT_URL" || {
-            echo "Deployment URL was not returned by the Vercel action." >&2
+            echo "Deployment URL was not set." >&2
             exit 1
           }
 

@@ -53,6 +53,26 @@ Required GitHub Actions variable for frontend deploy:
 
 - `FRONTEND_PUBLIC_API_BASE_URL=https://your-public-api-origin`
 
+Required GitHub Actions **secret** for frontend deploy:
+
+- `VERCEL_TOKEN` — create at [vercel.com/account/tokens](https://vercel.com/account/tokens). The account you are logged into when you create the token **must be a member of the Vercel team** that owns the project; otherwise deploy fails with `scope-not-accessible` / “You do not have access to the specified account” ([details](https://err.sh/vercel/scope-not-accessible)).
+
+Optional repository **Variables** (override defaults baked into the workflow):
+
+- `VERCEL_ORG_ID` — Team ID from Vercel (starts with `team_…`), if the default in the workflow is wrong for your token.
+- `VERCEL_PROJECT_ID` — Project ID (starts with `prj_…`).
+
+### Vercel: `scope-not-accessible` / no access to specified account
+
+This is **not** a Blazor or routing bug: the token cannot deploy under the **team scope** passed to the CLI.
+
+1. In Vercel, open the team that owns **yoga-life-enterprise** (or your production project).
+2. Confirm your user is on that team (Owner / Member).
+3. Log out of Vercel, log back in as that user, create a **new** token, paste it into GitHub → Settings → Secrets → `VERCEL_TOKEN`.
+4. If the project moved to another team, set `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID` in GitHub → Settings → Variables to match **Project Settings → General** on Vercel.
+
+Until this is fixed, CI will fail at the deploy step and production will not update.
+
 Optional but recommended media values for production API environment:
 
 - `Storage__Provider=S3`

@@ -16,4 +16,4 @@ if (-not $py) { $py = Get-Command python -ErrorAction SilentlyContinue }
 if (-not $py) { Write-Error "Python is required to patch appsettings.json (python or python3 on PATH)." }
 & $py.Source scripts/inject_public_api_url.py publish/wwwroot/appsettings.json $PublicApiBaseUrl
 Set-Location publish/wwwroot
-npx --yes vercel@38.0.0 deploy --prod --yes
+npx --yes vercel@41.4.1 deploy --prod --yes

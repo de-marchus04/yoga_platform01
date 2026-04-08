@@ -10,4 +10,4 @@ fi
 dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
 python3 scripts/inject_public_api_url.py publish/wwwroot/appsettings.json "$FRONTEND_PUBLIC_API_BASE_URL"
 cd publish/wwwroot
-exec npx --yes vercel@38.0.0 deploy --prod --yes
+exec npx --yes vercel@41.4.1 deploy --prod --yes
