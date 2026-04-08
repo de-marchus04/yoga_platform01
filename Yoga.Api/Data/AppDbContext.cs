@@ -242,7 +242,7 @@ namespace Yoga.Api.Data
 
             // Home — Hero
             Add("page.home.title", "Yoga.Life | Авторские Ретриты", "Yoga.Life | Author-Led Retreats", "Yoga.Life | Авторські Ретрити");
-            Add("page.home.hero.eyebrow", "Yoga · Life · Enterprise", "Yoga · Life · Enterprise", "Yoga · Life · Enterprise");
+            Add("page.home.hero.eyebrow", "SHAKTI.ASHRAM", "SHAKTI.ASHRAM", "SHAKTI.ASHRAM");
             Add("page.home.hero.h1.line1", "Возврат", "Return", "Повернення");
             Add("page.home.hero.h1.em", "к себе", "to yourself", "до себе");
             Add("page.home.hero.text", "Авторские ретриты и программы обучения. Погружение в тишину, практики осознанности и полное обновление.", "Author-led retreats and training programmes. A plunge into stillness, mindfulness practices and complete renewal.", "Авторські ретрити та навчальні програми. Занурення в тишу, практики усвідомленості та повне оновлення.");

@@ -547,6 +547,34 @@ textarea:focus-visible {
   color: var(--white);
 }
 
+/* --- HERO CRITICAL OVERRIDES (non-scoped backup) --- */
+.hero-text h1 {
+  font-family: var(--font-serif);
+  font-size: 5rem;
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.05;
+  color: var(--charcoal);
+  margin-bottom: 0;
+  letter-spacing: -0.01em;
+}
+.hero-text h1 em {
+  font-style: normal;
+  font-weight: 600;
+}
+.hero-text .btn {
+  align-self: flex-start;
+}
+@media (max-width: 900px) {
+  .hero-text h1 { font-size: 3.2rem; }
+}
+@media (max-width: 480px) {
+  .hero-text h1 { font-size: 2.4rem; }
+}
+@media (max-width: 360px) {
+  .hero-text h1 { font-size: 2.1rem; }
+}
+
 /* --- THIN DIVIDER UTILITY --- */
 .divider-gold {
   width: 60px;

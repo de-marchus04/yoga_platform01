@@ -15,11 +15,11 @@
 
 <section class="hero">
     <div class="hero-text">
-        <p class="hero-eyebrow">@(F("HeroEyebrow", Loc["page.home.hero.eyebrow"]))</p>
+        <p class="hero-eyebrow">@(F("HeroEyebrow", "SHAKTI.ASHRAM"))</p>
         <h1>@(F("HeroTitle", Loc["page.home.hero.h1.line1"]))<br/><em>@(F("HeroSubtitle", Loc["page.home.hero.h1.em"]))</em></h1>
         <div class="hero-gold-line"></div>
         <p>@(F("HeroText", Loc["page.home.hero.text"]))</p>
-        <button class="btn btn-primary" @onclick="OpenLeadModal">@Loc["page.home.hero.cta"]</button>
+        <button class="btn btn-primary" style="align-self:flex-start" @onclick="OpenLeadModal">@Loc["page.home.hero.cta"]</button>
     </div>
     <div class="hero-photo">
         <img src="@(F("HeroImage", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1400&q=80"))" alt="Йога ретрит" fetchpriority="high" decoding="async" />
