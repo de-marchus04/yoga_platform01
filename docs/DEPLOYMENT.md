@@ -73,11 +73,9 @@ This is **not** a Blazor or routing bug: the token cannot deploy under the **tea
 
 Until this is fixed, CI will fail at the deploy step and production will not update.
 
-### Vercel: Root Directory `publish_fresh/wwwroot` does not exist
+### Vercel: Root Directory
 
-If the Vercel project has **Root Directory** set to `publish_fresh/wwwroot` (common for this repo’s Vercel settings), the GitHub Action **copies** the built `publish/wwwroot` tree into `publish_fresh/wwwroot` on the runner before `vercel deploy`, so that path exists. Manual scripts do the same.
-
-**Alternative:** In Vercel → Project → Settings → General, clear **Root Directory** (use repository root / `.`) and deploy only from `publish/wwwroot`; then you could simplify the workflow to skip the copy (optional cleanup later).
+Keep **Root Directory** in Vercel → Project → Settings → General **empty** (default). The workflow and scripts deploy the **contents** of `publish/wwwroot` (the Blazor publish output). If you set Root Directory to a subpath (e.g. `publish_fresh/wwwroot`), that path must exist on the machine running `vercel deploy` or CI will fail.
 
 Optional but recommended media values for production API environment:
 

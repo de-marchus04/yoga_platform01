@@ -80,16 +80,11 @@ jobs:
           test -d publish/wwwroot/_framework
           grep -q '"PublicBaseUrl": "https://' publish/wwwroot/appsettings.json
 
-      # Vercel project "Root Directory" is set to publish_fresh/wwwroot — CLI validates that path exists in the repo workspace.
-      - name: Sync build to Vercel Root Directory (publish_fresh/wwwroot)
+      # Vercel Root Directory empty → deploy from publish output root (this folder).
+      - name: Link Vercel project (CLI)
         run: |
-          mkdir -p publish_fresh
-          rm -rf publish_fresh/wwwroot
-          cp -a publish/wwwroot publish_fresh/wwwroot
-          mkdir -p publish_fresh/wwwroot/.vercel
-          printf '%s\n' "{\"orgId\":\"${{ steps.vercel_ids.outputs.vercel_org_id }}\",\"projectId\":\"${{ steps.vercel_ids.outputs.vercel_project_id }}\"}" > publish_fresh/wwwroot/.vercel/project.json
-          test -f publish_fresh/wwwroot/index.html
-          test -f publish_fresh/wwwroot/vercel.json
+          mkdir -p publish/wwwroot/.vercel
+          printf '%s\n' "{\"orgId\":\"${{ steps.vercel_ids.outputs.vercel_org_id }}\",\"projectId\":\"${{ steps.vercel_ids.outputs.vercel_project_id }}\"}" > publish/wwwroot/.vercel/project.json
 
       - name: Verify Vercel token
         env:
@@ -107,14 +102,14 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           set -uo pipefail
-          cd publish_fresh/wwwroot
+          cd publish/wwwroot
           set +e
           VC_OUT="$(npx --yes "vercel@${VERCEL_CLI_VERSION}" deploy --prod --yes --token "$VERCEL_TOKEN" --scope "${{ steps.vercel_ids.outputs.vercel_org_id }}" 2>&1)"
           VC_EXIT=$?
           set -e
           printf '%s\n' "$VC_OUT"
           if [ "$VC_EXIT" -ne 0 ]; then
-            echo "::error::Vercel deploy failed. If you see 'Root Directory ... does not exist', the workflow mirrors the bundle to publish_fresh/wwwroot to match the default Vercel project setting; change the path here if your dashboard Root Directory differs. scope-not-accessible: see docs/DEPLOYMENT.md#vercel-scope-not-accessible."
+            echo "::error::Vercel deploy failed. If you see 'Root Directory ... does not exist', set Vercel Project Settings → General → Root Directory to empty (or match the folder you deploy from). scope-not-accessible: docs/DEPLOYMENT.md#vercel-scope-not-accessible."
             exit "$VC_EXIT"
           fi
           deployment_url="$(printf '%s\n' "$VC_OUT" | grep -oiE 'production:\s*https://[^ ]+' | tail -1 | sed -E 's/^production:\s*//i' || true)"

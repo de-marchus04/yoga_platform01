@@ -9,9 +9,5 @@ if [[ -z "${FRONTEND_PUBLIC_API_BASE_URL:-}" ]]; then
 fi
 dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
 python3 scripts/inject_public_api_url.py publish/wwwroot/appsettings.json "$FRONTEND_PUBLIC_API_BASE_URL"
-# Match Vercel project "Root Directory" (publish_fresh/wwwroot) so CLI does not error.
-mkdir -p publish_fresh
-rm -rf publish_fresh/wwwroot
-cp -a publish/wwwroot publish_fresh/wwwroot
-cd publish_fresh/wwwroot
+cd publish/wwwroot
 exec npx --yes vercel@41.4.1 deploy --prod --yes
