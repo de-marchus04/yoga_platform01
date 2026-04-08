@@ -5592,9 +5592,10 @@ details[open] > .program-module-summary .program-module-toggle {
   gap: 0.4rem;
 }
 .rd2-facts__icon {
-  font-size: 1.5rem;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
   color: var(--accent);
-  line-height: 1;
   margin-bottom: 0.25rem;
 }
 .rd2-facts__label {
@@ -5703,7 +5704,7 @@ details[open] > .program-module-summary .program-module-toggle {
 /* ──────────── 5. FACILITATOR ──────────── */
 .rd2-facilitator {
   padding: 5rem 0;
-  background: var(--section-bg-warm);
+  background: var(--background);
 }
 .rd2-facilitator__inner {
   max-width: 800px;
@@ -5887,7 +5888,7 @@ details[open] > .program-module-summary .program-module-toggle {
 /* ──────────── 7. GALLERY ──────────── */
 .rd2-gallery {
   padding: 5rem 0;
-  background: var(--section-bg-warm);
+  background: var(--background);
 }
 .rd2-gallery__inner {
   max-width: var(--container-width);
@@ -6006,7 +6007,7 @@ details[open] > .program-module-summary .program-module-toggle {
 /* ──────────── 9. ACCOMMODATION ──────────── */
 .rd2-accommodation {
   padding: 5rem 0;
-  background: var(--section-bg-warm);
+  background: var(--background);
 }
 .rd2-accommodation__inner {
   max-width: var(--container-width);
@@ -6190,7 +6191,7 @@ details[open] > .program-module-summary .program-module-toggle {
 /* ──────────── 11. FAQ ──────────── */
 .rd2-faq {
   padding: 5rem 0;
-  background: var(--section-bg-warm);
+  background: var(--background);
 }
 .rd2-faq__inner {
   max-width: 800px;
@@ -6521,11 +6522,11 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 [data-theme="dark"] .rd2-facts {
-  background: #111;
+  background: var(--section-bg-dark);
 }
 
 [data-theme="dark"] .rd2-about {
-  background: var(--section-bg-dark);
+  background: var(--background);
 }
 [data-theme="dark"] .rd2-about__title,
 [data-theme="dark"] .rd2-about__for-whom-title {
@@ -6542,7 +6543,7 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 [data-theme="dark"] .rd2-facilitator {
-  background: #1e1e1e;
+  background: var(--background);
 }
 [data-theme="dark"] .rd2-facilitator__name {
   color: var(--text-on-dark);
@@ -6555,7 +6556,7 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 [data-theme="dark"] .rd2-itinerary {
-  background: var(--section-bg-dark);
+  background: var(--background);
 }
 [data-theme="dark"] .rd2-itinerary__title {
   color: var(--text-on-dark);
@@ -6574,14 +6575,14 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 [data-theme="dark"] .rd2-gallery {
-  background: #1e1e1e;
+  background: var(--background);
 }
 [data-theme="dark"] .rd2-gallery__title {
   color: var(--text-on-dark);
 }
 
 [data-theme="dark"] .rd2-inclusions {
-  background: var(--section-bg-dark);
+  background: var(--background);
 }
 [data-theme="dark"] .rd2-inclusions__title {
   color: var(--text-on-dark);
@@ -6599,7 +6600,7 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 [data-theme="dark"] .rd2-accommodation {
-  background: #1e1e1e;
+  background: var(--background);
 }
 [data-theme="dark"] .rd2-accommodation__section-title,
 [data-theme="dark"] .rd2-accommodation__name {
@@ -6615,7 +6616,7 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 [data-theme="dark"] .rd2-reviews {
-  background: var(--section-bg-dark);
+  background: var(--background);
 }
 [data-theme="dark"] .rd2-reviews__title {
   color: var(--text-on-dark);
@@ -6632,7 +6633,7 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 [data-theme="dark"] .rd2-faq {
-  background: #1e1e1e;
+  background: var(--background);
 }
 [data-theme="dark"] .rd2-faq__title {
   color: var(--text-on-dark);
