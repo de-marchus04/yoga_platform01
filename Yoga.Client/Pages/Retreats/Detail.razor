@@ -25,8 +25,7 @@
 @if (retreat == null && !notFound)
 {
     <section class="rd2-hero" style="background:var(--section-bg-dark);">
-        <div class="rd2-hero-overlay"></div>
-        <div class="container rd2-hero-content">
+        <div class="rd2-hero__inner">
             <div class="skeleton skeleton-title" style="height:1rem; width:15%; margin-bottom:1rem;"></div>
             <div class="skeleton" style="height:3rem; width:70%; margin-bottom:1.5rem;"></div>
             <div style="display:flex; gap:1rem;">
@@ -53,103 +52,99 @@ else
     var heroImg = r.ImageUrl != null ? ApiService.ResolveMediaUrl(r.ImageUrl) : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1600&q=80";
     var duration = (r.EndDate - r.StartDate).Days;
 
-    <!-- 1. IMMERSIVE HERO -->
+    <!-- 1. HERO -->
     <section class="rd2-hero" style="background-image: url('@heroImg');">
-        <div class="rd2-hero-overlay"></div>
-        <nav class="rd2-breadcrumb" aria-label="breadcrumb">
-            <a href="/">@Loc["nav.home"]</a> <span>/</span>
-            <a href="/retreats/actual">@Loc["nav.retreats"]</a> <span>/</span>
-            <span>@Truncate(r.Title, 40)</span>
-        </nav>
-        <div class="container rd2-hero-content">
-            <p class="rd2-hero-eyebrow">@Loc["page.retreats.eyebrow"]</p>
-            <h1 class="rd2-hero-title">@r.Title</h1>
+        <a href="/retreats/actual" class="rd2-hero__breadcrumb">← @Loc["page.retreat.detail.back"]</a>
+        <div class="rd2-hero__inner">
+            <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.retreats.eyebrow"]</p>
+            <h1 class="rd2-hero__title">@r.Title</h1>
             @if (!string.IsNullOrEmpty(r.Description))
             {
-                <p class="rd2-hero-subtitle">@Truncate(r.Description, 120)</p>
+                <p class="rd2-hero__subtitle">@Truncate(r.Description, 120)</p>
             }
-            <div class="rd2-hero-pills">
-                <span class="rd2-pill">
-                    <span class="rd2-pill-icon"><RetreatMetaSvg Kind="pin" /></span>
+            <div class="rd2-hero__meta">
+                <span class="rd2-hero__pill">
+                    <span class="rd2-hero__pill-icon"><RetreatMetaSvg Kind="pin" /></span>
                     @r.Location
                 </span>
-                <span class="rd2-pill">
-                    <span class="rd2-pill-icon"><RetreatMetaSvg Kind="calendar" /></span>
+                <span class="rd2-hero__pill">
+                    <span class="rd2-hero__pill-icon"><RetreatMetaSvg Kind="calendar" /></span>
                     @r.StartDate.ToString("dd MMM yyyy") — @r.EndDate.ToString("dd MMM yyyy")
                 </span>
                 @if (!string.IsNullOrWhiteSpace(r.PriceLabel))
                 {
-                    <span class="rd2-pill rd2-pill-price">@r.PriceLabel</span>
+                    <span class="rd2-hero__pill">@r.PriceLabel</span>
                 }
                 @if (IsPast)
                 {
-                    <span class="rd2-pill rd2-pill-past">@Loc["page.retreat.past.badge"]</span>
+                    <span class="rd2-hero__pill rd2-hero__pill--past">@Loc["page.retreat.past.badge"]</span>
                 }
             </div>
         </div>
-        <div class="rd2-scroll-indicator" aria-hidden="true">
+        <div class="rd2-hero__scroll" aria-hidden="true">
             <span>@Loc["rd.scroll"]</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg>
         </div>
     </section>
 
-    <!-- 2. STICKY BOOKING BAR (desktop) -->
+    <!-- 2. STICKY BAR -->
     @if (!IsPast)
     {
         <div class="rd2-sticky-bar">
-            <div class="container rd2-sticky-inner">
-                <span class="rd2-sticky-title">@Truncate(r.Title, 50)</span>
+            <div class="container rd2-sticky-bar__inner">
+                <span class="rd2-sticky-bar__title">@Truncate(r.Title, 50)</span>
+                <span class="rd2-sticky-bar__spacer"></span>
                 @if (!string.IsNullOrWhiteSpace(r.PriceLabel))
                 {
-                    <span class="rd2-sticky-price">@r.PriceLabel</span>
+                    <span class="rd2-sticky-bar__price">@r.PriceLabel</span>
                 }
-                <button type="button" class="btn btn-primary rd2-sticky-btn" @onclick="OpenModal">@Loc["rd.sticky.cta"]</button>
+                <button type="button" class="rd2-sticky-bar__cta" @onclick="OpenModal">@Loc["rd.sticky.cta"]</button>
             </div>
         </div>
     }
 
-    <!-- 3. QUICK FACTS STRIP -->
+    <!-- 3. QUICK FACTS -->
     <section class="rd2-facts">
-        <div class="container rd2-facts-grid">
-            <div class="rd2-fact">
-                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                <span class="rd2-fact-label">@Loc["rd.facts.duration"]</span>
-                <span class="rd2-fact-value">@duration @Loc["rd.facts.days"]</span>
+        <div class="rd2-facts__grid">
+            <div class="rd2-facts__item">
+                <svg class="rd2-facts__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                <span class="rd2-facts__label">@Loc["rd.facts.duration"]</span>
+                <span class="rd2-facts__value">@duration @Loc["rd.facts.days"]</span>
             </div>
-            <div class="rd2-fact">
-                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <span class="rd2-fact-label">@Loc["rd.facts.group"]</span>
-                <span class="rd2-fact-value">@Loc["rd.facts.group_value"]</span>
+            <div class="rd2-facts__item">
+                <svg class="rd2-facts__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span class="rd2-facts__label">@Loc["rd.facts.group"]</span>
+                <span class="rd2-facts__value">@Loc["rd.facts.group_value"]</span>
             </div>
-            <div class="rd2-fact">
-                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                <span class="rd2-fact-label">@Loc["rd.facts.level"]</span>
-                <span class="rd2-fact-value">@Loc["rd.facts.level_value"]</span>
+            <div class="rd2-facts__item">
+                <svg class="rd2-facts__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                <span class="rd2-facts__label">@Loc["rd.facts.level"]</span>
+                <span class="rd2-facts__value">@Loc["rd.facts.level_value"]</span>
             </div>
-            <div class="rd2-fact">
-                <svg class="rd2-fact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                <span class="rd2-fact-label">@Loc["rd.facts.language"]</span>
-                <span class="rd2-fact-value">@Loc["rd.facts.language_value"]</span>
+            <div class="rd2-facts__item">
+                <svg class="rd2-facts__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span class="rd2-facts__label">@Loc["rd.facts.language"]</span>
+                <span class="rd2-facts__value">@Loc["rd.facts.language_value"]</span>
             </div>
         </div>
     </section>
 
-    <!-- 4. ABOUT SECTION -->
+    <!-- 4. ABOUT -->
     <section class="rd2-about">
-        <div class="container rd2-about-grid reveal">
-            <div class="rd2-about-text">
-                <p class="section-eyebrow">@Loc["rd.about.eyebrow"]</p>
-                <h2>@Loc["rd.about.h2"]</h2>
+        <div class="rd2-about__grid reveal">
+            <div>
+                <p class="rd2-about__eyebrow">@Loc["rd.about.eyebrow"]</p>
+                <h2 class="rd2-about__title">@Loc["rd.about.h2"]</h2>
                 <div class="section-divider" style="margin:1.5rem 0;"></div>
-                <div class="rd2-about-prose">
+                <div class="rd2-about__desc">
                     @foreach (var block in SplitDescriptionBlocks(r.Description))
                     {
                         <p>@block</p>
                     }
                 </div>
-                <div class="rd2-for-whom">
-                    <h4>@Loc["rd.about.for_whom"]</h4>
-                    <ul>
+                <div class="rd2-about__for-whom">
+                    <h4 class="rd2-about__for-whom-title">@Loc["rd.about.for_whom"]</h4>
+                    <ul class="rd2-about__for-whom-list">
                         <li>@Loc["rd.about.whom1"]</li>
                         <li>@Loc["rd.about.whom2"]</li>
                         <li>@Loc["rd.about.whom3"]</li>
@@ -157,7 +152,7 @@ else
                     </ul>
                 </div>
             </div>
-            <div class="rd2-about-photo">
+            <div class="rd2-about__image">
                 <img src="https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=800&q=80" alt="@r.Title" loading="lazy" />
             </div>
         </div>
@@ -165,72 +160,81 @@ else
 
     <!-- 5. FACILITATOR -->
     <section class="rd2-facilitator reveal">
-        <div class="container rd2-facilitator-inner">
-            <p class="section-eyebrow">@Loc["rd.facilitator.eyebrow"]</p>
-            <h2>@Loc["rd.facilitator.h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem auto;"></div>
-            <div class="rd2-facilitator-card">
-                <div class="rd2-facilitator-avatar">АУ</div>
-                <h3>@Loc["rd.facilitator.name"]</h3>
-                <p class="rd2-facilitator-role">@Loc["rd.facilitator.role"]</p>
-                <p class="rd2-facilitator-bio">@Loc["rd.facilitator.bio"]</p>
-                <blockquote class="rd2-facilitator-quote">
-                    <p>«@Loc["rd.facilitator.quote"]»</p>
-                </blockquote>
-            </div>
+        <div class="rd2-facilitator__inner">
+            <div class="rd2-facilitator__photo">АУ</div>
+            <h3 class="rd2-facilitator__name">@Loc["rd.facilitator.name"]</h3>
+            <p class="rd2-facilitator__role">@Loc["rd.facilitator.role"]</p>
+            <p class="rd2-facilitator__bio">@Loc["rd.facilitator.bio"]</p>
+            <blockquote class="rd2-facilitator__quote">«@Loc["rd.facilitator.quote"]»</blockquote>
         </div>
     </section>
 
-    <!-- 6. ITINERARY ACCORDION -->
+    <!-- 6. ITINERARY -->
     <section class="rd2-itinerary">
-        <div class="container reveal">
-            <p class="section-eyebrow">@Loc["rd.itinerary.eyebrow"]</p>
-            <h2>@Loc["rd.itinerary.h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
+        <div class="rd2-itinerary__inner reveal">
+            <p class="rd2-itinerary__eyebrow">@Loc["rd.itinerary.eyebrow"]</p>
+            <h2 class="rd2-itinerary__title">@Loc["rd.itinerary.h2"]</h2>
             @if (!string.IsNullOrWhiteSpace(r.Program))
             {
                 <div class="rd2-program-html">@((MarkupString)r.Program)</div>
             }
             else
             {
-                <details class="rd2-day" open>
-                    <summary><span class="rd2-day-chip">@P("День 1", "День 1", "Day 1")</span> <span>@P("Прибытие и встреча", "Прибуття та зустріч", "Arrival & welcome")</span></summary>
-                    <div class="rd2-day-content">
-                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.afternoon"]</span><p>@P("Заселение, знакомство группы", "Заселення, знайомство групи", "Check-in, group introduction")</p></div>
-                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.evening"]</span><p>@P("Вечерняя медитация при свечах", "Вечірня медитація при свічках", "Evening candlelight meditation")</p></div>
+                <details class="rd2-itinerary__day" open>
+                    <summary>
+                        <span class="rd2-itinerary__day-chip">@P("День 1", "День 1", "Day 1")</span>
+                        <span class="rd2-itinerary__day-title">@P("Прибытие и встреча", "Прибуття та зустріч", "Arrival & welcome")</span>
+                        <svg class="rd2-itinerary__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </summary>
+                    <div class="rd2-itinerary__content">
+                        <div class="rd2-itinerary__timeline">
+                            <div class="rd2-itinerary__block"><span class="rd2-itinerary__block-time">@Loc["rd.itinerary.afternoon"]</span><p class="rd2-itinerary__block-text">@P("Заселение, знакомство группы", "Заселення, знайомство групи", "Check-in, group introduction")</p></div>
+                            <div class="rd2-itinerary__block"><span class="rd2-itinerary__block-time">@Loc["rd.itinerary.evening"]</span><p class="rd2-itinerary__block-text">@P("Вечерняя медитация при свечах", "Вечірня медитація при свічках", "Evening candlelight meditation")</p></div>
+                        </div>
                     </div>
                 </details>
-                <details class="rd2-day">
-                    <summary><span class="rd2-day-chip">@P("Дни 2–6", "Дні 2–6", "Days 2–6")</span> <span>@P("Практики и погружение", "Практики та занурення", "Practices & immersion")</span></summary>
-                    <div class="rd2-day-content">
-                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.morning"]</span><p>@P("Утренняя пранаяма и йога", "Ранкова пранаяма та йога", "Morning pranayama & yoga")</p></div>
-                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.afternoon"]</span><p>@P("Авторские лекции, экскурсии, время для себя", "Авторські лекції, екскурсії, час для себе", "Author talks, excursions, free time")</p></div>
-                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.evening"]</span><p>@P("Групповая медитация, беседы у костра", "Групова медитація, бесіди біля вогнища", "Group meditation, fireside talks")</p></div>
+                <details class="rd2-itinerary__day">
+                    <summary>
+                        <span class="rd2-itinerary__day-chip">@P("Дни 2–6", "Дні 2–6", "Days 2–6")</span>
+                        <span class="rd2-itinerary__day-title">@P("Практики и погружение", "Практики та занурення", "Practices & immersion")</span>
+                        <svg class="rd2-itinerary__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </summary>
+                    <div class="rd2-itinerary__content">
+                        <div class="rd2-itinerary__timeline">
+                            <div class="rd2-itinerary__block"><span class="rd2-itinerary__block-time">@Loc["rd.itinerary.morning"]</span><p class="rd2-itinerary__block-text">@P("Утренняя пранаяма и йога", "Ранкова пранаяма та йога", "Morning pranayama & yoga")</p></div>
+                            <div class="rd2-itinerary__block"><span class="rd2-itinerary__block-time">@Loc["rd.itinerary.afternoon"]</span><p class="rd2-itinerary__block-text">@P("Авторские лекции, экскурсии, время для себя", "Авторські лекції, екскурсії, час для себе", "Author talks, excursions, free time")</p></div>
+                            <div class="rd2-itinerary__block"><span class="rd2-itinerary__block-time">@Loc["rd.itinerary.evening"]</span><p class="rd2-itinerary__block-text">@P("Групповая медитация, беседы у костра", "Групова медитація, бесіди біля вогнища", "Group meditation, fireside talks")</p></div>
+                        </div>
                     </div>
                 </details>
-                <details class="rd2-day">
-                    <summary><span class="rd2-day-chip">@P("День 7", "День 7", "Day 7")</span> <span>@P("Интеграция и отъезд", "Інтеграція та від'їзд", "Integration & departure")</span></summary>
-                    <div class="rd2-day-content">
-                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.morning"]</span><p>@P("Финальный круг, церемония благодарности", "Фінальне коло, церемонія подяки", "Final circle, gratitude ceremony")</p></div>
-                        <div class="rd2-timeline-item"><span class="rd2-tl-label">@Loc["rd.itinerary.afternoon"]</span><p>@P("Индивидуальная беседа с куратором, возвращение", "Індивідуальна бесіда з куратором, повернення", "Personal talk with facilitator, departure")</p></div>
+                <details class="rd2-itinerary__day">
+                    <summary>
+                        <span class="rd2-itinerary__day-chip">@P("День 7", "День 7", "Day 7")</span>
+                        <span class="rd2-itinerary__day-title">@P("Интеграция и отъезд", "Інтеграція та від'їзд", "Integration & departure")</span>
+                        <svg class="rd2-itinerary__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                    </summary>
+                    <div class="rd2-itinerary__content">
+                        <div class="rd2-itinerary__timeline">
+                            <div class="rd2-itinerary__block"><span class="rd2-itinerary__block-time">@Loc["rd.itinerary.morning"]</span><p class="rd2-itinerary__block-text">@P("Финальный круг, церемония благодарности", "Фінальне коло, церемонія подяки", "Final circle, gratitude ceremony")</p></div>
+                            <div class="rd2-itinerary__block"><span class="rd2-itinerary__block-time">@Loc["rd.itinerary.afternoon"]</span><p class="rd2-itinerary__block-text">@P("Индивидуальная беседа с куратором, возвращение", "Індивідуальна бесіда з куратором, повернення", "Personal talk with facilitator, departure")</p></div>
+                        </div>
                     </div>
                 </details>
             }
         </div>
     </section>
 
-    <!-- 7. GALLERY (Bento) -->
-    <section class="rd2-gallery-section">
-        <div class="container reveal">
-            <p class="section-eyebrow">@Loc["page.retreat.detail.gallery_eyebrow"]</p>
-            <h2>@Loc["page.retreat.detail.gallery_h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
-            <div class="rd2-gallery">
+    <!-- 7. GALLERY -->
+    <section class="rd2-gallery">
+        <div class="rd2-gallery__inner reveal">
+            <p class="rd2-gallery__eyebrow">@Loc["page.retreat.detail.gallery_eyebrow"]</p>
+            <h2 class="rd2-gallery__title">@Loc["page.retreat.detail.gallery_h2"]</h2>
+            <div class="rd2-gallery__grid">
                 @{ int gi = 0; }
                 @foreach (var img in GalleryImages)
                 {
                     var idx = gi;
-                    <div class="rd2-gallery-item @(gi == 0 ? "rd2-gallery-featured" : "")" @onclick="() => OpenLightbox(idx)">
+                    <div class="rd2-gallery__item" @onclick="() => OpenLightbox(idx)">
                         <img src="@img" alt="@r.Title" loading="lazy" />
                     </div>
                     gi++;
@@ -239,32 +243,31 @@ else
         </div>
     </section>
 
-    <!-- 8. INCLUDED / NOT INCLUDED -->
+    <!-- 8. INCLUSIONS -->
     <section class="rd2-inclusions">
-        <div class="container reveal">
-            <p class="section-eyebrow">@Loc["rd.included.eyebrow"]</p>
-            <h2>@Loc["rd.included.h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
-            <div class="rd2-inclusions-grid">
+        <div class="rd2-inclusions__inner reveal">
+            <p class="rd2-inclusions__eyebrow">@Loc["rd.included.eyebrow"]</p>
+            <h2 class="rd2-inclusions__title">@Loc["rd.included.h2"]</h2>
+            <div class="rd2-inclusions__grid">
                 <div>
-                    <h4 class="rd2-inc-heading rd2-inc-yes">@Loc["rd.included.col1"]</h4>
-                    <ul class="rd2-inc-list rd2-inc-list-yes">
-                        <li>@Loc["page.retreat.detail.included.1"]</li>
-                        <li>@Loc["page.retreat.detail.included.2"]</li>
-                        <li>@Loc["page.retreat.detail.included.3"]</li>
-                        <li>@Loc["page.retreat.detail.included.4"]</li>
-                        <li>@Loc["page.retreat.detail.included.5"]</li>
-                        <li>@Loc["page.retreat.detail.included.6"]</li>
-                        <li>@Loc["page.retreat.detail.included.7"]</li>
-                    </ul>
+                    <h4 style="margin-bottom:1rem; font-family:var(--font-sans); font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; color:var(--accent);">@Loc["rd.included.col1"]</h4>
+                    <div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.1"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.2"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.3"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.4"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.5"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.6"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.7"]</div>
+                    </div>
                 </div>
                 <div>
-                    <h4 class="rd2-inc-heading rd2-inc-no">@Loc["rd.included.col2"]</h4>
-                    <ul class="rd2-inc-list rd2-inc-list-no">
-                        <li>@Loc["rd.excluded.1"]</li>
-                        <li>@Loc["rd.excluded.2"]</li>
-                        <li>@Loc["rd.excluded.3"]</li>
-                    </ul>
+                    <h4 style="margin-bottom:1rem; font-family:var(--font-sans); font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted);">@Loc["rd.included.col2"]</h4>
+                    <div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--no">✕</span> @Loc["rd.excluded.1"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--no">✕</span> @Loc["rd.excluded.2"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--no">✕</span> @Loc["rd.excluded.3"]</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -272,67 +275,79 @@ else
 
     <!-- 9. ACCOMMODATION -->
     <section class="rd2-accommodation">
-        <div class="container rd2-accommodation-grid reveal">
-            <div class="rd2-accommodation-photo">
-                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" alt="Accommodation" loading="lazy" />
-            </div>
-            <div class="rd2-accommodation-text">
-                <p class="section-eyebrow">@Loc["rd.accommodation.eyebrow"]</p>
-                <h3>@Loc["rd.accommodation.h2"]</h3>
-                <div class="section-divider" style="margin:1.25rem 0;"></div>
-                <p>@Loc["rd.accommodation.desc"]</p>
-                <div class="rd2-amenity-tags">
-                    <span class="rd2-amenity">@Loc["rd.accommodation.amenity1"]</span>
-                    <span class="rd2-amenity">@Loc["rd.accommodation.amenity2"]</span>
-                    <span class="rd2-amenity">@Loc["rd.accommodation.amenity3"]</span>
+        <div class="rd2-accommodation__inner reveal">
+            <p class="rd2-accommodation__eyebrow">@Loc["rd.accommodation.eyebrow"]</p>
+            <h2 class="rd2-accommodation__section-title">@Loc["rd.accommodation.h2"]</h2>
+            <div class="rd2-accommodation__grid">
+                <img class="rd2-accommodation__image" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" alt="Accommodation" loading="lazy" />
+                <div class="rd2-accommodation__body">
+                    <p class="rd2-accommodation__desc">@Loc["rd.accommodation.desc"]</p>
+                    <div class="rd2-accommodation__amenities">
+                        <span class="rd2-accommodation__tag">@Loc["rd.accommodation.amenity1"]</span>
+                        <span class="rd2-accommodation__tag">@Loc["rd.accommodation.amenity2"]</span>
+                        <span class="rd2-accommodation__tag">@Loc["rd.accommodation.amenity3"]</span>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 10. REVIEWS CAROUSEL -->
+    <!-- 10. REVIEWS -->
     <section class="rd2-reviews">
-        <div class="container reveal">
-            <p class="section-eyebrow">@Loc["rd.reviews.eyebrow"]</p>
-            <h2>@Loc["rd.reviews.h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
-            <div class="rd2-reviews-track">
-                <div class="rd2-review-card">
-                    <div class="rd2-review-header">
-                        <div class="rd2-review-avatar">ЕМ</div>
-                        <div><span class="rd2-review-stars">★★★★★</span><span class="rd2-review-name">@P("Елена М.", "Олена М.", "Elena M.")</span></div>
+        <div class="rd2-reviews__inner reveal">
+            <p class="rd2-reviews__eyebrow">@Loc["rd.reviews.eyebrow"]</p>
+            <h2 class="rd2-reviews__title">@Loc["rd.reviews.h2"]</h2>
+            <div class="rd2-reviews__track">
+                <div class="rd2-reviews__card">
+                    <div class="rd2-reviews__header">
+                        <div class="rd2-reviews__avatar">ЕМ</div>
+                        <div><span class="rd2-reviews__stars">★★★★★</span><br/><span class="rd2-reviews__author">@P("Елена М.", "Олена М.", "Elena M.")</span></div>
                     </div>
-                    <p class="rd2-review-quote">@P("После этого ретрита я вернулась другим человеком. Тишина, природа, глубина практик — всё на своём месте.", "Після цього ретриту я повернулася іншою людиною.", "After this retreat I came back a different person.")</p>
+                    <p class="rd2-reviews__quote">@P("После этого ретрита я вернулась другим человеком. Тишина, природа, глубина практик — всё на своём месте.", "Після цього ретриту я повернулася іншою людиною.", "After this retreat I came back a different person.")</p>
                 </div>
-                <div class="rd2-review-card">
-                    <div class="rd2-review-header">
-                        <div class="rd2-review-avatar">ИВ</div>
-                        <div><span class="rd2-review-stars">★★★★★</span><span class="rd2-review-name">@P("Ирина В.", "Ірина В.", "Irina V.")</span></div>
+                <div class="rd2-reviews__card">
+                    <div class="rd2-reviews__header">
+                        <div class="rd2-reviews__avatar">ИВ</div>
+                        <div><span class="rd2-reviews__stars">★★★★★</span><br/><span class="rd2-reviews__author">@P("Ирина В.", "Ірина В.", "Irina V.")</span></div>
                     </div>
-                    <p class="rd2-review-quote">@P("Первый раз попала на подобную программу и сразу поняла: это именно то, чего не хватало годами.", "Вперше потрапила на подібну програму і одразу зрозуміла: це саме те, чого не вистачало роками.", "First time at such a program and I immediately knew: this is exactly what I'd been missing.")</p>
+                    <p class="rd2-reviews__quote">@P("Первый раз попала на подобную программу и сразу поняла: это именно то, чего не хватало годами.", "Вперше потрапила на подібну програму і одразу зрозуміла: це саме те.", "First time at such a program and I immediately knew: this is it.")</p>
                 </div>
-                <div class="rd2-review-card">
-                    <div class="rd2-review-header">
-                        <div class="rd2-review-avatar">ДК</div>
-                        <div><span class="rd2-review-stars">★★★★★</span><span class="rd2-review-name">@P("Дмитрий К.", "Дмитро К.", "Dmitry K.")</span></div>
+                <div class="rd2-reviews__card">
+                    <div class="rd2-reviews__header">
+                        <div class="rd2-reviews__avatar">ДК</div>
+                        <div><span class="rd2-reviews__stars">★★★★★</span><br/><span class="rd2-reviews__author">@P("Дмитрий К.", "Дмитро К.", "Dmitry K.")</span></div>
                     </div>
-                    <p class="rd2-review-quote">@P("Организация на высоте, куратор всегда рядом. Тело и ум получили именно тот отдых, который нужен.", "Організація на висоті, куратор завжди поруч.", "Top-notch organization, the facilitator is always near.")</p>
+                    <p class="rd2-reviews__quote">@P("Организация на высоте, куратор всегда рядом. Тело и ум получили именно тот отдых, который нужен.", "Організація на висоті, куратор завжди поруч.", "Top-notch organization, the facilitator is always near.")</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 11. FAQ ACCORDION -->
+    <!-- 11. FAQ -->
     <section class="rd2-faq">
-        <div class="container reveal">
-            <p class="section-eyebrow">@Loc["rd.faq.eyebrow"]</p>
-            <h2>@Loc["rd.faq.h2"]</h2>
-            <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
-            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q1"]</summary><p>@Loc["rd.faq.a1"]</p></details>
-            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q2"]</summary><p>@Loc["rd.faq.a2"]</p></details>
-            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q3"]</summary><p>@Loc["rd.faq.a3"]</p></details>
-            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q4"]</summary><p>@Loc["rd.faq.a4"]</p></details>
-            <details class="rd2-faq-item"><summary>@Loc["rd.faq.q5"]</summary><p>@Loc["rd.faq.a5"]</p></details>
+        <div class="rd2-faq__inner reveal">
+            <p class="rd2-faq__eyebrow">@Loc["rd.faq.eyebrow"]</p>
+            <h2 class="rd2-faq__title">@Loc["rd.faq.h2"]</h2>
+            <details class="rd2-faq__item">
+                <summary>@Loc["rd.faq.q1"] <svg class="rd2-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>
+                <p class="rd2-faq__answer">@Loc["rd.faq.a1"]</p>
+            </details>
+            <details class="rd2-faq__item">
+                <summary>@Loc["rd.faq.q2"] <svg class="rd2-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>
+                <p class="rd2-faq__answer">@Loc["rd.faq.a2"]</p>
+            </details>
+            <details class="rd2-faq__item">
+                <summary>@Loc["rd.faq.q3"] <svg class="rd2-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>
+                <p class="rd2-faq__answer">@Loc["rd.faq.a3"]</p>
+            </details>
+            <details class="rd2-faq__item">
+                <summary>@Loc["rd.faq.q4"] <svg class="rd2-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>
+                <p class="rd2-faq__answer">@Loc["rd.faq.a4"]</p>
+            </details>
+            <details class="rd2-faq__item">
+                <summary>@Loc["rd.faq.q5"] <svg class="rd2-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></summary>
+                <p class="rd2-faq__answer">@Loc["rd.faq.a5"]</p>
+            </details>
         </div>
     </section>
 
@@ -342,21 +357,20 @@ else
     @if (otherRetreats.Any())
     {
         <section class="rd2-others">
-            <div class="container reveal">
-                <p class="section-eyebrow">@Loc["page.retreat.detail.other_eyebrow"]</p>
-                <h2>@Loc["page.retreat.detail.other_h2"]</h2>
-                <div class="section-divider" style="margin:1.5rem 0 3rem;"></div>
-                <div class="rd2-others-grid">
+            <div class="rd2-others__inner reveal">
+                <p class="rd2-others__eyebrow">@Loc["page.retreat.detail.other_eyebrow"]</p>
+                <h2 class="rd2-others__title">@Loc["page.retreat.detail.other_h2"]</h2>
+                <div class="rd2-others__grid">
                     @foreach (var other in otherRetreats)
                     {
                         var o = other;
-                        <a href="@RetreatUrls.DetailPath(o)" class="rd2-other-card reveal">
-                            <img src="@(o.ImageUrl != null ? ApiService.ResolveMediaUrl(o.ImageUrl) : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")"
-                                 alt="@o.Title" loading="lazy" />
-                            <div class="rd2-other-body">
-                                <h4>@o.Title</h4>
-                                <p class="card-meta-line"><span class="card-meta-icon"><RetreatMetaSvg Kind="pin" /></span> @o.Location</p>
-                                <p class="card-meta-line"><span class="card-meta-icon"><RetreatMetaSvg Kind="calendar" /></span> @o.StartDate.ToString("dd MMM yyyy")</p>
+                        <a href="@RetreatUrls.DetailPath(o)" class="rd2-others__card reveal">
+                            <img class="rd2-others__card-image" src="@(o.ImageUrl != null ? ApiService.ResolveMediaUrl(o.ImageUrl) : "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80")" alt="@o.Title" loading="lazy" />
+                            <div class="rd2-others__card-body">
+                                <h4 class="rd2-others__card-title">@o.Title</h4>
+                                <p class="rd2-others__card-meta"><span class="card-meta-icon"><RetreatMetaSvg Kind="pin" /></span> @o.Location</p>
+                                <p class="rd2-others__card-meta"><span class="card-meta-icon"><RetreatMetaSvg Kind="calendar" /></span> @o.StartDate.ToString("dd MMM yyyy")</p>
+                                <span class="rd2-others__card-link">@Loc["page.retreat.detail.other_cta"]</span>
                             </div>
                         </a>
                     }
@@ -369,16 +383,15 @@ else
     @if (!IsPast)
     {
         <section class="rd2-cta-footer" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1800&q=80');">
-            <div class="rd2-cta-overlay"></div>
-            <div class="rd2-cta-content">
-                <h2>@Loc["rd.cta.h2"]</h2>
-                <p>@Loc["rd.cta.text"]</p>
-                <button type="button" class="btn btn-primary" @onclick="OpenModal">@Loc["rd.sticky.cta"]</button>
+            <div class="rd2-cta-footer__inner">
+                <h2 class="rd2-cta-footer__title">@Loc["rd.cta.h2"]</h2>
+                <p class="rd2-cta-footer__subtitle">@Loc["rd.cta.text"]</p>
+                <button type="button" class="rd2-cta-footer__btn" @onclick="OpenModal">@Loc["rd.sticky.cta"]</button>
             </div>
         </section>
     }
 
-    <!-- 14. MOBILE FIXED CTA -->
+    <!-- 14. MOBILE CTA -->
     @if (!IsPast)
     {
         <div class="rd2-mobile-cta">
@@ -389,12 +402,12 @@ else
     <!-- LIGHTBOX -->
     @if (showLightbox)
     {
-        <div class="rd2-lightbox" @onclick="CloseLightbox">
-            <button class="rd2-lb-close" @onclick="CloseLightbox" @onclick:stopPropagation="true">✕</button>
-            <button class="rd2-lb-prev" @onclick="PrevImage" @onclick:stopPropagation="true">‹</button>
-            <img src="@GalleryImages[lightboxIndex]" alt="" @onclick:stopPropagation="true" />
-            <button class="rd2-lb-next" @onclick="NextImage" @onclick:stopPropagation="true">›</button>
-            <span class="rd2-lb-counter">@(lightboxIndex + 1) / @GalleryImages.Count</span>
+        <div class="rd2-lightbox rd2-lightbox--open" @onclick="CloseLightbox">
+            <button class="rd2-lightbox__close" @onclick="CloseLightbox" @onclick:stopPropagation="true">✕</button>
+            <button class="rd2-lightbox__prev" @onclick="PrevImage" @onclick:stopPropagation="true">‹</button>
+            <img class="rd2-lightbox__img" src="@GalleryImages[lightboxIndex]" alt="" @onclick:stopPropagation="true" />
+            <button class="rd2-lightbox__next" @onclick="NextImage" @onclick:stopPropagation="true">›</button>
+            <span class="rd2-lightbox__counter">@(lightboxIndex + 1) / @GalleryImages.Count</span>
         </div>
     }
 }
