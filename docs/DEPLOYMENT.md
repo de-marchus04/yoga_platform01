@@ -2,6 +2,8 @@
 
 This guide describes the baseline deployment model for the first production release.
 
+For **local tooling** (.NET 8 SDK, Node, Python, PostgreSQL), **Git author email / Vercel “Git Email Invalid”**, and **avoiding duplicate Vercel production deploys** (Git vs CLI), see [DEVELOPMENT.md](./DEVELOPMENT.md).
+
 ## Target Topology
 
 - Public edge: Cloudflare or equivalent DNS and SSL proxy.
@@ -114,8 +116,8 @@ docker compose up -d --build
 
 Current GitHub Actions flow:
 
-- `Build Blazor WASM` creates the `publish/wwwroot` artifact.
-- `Deploy Blazor Frontend` rebuilds the frontend, injects `FRONTEND_PUBLIC_API_BASE_URL` into the published runtime config, and publishes the static bundle to Vercel using `amondnet/vercel-action` (no fragile parsing of CLI stdout). After deploy, the workflow checks that `/app.css` is served as `text/css` so a broken SPA rewrite cannot slip through unnoticed.
+- `Build Blazor WASM` restores [Yoga.Life.Enterprise.sln](../Yoga.Life.Enterprise.sln), builds the solution in Release, runs **`dotnet test`** (including `Yoga.Api.Tests`), then creates the `publish/wwwroot` artifact.
+- `Deploy Blazor Frontend` runs the same solution restore/build/**test** as above, then rebuilds the frontend, injects `FRONTEND_PUBLIC_API_BASE_URL` into the published runtime config, and publishes the static bundle to Vercel using `amondnet/vercel-action` (no fragile parsing of CLI stdout). After deploy, the workflow checks that `/app.css` is served as `text/css` so a broken SPA rewrite cannot slip through unnoticed.
 
 1. If the automatic frontend deployment is unavailable, use the repository scripts (same inject logic as CI):
 

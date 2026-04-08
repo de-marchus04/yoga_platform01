@@ -1,9 +1,11 @@
 @page "/retreats/{Id:guid}"
+@page "/retreats/{RetreatSlug}"
 @inject LocalizationService Loc
 @inject Yoga.Client.Services.ApiService ApiService
 @inject NavigationManager Nav
 @implements IDisposable
 @using Yoga.Shared.DTOs
+@using Yoga.Client.Helpers
 
 <PageTitle>@(retreat?.Title ?? Loc["page.retreat.detail.loading"]) | shakti.ashram</PageTitle>
 <HeadContent>
@@ -57,7 +59,7 @@ else
             <div class="retreat-detail-hero-text">
                 <a href="/retreats/actual" class="retreat-back-link">← @Loc["page.retreat.detail.back"]</a>
                 <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.retreats.eyebrow"]</p>
-                <h1>@r.Title</h1>
+                <h1 class="retreat-detail-hero-title">@r.Title</h1>
             </div>
             <div class="retreat-detail-hero-spacer" aria-hidden="true"></div>
             <div class="retreat-detail-hero-meta">
@@ -91,7 +93,12 @@ else
                     <p class="section-eyebrow">@Loc["page.retreat.detail.about_eyebrow"]</p>
                     <h2>@Loc["page.retreat.detail.about_h2"]</h2>
                     <div class="section-divider" style="margin:1.5rem 0;"></div>
-                    <p style="line-height:1.9; color:var(--text-muted);">@r.Description</p>
+                    <div class="retreat-description-prose">
+                        @foreach (var block in SplitDescriptionBlocks(r.Description))
+                        {
+                            <p>@block</p>
+                        }
+                    </div>
                 </div>
 
                 <!-- Programme -->
@@ -209,7 +216,7 @@ else
                                             <span class="card-meta-icon"><RetreatMetaSvg Kind="calendar" /></span>
                                             @o.StartDate.ToString("dd MMM yyyy")
                                         </p>
-                                        <a href="/retreats/@o.Id" class="btn btn-outline btn-sm" style="display:inline-block; margin-top:1rem;">@Loc["page.retreat.detail.other_cta"]</a>
+                                        <a href="@RetreatUrls.DetailPath(o)" class="btn btn-outline btn-sm" style="display:inline-block; margin-top:1rem;">@Loc["page.retreat.detail.other_cta"]</a>
                                     </div>
                                 </div>
                             }
@@ -265,10 +272,13 @@ else
 
 @code {
     [Parameter] public Guid Id { get; set; }
+    [Parameter] public string? RetreatSlug { get; set; }
 
     private RetreatDto? retreat;
     private bool notFound = false;
     private List<RetreatDto> otherRetreats = new();
+    private Guid _loadedForId;
+    private string? _loadedForSlug;
 
     private bool IsPast => retreat?.EndDate.ToUniversalTime() < DateTime.UtcNow;
 
@@ -282,16 +292,16 @@ else
         "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
     };
 
-    protected override async Task OnInitializedAsync()
-    {
-        Loc.OnLanguageChanged += Refresh;
-        await LoadData();
-    }
+    protected override async Task OnInitializedAsync() => Loc.OnLanguageChanged += Refresh;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (retreat?.Id != Id)
-            await LoadData();
+        var slug = string.IsNullOrWhiteSpace(RetreatSlug) ? null : RetreatSlug.Trim();
+        if (slug == _loadedForSlug && Id == _loadedForId && retreat != null)
+            return;
+        _loadedForSlug = slug;
+        _loadedForId = Id;
+        await LoadData();
     }
 
     private static readonly Guid SpecialRetreatId = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -302,11 +312,24 @@ else
         retreat = null;
         try
         {
-            retreat = await ApiService.GetRetreatByIdAsync(Id, Loc.CurrentLang);
+            var slug = string.IsNullOrWhiteSpace(RetreatSlug) ? null : RetreatSlug.Trim();
+            if (!string.IsNullOrEmpty(slug))
+                retreat = await ApiService.GetRetreatBySlugAsync(slug, Loc.CurrentLang);
+            else if (Id != Guid.Empty)
+                retreat = await ApiService.GetRetreatByIdAsync(Id, Loc.CurrentLang);
+            else
+            {
+                notFound = true;
+                return;
+            }
+
             if (retreat == null) { notFound = true; return; }
             ApplyRetreatOverride();
+            if (string.IsNullOrEmpty(slug) && Id != Guid.Empty && !string.IsNullOrWhiteSpace(retreat.Slug))
+                Nav.NavigateTo($"/retreats/{retreat.Slug}", replace: true);
+
             var all = await CatalogState.GetActiveRetreatsAsync(Loc.CurrentLang);
-            otherRetreats = all.Where(x => x.Id != Id).Take(2).ToList();
+            otherRetreats = all.Where(x => x.Id != retreat.Id).Take(2).ToList();
         }
         catch
         {
@@ -321,6 +344,7 @@ else
         retreat = retreat with
         {
             Title = "С 9 по 19 мая\nВ Черногории г. Бар состоится РЕТРИТ",
+            Location = "Бар, Черногория",
             Description = @"с Александром Украинцевым (Саишварарамой)
 Практикующим йогом, психоаналитиком, духовным учителем, руководителем духовного центра Ади Парашакти.
 
@@ -328,20 +352,19 @@ else
 
 Программа включает занятия по:
 
-🔥 Раджа йоге (""королевской йоге"")
+• Раджа йоге («королевской йоге»)
 
-🔥 Практикам пранаям и медитаций
+• Практикам пранаям и медитаций
 
-🔥 Личная консультация учителя по всем жизненным вопросам, которые вас волнуют
+• Личная консультация учителя по всем жизненным вопросам, которые вас волнуют
 
-🔥 Присутствие на огненной церемонии Ягья 🙏
-Которая работает как ""кармическая хирургия"" по очистке наших тонких тел.
+• Присутствие на огненной церемонии Ягья — она работает как «кармическая хирургия» по очистке наших тонких тел.
 
-🔥 Посещение скального монастыря Острог, извесного чудесами исцеления, медитация в месте силы.
+• Посещение скального монастыря Острог, известного чудесами исцеления, медитация в месте силы.
 
-🔥 Посещение старого города Будва, прогулка по красивым, атмосферным улочкам, обмен впечатлениями.
+• Посещение старого города Будва, прогулка по красивым, атмосферным улочкам, обмен впечатлениями.
 
-❗️ Если вы уже находитесь в городе Бар, то стоимость будет без учёта жилья и трансфера.
+Если вы уже находитесь в городе Бар, то стоимость будет без учёта жилья и трансфера.
 
 В полную стоимость ретрита входит:
 — Проживание в апартаментах на двоих
@@ -353,7 +376,7 @@ else
 — Поездка в старый город Будва
 — Трансфер из аэропорта
 
-👆 Дополнительные консультации, а так же индивидуальные ягьи у Александра, можно заказать по предварительной записи.
+Дополнительные консультации, а также индивидуальные ягьи у Александра, можно заказать по предварительной записи.
 
 По всем вопросам обращаться в WhatsApp / Viber: +380939152051"
         };
@@ -361,6 +384,8 @@ else
 
     private async void Refresh()
     {
+        _loadedForSlug = null;
+        _loadedForId = Guid.Empty;
         await LoadData();
         await InvokeAsync(StateHasChanged);
     }
@@ -387,4 +412,17 @@ else
 
     private static string Truncate(string? s, int max) =>
         string.IsNullOrEmpty(s) ? "" : s.Length <= max ? s : s[..max] + "…";
+
+    private static IEnumerable<string> SplitDescriptionBlocks(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+            yield break;
+        var parts = description.Split(new[] { "\r\n\r\n", "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var p in parts)
+        {
+            var t = p.Trim();
+            if (t.Length > 0)
+                yield return t;
+        }
+    }
 }

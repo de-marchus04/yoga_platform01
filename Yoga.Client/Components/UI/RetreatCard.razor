@@ -1,5 +1,6 @@
 @namespace Yoga.Client.Components.UI
 @using Yoga.Shared.DTOs
+@using Yoga.Client.Helpers
 @inject Yoga.Client.Services.ApiService Api
 
 <div class="retreat-card @(Featured ? "retreat-card--featured " : "")reveal">
@@ -30,12 +31,12 @@
 
         @if (IsPast)
         {
-            <a href="/retreats/@Retreat.Id" class="btn btn-outline" style="width:100%; text-align:center;">@DetailText</a>
+            <a href="@RetreatUrls.DetailPath(Retreat)" class="btn btn-outline" style="width:100%; text-align:center;">@DetailText</a>
         }
         else
         {
             <div class="retreat-card-actions">
-                <a href="/retreats/@Retreat.Id" class="btn btn-outline" style="width:100%; text-align:center;">@DetailText</a>
+                <a href="@RetreatUrls.DetailPath(Retreat)" class="btn btn-outline" style="width:100%; text-align:center;">@DetailText</a>
                 @if (HasCta)
                 {
                     <button type="button" class="btn btn-outline btn-sm" style="width:100%;" @onclick="() => OnCtaClick.InvokeAsync(Retreat.Title)">@CtaText</button>

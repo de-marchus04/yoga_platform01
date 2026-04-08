@@ -98,7 +98,8 @@ namespace Yoga.Shared.DTOs
         DateTime EndDate,
         string? ImageUrl,
         string? PriceLabel,
-        string? Program
+        string? Program,
+        string? Slug
     );
 
     public record YagyaDto(

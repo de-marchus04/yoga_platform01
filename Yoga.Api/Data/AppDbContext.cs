@@ -41,6 +41,10 @@ namespace Yoga.Api.Data
             // Any specific configurations, e.g.
             modelBuilder.Entity<Lead>().HasKey(l => l.Id);
             modelBuilder.Entity<Retreat>().HasKey(r => r.Id);
+            modelBuilder.Entity<Retreat>()
+                .HasIndex(r => r.Slug)
+                .IsUnique()
+                .HasFilter("\"Slug\" IS NOT NULL");
             modelBuilder.Entity<Yagya>().HasKey(y => y.Id);
             modelBuilder.Entity<AdminUser>().HasKey(a => a.Id);
 
@@ -129,7 +133,8 @@ namespace Yoga.Api.Data
                 Id = retreatId,
                 Title = "Ретрит в Черногории: Возврат к себе",
                 Description = "Погружение в себя на берегу Адриатического моря. Практики тишины, йога 2 раза в день, авторское меню и детокс.",
-                Location = "Будва, Черногория",
+                Location = "Бар, Черногория",
+                Slug = "me01",
                 StartDate = new DateTime(2026, 5, 10, 0, 0, 0, DateTimeKind.Utc),
                 EndDate = new DateTime(2026, 5, 17, 0, 0, 0, DateTimeKind.Utc),
                 IsActive = true
@@ -139,13 +144,13 @@ namespace Yoga.Api.Data
             modelBuilder.Entity<Translation>().HasData(
                 new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000001"), EntityType = "Retreat", EntityId = retreatId, Field = "Title", Language = "ru", Value = "Ретрит в Черногории: Возврат к себе" },
                 new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000002"), EntityType = "Retreat", EntityId = retreatId, Field = "Description", Language = "ru", Value = "Погружение в себя на берегу Адриатического моря. Практики тишины, йога 2 раза в день, авторское меню и детокс." },
-                new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000003"), EntityType = "Retreat", EntityId = retreatId, Field = "Location", Language = "ru", Value = "Будва, Черногория" },
+                new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000003"), EntityType = "Retreat", EntityId = retreatId, Field = "Location", Language = "ru", Value = "Бар, Черногория" },
                 new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000004"), EntityType = "Retreat", EntityId = retreatId, Field = "Title", Language = "en", Value = "Retreat in Montenegro: Return to Yourself" },
                 new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000005"), EntityType = "Retreat", EntityId = retreatId, Field = "Description", Language = "en", Value = "A deep dive into yourself on the shores of the Adriatic Sea. Silence practices, yoga twice a day, a curated menu and detox." },
-                new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000006"), EntityType = "Retreat", EntityId = retreatId, Field = "Location", Language = "en", Value = "Budva, Montenegro" },
+                new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000006"), EntityType = "Retreat", EntityId = retreatId, Field = "Location", Language = "en", Value = "Bar, Montenegro" },
                 new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000007"), EntityType = "Retreat", EntityId = retreatId, Field = "Title", Language = "uk", Value = "Ретрит у Чорногорії: Повернення до себе" },
                 new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000008"), EntityType = "Retreat", EntityId = retreatId, Field = "Description", Language = "uk", Value = "Занурення в себе на березі Адріатичного моря. Практики тиші, йога 2 рази на день, авторське меню та детокс." },
-                new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000009"), EntityType = "Retreat", EntityId = retreatId, Field = "Location", Language = "uk", Value = "Будва, Чорногорія" }
+                new Translation { Id = Guid.Parse("a0000001-0001-0001-0001-000000000009"), EntityType = "Retreat", EntityId = retreatId, Field = "Location", Language = "uk", Value = "Бар, Чорногорія" }
             );
 
             // Seed Courses

@@ -48,12 +48,15 @@ namespace Yoga.Api.Controllers
             foreach (var slug in consultations)
                 AddUrl(sb, $"/consultations/{slug}", "weekly", "0.7");
 
-            // Retreats
+            // Retreats (canonical slug URL when set)
             var retreats = await _context.Retreats
-                .Select(r => r.Id)
+                .Select(r => new { r.Id, r.Slug })
                 .ToListAsync();
-            foreach (var id in retreats)
-                AddUrl(sb, $"/retreats/{id}", "monthly", "0.7");
+            foreach (var r in retreats)
+            {
+                var path = !string.IsNullOrWhiteSpace(r.Slug) ? $"/retreats/{r.Slug}" : $"/retreats/{r.Id}";
+                AddUrl(sb, path, "monthly", "0.7");
+            }
 
             // Blog posts
             var posts = await _context.BlogPosts

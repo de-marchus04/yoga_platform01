@@ -3534,12 +3534,14 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 /* Photo-overlay hero text must always be light regardless of active theme */
-.retreat-detail-hero-content h1 {
+.retreat-detail-hero-content h1,
+.retreat-detail-hero-title {
   font-size: clamp(2rem, 5vw, 3.8rem);
   font-weight: 300;
   font-style: italic;
   color: var(--text-on-dark);
   margin-bottom: 1.5rem;
+  white-space: pre-line;
 }
 
 .retreat-detail-hero-content p {
@@ -3629,6 +3631,24 @@ details[open] > .program-module-summary .program-module-toggle {
 .retreat-content-block h2 {
   font-size: clamp(1.4rem, 3vw, 2rem);
   margin-top: 0.5rem;
+}
+
+.retreat-description-prose {
+  max-width: 42rem;
+}
+
+.retreat-description-prose p {
+  line-height: 1.9;
+  color: var(--text-muted);
+  margin: 0 0 1.15rem;
+}
+
+.retreat-description-prose p:last-child {
+  margin-bottom: 0;
+}
+
+[data-theme="dark"] .retreat-booking-card {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 /* Sticky sidebar */
@@ -4814,4 +4834,74 @@ details[open] > .program-module-summary .program-module-toggle {
 .cookie-btn-decline:hover {
     border-color: rgba(224, 220, 212, 0.5);
     color: rgba(224, 220, 212, 0.95);
+}
+
+/* ── Home hero & retreat showcase: global fallback if scoped bundle (Yoga.Client.styles.css) is not applied ── */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 92vh;
+  overflow: hidden;
+}
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6rem 5rem 6rem 3rem;
+  background-color: var(--background);
+  position: relative;
+}
+.hero-photo {
+  position: relative;
+  overflow: hidden;
+}
+.hero-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.retreat-showcase {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 520px;
+}
+.retreat-showcase--reversed {
+  direction: rtl;
+}
+.retreat-showcase--reversed > * {
+  direction: ltr;
+}
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .hero-photo {
+    height: 55vw;
+    min-height: 320px;
+  }
+  .hero-text {
+    padding: 4rem 2rem;
+  }
+  .hero-text h1 {
+    font-size: 3.2rem;
+  }
+  .retreat-showcase {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+}
+@media (max-width: 480px) {
+  .hero-text {
+    padding: 3.5rem 1.5rem 3rem;
+  }
+  .hero-text h1 {
+    font-size: 2.4rem;
+  }
+  .hero-photo {
+    height: 65vw;
+    min-height: 260px;
+  }
 }

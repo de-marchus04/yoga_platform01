@@ -39,17 +39,7 @@ namespace Yoga.Api.Controllers
             var result = retreats.Select(r =>
             {
                 var ct = translations.Where(t => t.EntityId == r.Id).ToDictionary(t => t.Field, t => t.Value);
-                return new RetreatDto(
-                    r.Id,
-                    ct.TryGetValue("Title", out var title) ? title : r.Title,
-                    ct.TryGetValue("Description", out var desc) ? desc : r.Description,
-                    ct.TryGetValue("Location", out var loc) ? loc : r.Location,
-                    r.StartDate,
-                    r.EndDate,
-                    r.ImageUrl,
-                    ct.TryGetValue("PriceLabel", out var price) ? price : r.PriceLabel,
-                    ct.TryGetValue("Program", out var prog) ? prog : r.Program
-                );
+                return ToRetreatDto(r, ct);
             });
 
             return Ok(result);
@@ -132,6 +122,22 @@ namespace Yoga.Api.Controllers
             return Ok(await MapToDto(retreats, lang));
         }
 
+        // GET: api/retreats/by-slug/{slug}?lang=ru — must be before {id:guid}
+        [HttpGet("by-slug/{slug}")]
+        public async Task<ActionResult<RetreatDto>> GetRetreatBySlug(string slug, [FromQuery] string lang = "ru")
+        {
+            if (string.IsNullOrWhiteSpace(slug)) return NotFound();
+            var retreat = await _context.Retreats.FirstOrDefaultAsync(r => r.Slug == slug);
+            if (retreat == null) return NotFound();
+
+            var translations = await _context.Translations
+                .Where(t => t.EntityType == "Retreat" && t.EntityId == retreat.Id && t.Language == lang)
+                .ToListAsync();
+
+            var ct = translations.ToDictionary(t => t.Field, t => t.Value);
+            return Ok(ToRetreatDto(retreat, ct));
+        }
+
         // GET: api/retreats/{id}?lang=ru
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<RetreatDto>> GetRetreat(Guid id, [FromQuery] string lang = "ru")
@@ -144,17 +150,7 @@ namespace Yoga.Api.Controllers
                 .ToListAsync();
 
             var ct = translations.ToDictionary(t => t.Field, t => t.Value);
-            return Ok(new RetreatDto(
-                retreat.Id,
-                ct.TryGetValue("Title", out var title) ? title : retreat.Title,
-                ct.TryGetValue("Description", out var desc) ? desc : retreat.Description,
-                ct.TryGetValue("Location", out var loc) ? loc : retreat.Location,
-                retreat.StartDate,
-                retreat.EndDate,
-                retreat.ImageUrl,
-                ct.TryGetValue("PriceLabel", out var price) ? price : retreat.PriceLabel,
-                ct.TryGetValue("Program", out var prog) ? prog : retreat.Program
-            ));
+            return Ok(ToRetreatDto(retreat, ct));
         }
 
         private async Task<IEnumerable<RetreatDto>> MapToDto(List<Retreat> retreats, string lang)
@@ -167,19 +163,23 @@ namespace Yoga.Api.Controllers
             return retreats.Select(r =>
             {
                 var ct = translations.Where(t => t.EntityId == r.Id).ToDictionary(t => t.Field, t => t.Value);
-                return new RetreatDto(
-                    r.Id,
-                    ct.TryGetValue("Title", out var title) ? title : r.Title,
-                    ct.TryGetValue("Description", out var desc) ? desc : r.Description,
-                    ct.TryGetValue("Location", out var loc) ? loc : r.Location,
-                    r.StartDate,
-                    r.EndDate,
-                    r.ImageUrl,
-                    ct.TryGetValue("PriceLabel", out var price) ? price : r.PriceLabel,
-                    ct.TryGetValue("Program", out var prog) ? prog : r.Program
-                );
+                return ToRetreatDto(r, ct);
             });
         }
+
+        private static RetreatDto ToRetreatDto(Retreat r, Dictionary<string, string> ct) =>
+            new(
+                r.Id,
+                ct.TryGetValue("Title", out var title) ? title : r.Title,
+                ct.TryGetValue("Description", out var desc) ? desc : r.Description,
+                ct.TryGetValue("Location", out var loc) ? loc : r.Location,
+                r.StartDate,
+                r.EndDate,
+                r.ImageUrl,
+                ct.TryGetValue("PriceLabel", out var price) ? price : r.PriceLabel,
+                ct.TryGetValue("Program", out var prog) ? prog : r.Program,
+                r.Slug
+            );
 
         private bool RetreatExists(Guid id)
         {

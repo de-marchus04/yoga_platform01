@@ -1,0 +1,21 @@
+{
+  "name": "Yoga.Life Enterprise (.NET 8)",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    }
+  },
+  "postCreateCommand": "dotnet restore Yoga.Life.Enterprise.sln --nologo",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

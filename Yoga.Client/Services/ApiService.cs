@@ -85,6 +85,12 @@ namespace Yoga.Client.Services
             return await GetSafeAsync<RetreatDto>($"api/retreats/{id}?lang={lang}");
         }
 
+        public async Task<RetreatDto?> GetRetreatBySlugAsync(string slug, string lang = "ru")
+        {
+            if (string.IsNullOrWhiteSpace(slug)) return null;
+            return await GetSafeAsync<RetreatDto>($"api/retreats/by-slug/{Uri.EscapeDataString(slug)}?lang={lang}");
+        }
+
         public async Task<List<YagyaDto>> GetActiveYagyasAsync(string lang = "ru")
         {
             var result = await GetSafeAsync<List<YagyaDto>>($"api/yagyas?lang={lang}");

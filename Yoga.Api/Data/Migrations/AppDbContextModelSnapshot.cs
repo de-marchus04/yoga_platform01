@@ -710,6 +710,9 @@ namespace Yoga.Api.Data.Migrations
                     b.Property<string>("Program")
                         .HasColumnType("text");
 
+                    b.Property<string>("Slug")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
@@ -718,6 +721,10 @@ namespace Yoga.Api.Data.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasFilter("\"Slug\" IS NOT NULL");
 
                     b.ToTable("Retreats");
 
@@ -728,7 +735,8 @@ namespace Yoga.Api.Data.Migrations
                             Description = "Погружение в себя на берегу Адриатического моря. Практики тишины, йога 2 раза в день, авторское меню и детокс.",
                             EndDate = new DateTime(2026, 5, 17, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
-                            Location = "Будва, Черногория",
+                            Location = "Бар, Черногория",
+                            Slug = "me01",
                             StartDate = new DateTime(2026, 5, 10, 0, 0, 0, 0, DateTimeKind.Utc),
                             Title = "Ретрит в Черногории: Возврат к себе"
                         });
@@ -849,7 +857,7 @@ namespace Yoga.Api.Data.Migrations
                             EntityType = "Retreat",
                             Field = "Location",
                             Language = "ru",
-                            Value = "Будва, Черногория"
+                            Value = "Бар, Черногория"
                         },
                         new
                         {
@@ -876,7 +884,7 @@ namespace Yoga.Api.Data.Migrations
                             EntityType = "Retreat",
                             Field = "Location",
                             Language = "en",
-                            Value = "Budva, Montenegro"
+                            Value = "Bar, Montenegro"
                         },
                         new
                         {
@@ -903,7 +911,7 @@ namespace Yoga.Api.Data.Migrations
                             EntityType = "Retreat",
                             Field = "Location",
                             Language = "uk",
-                            Value = "Будва, Чорногорія"
+                            Value = "Бар, Чорногорія"
                         });
                 });
 

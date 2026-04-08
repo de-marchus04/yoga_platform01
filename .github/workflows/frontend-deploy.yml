@@ -37,6 +37,15 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Restore solution
+        run: dotnet restore Yoga.Life.Enterprise.sln --nologo
+
+      - name: Build solution (Release)
+        run: dotnet build Yoga.Life.Enterprise.sln -c Release --no-restore --nologo
+
+      - name: Test API
+        run: dotnet test Yoga.Life.Enterprise.sln -c Release --no-build --nologo --verbosity normal
+
       - name: Resolve Vercel org and project IDs
         id: vercel_ids
         env:
@@ -51,10 +60,10 @@ jobs:
 
       - name: Build frontend
         run: |
-          dotnet restore Yoga.Client/Yoga.Client.csproj
           dotnet publish Yoga.Client/Yoga.Client.csproj \
             -c Release \
             -o publish \
+            --no-restore \
             --nologo
 
       - name: Validate public API URL
