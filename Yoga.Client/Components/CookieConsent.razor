@@ -1,22 +1,24 @@
 @inject IJSRuntime JS
+@inject Yoga.Client.Services.LocalizationService Loc
 
 @if (showBanner)
 {
     <div class="cookie-consent">
         <div class="cookie-consent-inner">
             <p class="cookie-consent-text">
-                Мы используем файлы cookie для корректной работы сайта и аналитики. 
-                Подробнее в <a href="/privacy">Политике конфиденциальности</a>.
+                @Loc["cookie.text"]
+                <a href="/privacy">@Loc["cookie.link"]</a>.
             </p>
             <div class="cookie-consent-actions">
-                <button class="cookie-btn cookie-btn-accept" @onclick="Accept">Принять</button>
-                <button class="cookie-btn cookie-btn-decline" @onclick="Decline">Только необходимые</button>
+                <button class="cookie-btn cookie-btn-accept" @onclick="Accept">@Loc["cookie.accept"]</button>
+                <button class="cookie-btn cookie-btn-decline" @onclick="Decline">@Loc["cookie.decline"]</button>
             </div>
         </div>
     </div>
 }
 
 @code {
+    private const string ConsentKey = "cookie-consent-v2";
     private bool showBanner;
     private bool _checked;
 
@@ -25,7 +27,7 @@
         if (!_checked)
         {
             _checked = true;
-            var consent = await JS.InvokeAsync<string?>("localStorage.getItem", "cookie-consent");
+            var consent = await JS.InvokeAsync<string?>("localStorage.getItem", ConsentKey);
             if (string.IsNullOrEmpty(consent))
             {
                 showBanner = true;
@@ -36,13 +38,13 @@
 
     private async Task Accept()
     {
-        await JS.InvokeVoidAsync("localStorage.setItem", "cookie-consent", "all");
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentKey, "all");
         showBanner = false;
     }
 
     private async Task Decline()
     {
-        await JS.InvokeVoidAsync("localStorage.setItem", "cookie-consent", "essential");
+        await JS.InvokeVoidAsync("localStorage.setItem", ConsentKey, "essential");
         showBanner = false;
     }
 }

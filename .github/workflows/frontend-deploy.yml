@@ -66,6 +66,12 @@ jobs:
             --no-restore \
             --nologo
 
+      - name: Cache-bust asset versions in index.html
+        run: |
+          SHORT_SHA="${GITHUB_SHA::8}"
+          sed -i "s/?v=20260408/?v=${SHORT_SHA}/g" publish/wwwroot/index.html
+          echo "Asset version tag set to ?v=${SHORT_SHA}"
+
       - name: Validate public API URL
         run: |
           test -n "$FRONTEND_PUBLIC_API_BASE_URL" || {

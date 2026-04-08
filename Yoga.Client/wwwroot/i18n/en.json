@@ -371,5 +371,9 @@
   "terms.s5.title": "5. Limitation of liability",
   "terms.s6.p1": "The platform owner may update the terms of use when the business model, service scope, infrastructure, or legal requirements change. The current version must be published on the website and used as the baseline reference version for client support.",
   "terms.s6.title": "6. Changes to terms",
-  "terms.title": "Terms of Use"
+  "terms.title": "Terms of Use",
+  "cookie.text": "We use cookies for proper site functionality and analytics. Learn more in our ",
+  "cookie.link": "Privacy Policy",
+  "cookie.accept": "Accept",
+  "cookie.decline": "Essential only"
 }
