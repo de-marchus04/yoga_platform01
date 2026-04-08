@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   VERCEL_ORG_ID: team_4ZeZHmzGdjhTB9NdH82pbzjN
   VERCEL_PROJECT_ID: prj_xZU60Fn5Iud595WIGVXWZB9a0Xxr
   FRONTEND_PUBLIC_API_BASE_URL: ${{ vars.FRONTEND_PUBLIC_API_BASE_URL }}
@@ -29,12 +28,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "24"
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
 
       - name: Build frontend
         run: |
@@ -60,77 +59,33 @@ jobs:
           esac
 
       - name: Inject public API URL into frontend runtime config
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          import os
-
-          appsettings_path = Path("publish/wwwroot/appsettings.json")
-          data = json.loads(appsettings_path.read_text(encoding="utf-8"))
-          data.setdefault("Api", {})["PublicBaseUrl"] = os.environ["FRONTEND_PUBLIC_API_BASE_URL"].rstrip("/") + "/"
-          appsettings_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-          PY
-
-      - name: Prepare Vercel project linkage
-        run: |
-          mkdir -p publish/wwwroot/.vercel
-          cat > publish/wwwroot/.vercel/project.json <<'EOF'
-          {"orgId":"team_4ZeZHmzGdjhTB9NdH82pbzjN","projectId":"prj_xZU60Fn5Iud595WIGVXWZB9a0Xxr"}
-          EOF
+        run: python3 scripts/inject_public_api_url.py publish/wwwroot/appsettings.json "$FRONTEND_PUBLIC_API_BASE_URL"
 
       - name: Verify static bundle
         run: |
           test -f publish/wwwroot/index.html
+          test -f publish/wwwroot/vercel.json
           test -d publish/wwwroot/_framework
           grep -q '"PublicBaseUrl": "https://' publish/wwwroot/appsettings.json
 
-      - name: Verify Vercel token access
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          npx --yes vercel@38.0.0 whoami --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN"
-
       - name: Deploy static frontend to Vercel
-        id: vercel_deploy
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          FORCE_COLOR: "0"
-        run: |
-          cd publish/wwwroot
-          set -uo pipefail
-          # Vercel CLI prints build logs + a line like "Production: https://….vercel.app".
-          # Capturing raw stdout breaks GITHUB_OUTPUT and smoke checks; extract one HTTPS URL.
-          set +e
-          VC_OUT="$(npx --yes vercel@38.0.0 deploy --prod --yes --scope "$VERCEL_ORG_ID" --token="$VERCEL_TOKEN" 2>&1)"
-          VC_EXIT=$?
-          set -e
-          printf '%s\n' "$VC_OUT"
-          if [ "$VC_EXIT" -ne 0 ]; then
-            echo "Vercel deploy failed (exit $VC_EXIT)." >&2
-            exit "$VC_EXIT"
-          fi
-          deployment_url="$(printf '%s\n' "$VC_OUT" | grep -oiE 'production:\s*https://[^ ]+' | tail -1 | sed -E 's/^production:\s*//i' || true)"
-          if [ -z "$deployment_url" ]; then
-            deployment_url="$(printf '%s\n' "$VC_OUT" | grep -oE 'https://[a-zA-Z0-9][a-zA-Z0-9.-]*\.vercel\.app' | tail -1 || true)"
-          fi
-          if [ -z "$deployment_url" ]; then
-            echo "Could not parse production URL from Vercel CLI output." >&2
-            exit 1
-          fi
-          {
-            echo "deployment_url<<VC_URL_EOF"
-            echo "$deployment_url"
-            echo "VC_URL_EOF"
-          } >> "$GITHUB_OUTPUT"
-          echo "Parsed deployment_url=$deployment_url"
+        id: vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ env.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
+          working-directory: publish/wwwroot
+          vercel-args: "--prod --yes"
+          scope: ${{ env.VERCEL_ORG_ID }}
+          github-comment: false
 
-      - name: Smoke check published frontend and API
+      - name: Smoke check deployed frontend (required)
         env:
-          DEPLOYMENT_URL: ${{ steps.vercel_deploy.outputs.deployment_url }}
+          DEPLOYMENT_URL: ${{ steps.vercel.outputs.preview-url }}
         run: |
           test -n "$DEPLOYMENT_URL" || {
-            echo "Deployment URL was not returned by Vercel deploy step." >&2
+            echo "Deployment URL was not returned by the Vercel action." >&2
             exit 1
           }
 
@@ -145,9 +100,22 @@ jobs:
             curl --fail --silent --show-error --location "$DEPLOYMENT_URL$route" > /dev/null
           done
 
+          echo "Checking static assets are not served as HTML"
+          hdr_ct="$(curl --fail --silent --show-error --location -o /dev/null -D - "$DEPLOYMENT_URL/app.css" | tr -d '\r' | grep -i '^content-type:' | tail -1 | cut -d: -f2- | xargs)"
+          echo "GET /app.css Content-Type: $hdr_ct"
+          echo "$hdr_ct" | grep -qi 'text/css' || {
+            echo "Expected app.css to be text/css (got: $hdr_ct). SPA rewrite may be misconfigured." >&2
+            exit 1
+          }
+
           appsettings_json="$(curl --fail --silent --show-error --location "$DEPLOYMENT_URL/appsettings.json")"
           echo "$appsettings_json" | grep -q '"PublicBaseUrl": "https://'
           echo "$appsettings_json" | grep -q '"PublicBaseUrl": "'$FRONTEND_PUBLIC_API_BASE_URL'/"'
 
+      - name: Probe API health (non-blocking)
+        continue-on-error: true
+        run: |
+          echo "Probing API (failure here does not roll back the frontend deploy)"
           curl --fail --silent --show-error --location "$FRONTEND_PUBLIC_API_BASE_URL/health/live" > /dev/null
           curl --fail --silent --show-error --location "$FRONTEND_PUBLIC_API_BASE_URL/health/ready" > /dev/null
+          echo "API health OK"

@@ -80,24 +80,22 @@ docker compose up -d --build
 Current GitHub Actions flow:
 
 - `Build Blazor WASM` creates the `publish/wwwroot` artifact.
-- `Deploy Blazor Frontend` rebuilds the frontend, injects `FRONTEND_PUBLIC_API_BASE_URL` into the published runtime config, and publishes the static bundle to Vercel without using a local terminal session.
+- `Deploy Blazor Frontend` rebuilds the frontend, injects `FRONTEND_PUBLIC_API_BASE_URL` into the published runtime config, and publishes the static bundle to Vercel using `amondnet/vercel-action` (no fragile parsing of CLI stdout). After deploy, the workflow checks that `/app.css` is served as `text/css` so a broken SPA rewrite cannot slip through unnoticed.
 
-1. If the automatic frontend deployment is unavailable, use the fallback manual procedure:
+1. If the automatic frontend deployment is unavailable, use the repository scripts (same inject logic as CI):
 
 ```bash
-dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
-python3 - <<'PY'
-import json
-from pathlib import Path
-
-appsettings_path = Path('publish/wwwroot/appsettings.json')
-data = json.loads(appsettings_path.read_text(encoding='utf-8'))
-data.setdefault('Api', {})['PublicBaseUrl'] = 'https://your-public-api-origin/'
-appsettings_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-PY
-cd publish/wwwroot
-vercel deploy --prod --yes
+export FRONTEND_PUBLIC_API_BASE_URL="https://your-public-api-origin"
+bash scripts/deploy-frontend.sh
 ```
+
+On Windows (PowerShell), from the repo root:
+
+```powershell
+.\scripts\deploy-frontend.ps1 -PublicApiBaseUrl "https://your-public-api-origin"
+```
+
+You must be logged into Vercel CLI (`vercel login`) or have `VERCEL_TOKEN` in the environment for non-interactive use.
 
 1. Verify:
    - frontend loads from the public domain
@@ -114,22 +112,7 @@ docker compose up -d --build
 
 Then run `Deploy Blazor Frontend` from the GitHub Actions tab to publish the frontend without using a local terminal.
 
-If the deploy workflow is unavailable, use the manual fallback:
-
-```bash
-dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
-python3 - <<'PY'
-import json
-from pathlib import Path
-
-appsettings_path = Path('publish/wwwroot/appsettings.json')
-data = json.loads(appsettings_path.read_text(encoding='utf-8'))
-data.setdefault('Api', {})['PublicBaseUrl'] = 'https://your-public-api-origin/'
-appsettings_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-PY
-cd publish/wwwroot
-vercel deploy --prod --yes
-```
+If the deploy workflow is unavailable, use `scripts/deploy-frontend.sh` or `scripts/deploy-frontend.ps1` as described above.
 
 After upgrade:
 
