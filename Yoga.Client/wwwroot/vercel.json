@@ -23,7 +23,7 @@
       "destination": "https://api.medisha.space/health/$1"
     },
     {
-      "source": "/((?!(_framework/|.*\\..*)).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
