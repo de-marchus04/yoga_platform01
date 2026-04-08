@@ -501,7 +501,7 @@ else
 
             if (retreat == null) { notFound = true; return; }
             ApplyRetreatOverride();
-            if (string.IsNullOrEmpty(slug) && Id != Guid.Empty && !string.IsNullOrWhiteSpace(retreat.Slug))
+            if (!string.IsNullOrWhiteSpace(retreat.Slug) && slug != retreat.Slug)
                 Nav.NavigateTo($"/retreats/{retreat.Slug}", replace: true);
 
             var all = await CatalogState.GetActiveRetreatsAsync(Loc.CurrentLang);
