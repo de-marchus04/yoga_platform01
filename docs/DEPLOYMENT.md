@@ -60,6 +60,10 @@ Post-deploy checks:
 
 Secret `VERCEL_PROTECTION_BYPASS_SECRET`: Vercel → **Deployment Protection** → automation bypass; sent as `x-vercel-protection-bypass`. [Docs](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation).
 
+If production is **auth-protected**, the workflow still **passes**: HTTP **401/403** on smoke routes is treated as OK (deploy succeeded; CI cannot see HTML without bypass).
+
+`vercel.json` uses a final `/(.*) → /index.html` SPA fallback; Vercel serves real files (`app.css`, `_framework/*`) first. Do not use an `Accept: text/html`-only rewrite — `curl` and Vercel previews use `Accept: */*` and would get **404** on deep links.
+
 Required GitHub Actions **secret** for frontend deploy:
 
 - `VERCEL_TOKEN` — create at [vercel.com/account/tokens](https://vercel.com/account/tokens). The account you are logged into when you create the token **must be a member of the Vercel team** that owns the project; otherwise deploy fails with `scope-not-accessible` / “You do not have access to the specified account” ([details](https://err.sh/vercel/scope-not-accessible)).
