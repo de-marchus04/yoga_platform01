@@ -53,11 +53,12 @@ Required GitHub Actions variable for frontend deploy:
 
 - `FRONTEND_PUBLIC_API_BASE_URL=https://your-public-api-origin`
 
-Post-deploy smoke tests avoid hitting protected `*.vercel.app` URLs:
+Post-deploy checks:
 
-- If `FRONTEND_PUBLIC_API_BASE_URL` is `https://api.example.com`, the workflow **automatically** smoke-checks `https://www.example.com` (no extra variable required).
-- Override with optional variable `FRONTEND_SMOKE_URL` if your public site is not `www.` on the same host.
-- Optional secret `VERCEL_PROTECTION_BYPASS_SECRET` — Vercel → **Deployment Protection** → automation bypass; sent as `x-vercel-protection-bypass` on curls. See [Vercel docs](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation).
+- **Required:** `curl` against the **`*.vercel.app` URL** returned for this deployment (with optional `VERCEL_PROTECTION_BYPASS_SECRET` if Deployment Protection returns 401). This proves the bundle you just uploaded is live.
+- **Optional** (`continue-on-error`): if `FRONTEND_PUBLIC_API_BASE_URL` is `https://api.example.com`, the workflow also tries `https://www.example.com/`, or use variable `FRONTEND_SMOKE_URL`. A **404 on www** means the custom domain is not assigned to this Vercel project or DNS is wrong — fix under Vercel → **Project → Domains**; it does **not** fail the job.
+
+Secret `VERCEL_PROTECTION_BYPASS_SECRET`: Vercel → **Deployment Protection** → automation bypass; sent as `x-vercel-protection-bypass`. [Docs](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation).
 
 Required GitHub Actions **secret** for frontend deploy:
 

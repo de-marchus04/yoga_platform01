@@ -129,7 +129,8 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "Parsed deployment_url=$deployment_url"
 
-      - name: Smoke check deployed frontend (required)
+      # Always hit the URL Vercel just deployed. Custom domains (www) may 404 until assigned in Vercel → Domains.
+      - name: Smoke check this deployment (required)
         env:
           DEPLOYMENT_URL: ${{ steps.vercel_deploy.outputs.deployment_url }}
           VERCEL_PROTECTION_BYPASS_SECRET: ${{ secrets.VERCEL_PROTECTION_BYPASS_SECRET }}
@@ -144,58 +145,81 @@ jobs:
             *) DEPLOYMENT_URL="https://$DEPLOYMENT_URL" ;;
           esac
 
-          # *.vercel.app often returns 401 (Deployment Protection). Prefer public site:
-          # 1) FRONTEND_SMOKE_URL if set, else 2) auto https://api.host -> https://www.host from API variable.
-          DERIVED_SMOKE=""
-          api_base="${FRONTEND_PUBLIC_API_BASE_URL%/}"
-          case "$api_base" in
-            https://api.*)
-              host="${api_base#https://api.}"
-              DERIVED_SMOKE="https://www.$host"
-              ;;
-            http://api.*)
-              host="${api_base#http://api.}"
-              DERIVED_SMOKE="http://www.$host"
-              ;;
-          esac
-
-          if [ -n "$FRONTEND_SMOKE_URL" ]; then
-            SMOKE_URL="$FRONTEND_SMOKE_URL"
-            case "$SMOKE_URL" in
-              https://*) ;;
-              http://*) ;;
-              *) SMOKE_URL="https://$SMOKE_URL" ;;
-            esac
-            echo "Smoke checking $SMOKE_URL (FRONTEND_SMOKE_URL; deploy URL $DEPLOYMENT_URL)"
-          elif [ -n "$DERIVED_SMOKE" ]; then
-            SMOKE_URL="$DERIVED_SMOKE"
-            echo "Smoke checking $SMOKE_URL (auto from FRONTEND_PUBLIC_API_BASE_URL; deploy URL $DEPLOYMENT_URL)"
-          else
-            SMOKE_URL="$DEPLOYMENT_URL"
-            echo "Smoke checking $SMOKE_URL (no FRONTEND_SMOKE_URL and API is not https://api.* — set FRONTEND_SMOKE_URL or VERCEL_PROTECTION_BYPASS_SECRET if you get 401)"
-          fi
-
+          echo "Smoke checking deployment URL $DEPLOYMENT_URL"
           CURL_EXTRA=(--fail --silent --show-error --location)
           if [ -n "$VERCEL_PROTECTION_BYPASS_SECRET" ]; then
             CURL_EXTRA+=(-H "x-vercel-protection-bypass: $VERCEL_PROTECTION_BYPASS_SECRET")
             echo "Using x-vercel-protection-bypass for curl"
+          elif echo "$DEPLOYMENT_URL" | grep -q '\.vercel\.app'; then
+            echo "::notice::If curl fails with 401, add secret VERCEL_PROTECTION_BYPASS_SECRET (Vercel → Deployment Protection → automation bypass)."
           fi
 
           for route in / /about /contacts /retreats /privacy /terms /account/login; do
-            curl "${CURL_EXTRA[@]}" "$SMOKE_URL$route" > /dev/null
+            curl "${CURL_EXTRA[@]}" "$DEPLOYMENT_URL$route" > /dev/null
           done
 
           echo "Checking static assets are not served as HTML"
-          hdr_ct="$(curl "${CURL_EXTRA[@]}" -o /dev/null -D - "$SMOKE_URL/app.css" | tr -d '\r' | grep -i '^content-type:' | tail -1 | cut -d: -f2- | xargs)"
+          hdr_ct="$(curl "${CURL_EXTRA[@]}" -o /dev/null -D - "$DEPLOYMENT_URL/app.css" | tr -d '\r' | grep -i '^content-type:' | tail -1 | cut -d: -f2- | xargs)"
           echo "GET /app.css Content-Type: $hdr_ct"
           echo "$hdr_ct" | grep -qi 'text/css' || {
             echo "Expected app.css to be text/css (got: $hdr_ct). SPA rewrite may be misconfigured." >&2
             exit 1
           }
 
-          appsettings_json="$(curl "${CURL_EXTRA[@]}" "$SMOKE_URL/appsettings.json")"
+          appsettings_json="$(curl "${CURL_EXTRA[@]}" "$DEPLOYMENT_URL/appsettings.json")"
           echo "$appsettings_json" | grep -q '"PublicBaseUrl": "https://'
           echo "$appsettings_json" | grep -q '"PublicBaseUrl": "'$FRONTEND_PUBLIC_API_BASE_URL'/"'
+
+      # Public hostname may not be wired yet → must not fail the workflow.
+      - name: Smoke public site (optional)
+        continue-on-error: true
+        env:
+          DEPLOYMENT_URL: ${{ steps.vercel_deploy.outputs.deployment_url }}
+        run: |
+          case "$DEPLOYMENT_URL" in
+            https://*) ;;
+            *) DEPLOYMENT_URL="https://$DEPLOYMENT_URL" ;;
+          esac
+
+          api_base="${FRONTEND_PUBLIC_API_BASE_URL%/}"
+          DERIVED=""
+          case "$api_base" in
+            https://api.*)
+              host="${api_base#https://api.}"
+              DERIVED="https://www.$host"
+              ;;
+            http://api.*)
+              host="${api_base#http://api.}"
+              DERIVED="http://www.$host"
+              ;;
+          esac
+
+          if [ -n "$FRONTEND_SMOKE_URL" ]; then
+            PUB="$FRONTEND_SMOKE_URL"
+            case "$PUB" in
+              https://*) ;;
+              http://*) ;;
+              *) PUB="https://$PUB" ;;
+            esac
+          elif [ -n "$DERIVED" ]; then
+            PUB="$DERIVED"
+          else
+            echo "No FRONTEND_SMOKE_URL and API is not https://api.* — skip optional public check."
+            exit 0
+          fi
+
+          if [ "$PUB" = "$DEPLOYMENT_URL" ]; then
+            echo "Public URL same as deploy URL; skip."
+            exit 0
+          fi
+
+          echo "Optional: GET $PUB/ (assign domain in Vercel + DNS if this 404s)"
+          if curl --fail --silent --show-error --location "$PUB/" > /dev/null; then
+            echo "Public URL responded OK."
+          else
+            echo "::warning::$PUB not reachable (404/timeout). Vercel → Project → Domains: add $PUB and point DNS. Production deploy still succeeded at $DEPLOYMENT_URL"
+            exit 1
+          fi
 
       - name: Probe API health (non-blocking)
         continue-on-error: true
