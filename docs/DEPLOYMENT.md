@@ -53,6 +53,14 @@ Required GitHub Actions variable for frontend deploy:
 
 - `FRONTEND_PUBLIC_API_BASE_URL=https://your-public-api-origin`
 
+Recommended for frontend deploy (avoids smoke failures):
+
+- `FRONTEND_SMOKE_URL=https://www.your-public-site.com` — URL used for post-deploy **curl** checks. If unset, the workflow uses the `*.vercel.app` URL returned by the CLI; with **Vercel Deployment Protection** enabled, that URL often returns **401** to anonymous requests and the job fails even though the deploy succeeded. Pointing smoke at your real public domain (after the production alias updates) fixes this.
+
+Optional GitHub Actions **secret** (alternative to `FRONTEND_SMOKE_URL` for protected `*.vercel.app` URLs):
+
+- `VERCEL_PROTECTION_BYPASS_SECRET` — from Vercel → Project → **Settings** → **Deployment Protection** → generate an **Automation Bypass** secret; the workflow sends it as header `x-vercel-protection-bypass`. See [Vercel: bypass for automation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation).
+
 Required GitHub Actions **secret** for frontend deploy:
 
 - `VERCEL_TOKEN` — create at [vercel.com/account/tokens](https://vercel.com/account/tokens). The account you are logged into when you create the token **must be a member of the Vercel team** that owns the project; otherwise deploy fails with `scope-not-accessible` / “You do not have access to the specified account” ([details](https://err.sh/vercel/scope-not-accessible)).

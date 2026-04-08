@@ -5,6 +5,8 @@ on:
 
 env:
   FRONTEND_PUBLIC_API_BASE_URL: ${{ vars.FRONTEND_PUBLIC_API_BASE_URL }}
+  # If set (e.g. https://www.medisha.space), smoke tests use this URL instead of the raw *.vercel.app URL (avoids 401 when Deployment Protection is on).
+  FRONTEND_SMOKE_URL: ${{ vars.FRONTEND_SMOKE_URL }}
   # Pin CLI so logs stay parseable across releases
   VERCEL_CLI_VERSION: "41.4.1"
 
@@ -130,6 +132,7 @@ jobs:
       - name: Smoke check deployed frontend (required)
         env:
           DEPLOYMENT_URL: ${{ steps.vercel_deploy.outputs.deployment_url }}
+          VERCEL_PROTECTION_BYPASS_SECRET: ${{ secrets.VERCEL_PROTECTION_BYPASS_SECRET }}
         run: |
           test -n "$DEPLOYMENT_URL" || {
             echo "Deployment URL was not set." >&2
@@ -141,21 +144,40 @@ jobs:
             *) DEPLOYMENT_URL="https://$DEPLOYMENT_URL" ;;
           esac
 
-          echo "Smoke checking $DEPLOYMENT_URL"
+          # Prefer public production domain for smoke: *.vercel.app often returns 401 when Vercel Deployment Protection is enabled.
+          if [ -n "$FRONTEND_SMOKE_URL" ]; then
+            SMOKE_URL="$FRONTEND_SMOKE_URL"
+            case "$SMOKE_URL" in
+              https://*) ;;
+              *) SMOKE_URL="https://$SMOKE_URL" ;;
+            esac
+            echo "Smoke checking public URL $SMOKE_URL (FRONTEND_SMOKE_URL; deployment was $DEPLOYMENT_URL)"
+          else
+            SMOKE_URL="$DEPLOYMENT_URL"
+            echo "Smoke checking $SMOKE_URL"
+          fi
+
+          CURL_EXTRA=(--fail --silent --show-error --location)
+          if [ -n "$VERCEL_PROTECTION_BYPASS_SECRET" ]; then
+            CURL_EXTRA+=(-H "x-vercel-protection-bypass: $VERCEL_PROTECTION_BYPASS_SECRET")
+            echo "Using Vercel protection bypass header for curl"
+          elif [ "$SMOKE_URL" = "$DEPLOYMENT_URL" ] && echo "$SMOKE_URL" | grep -q '\.vercel\.app'; then
+            echo "::warning::Smoke target is a *.vercel.app URL without VERCEL_PROTECTION_BYPASS_SECRET. If curl returns 401, set GitHub Variable FRONTEND_SMOKE_URL to your public site (e.g. https://www.medisha.space) or add secret VERCEL_PROTECTION_BYPASS_SECRET from Vercel → Project → Settings → Deployment Protection."
+          fi
 
           for route in / /about /contacts /retreats /privacy /terms /account/login; do
-            curl --fail --silent --show-error --location "$DEPLOYMENT_URL$route" > /dev/null
+            curl "${CURL_EXTRA[@]}" "$SMOKE_URL$route" > /dev/null
           done
 
           echo "Checking static assets are not served as HTML"
-          hdr_ct="$(curl --fail --silent --show-error --location -o /dev/null -D - "$DEPLOYMENT_URL/app.css" | tr -d '\r' | grep -i '^content-type:' | tail -1 | cut -d: -f2- | xargs)"
+          hdr_ct="$(curl "${CURL_EXTRA[@]}" -o /dev/null -D - "$SMOKE_URL/app.css" | tr -d '\r' | grep -i '^content-type:' | tail -1 | cut -d: -f2- | xargs)"
           echo "GET /app.css Content-Type: $hdr_ct"
           echo "$hdr_ct" | grep -qi 'text/css' || {
             echo "Expected app.css to be text/css (got: $hdr_ct). SPA rewrite may be misconfigured." >&2
             exit 1
           }
 
-          appsettings_json="$(curl --fail --silent --show-error --location "$DEPLOYMENT_URL/appsettings.json")"
+          appsettings_json="$(curl "${CURL_EXTRA[@]}" "$SMOKE_URL/appsettings.json")"
           echo "$appsettings_json" | grep -q '"PublicBaseUrl": "https://'
           echo "$appsettings_json" | grep -q '"PublicBaseUrl": "'$FRONTEND_PUBLIC_API_BASE_URL'/"'
 
