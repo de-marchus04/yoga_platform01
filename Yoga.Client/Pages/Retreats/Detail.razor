@@ -141,6 +141,14 @@ else
                     {
                         <p>@block</p>
                     }
+                    @if (!string.IsNullOrEmpty(overrideAbout))
+                    {
+                        <p>@overrideAbout</p>
+                    }
+                    @if (!string.IsNullOrEmpty(overrideNote))
+                    {
+                        <p style="font-size:0.85rem; color:var(--text-muted); font-style:italic; margin-top:1.5rem;">@overrideNote</p>
+                    }
                 </div>
                 <div class="rd2-about__for-whom">
                     <h4 class="rd2-about__for-whom-title">@Loc["rd.about.for_whom"]</h4>
@@ -177,6 +185,19 @@ else
             @if (!string.IsNullOrWhiteSpace(r.Program))
             {
                 <div class="rd2-program-html">@((MarkupString)r.Program)</div>
+            }
+            else if (overrideProgram.Any())
+            {
+                @foreach (var item in overrideProgram)
+                {
+                    <details class="rd2-itinerary__day">
+                        <summary>
+                            <span class="rd2-itinerary__day-chip">•</span>
+                            <span class="rd2-itinerary__day-title">@item</span>
+                            <svg class="rd2-itinerary__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                        </summary>
+                    </details>
+                }
             }
             else
             {
@@ -252,13 +273,23 @@ else
                 <div>
                     <h4 style="margin-bottom:1rem; font-family:var(--font-sans); font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; color:var(--accent);">@Loc["rd.included.col1"]</h4>
                     <div>
-                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.1"]</div>
-                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.2"]</div>
-                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.3"]</div>
-                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.4"]</div>
-                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.5"]</div>
-                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.6"]</div>
-                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.7"]</div>
+                        @if (overrideIncluded.Any())
+                        {
+                            @foreach (var item in overrideIncluded)
+                            {
+                                <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @item</div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.1"]</div>
+                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.2"]</div>
+                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.3"]</div>
+                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.4"]</div>
+                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.5"]</div>
+                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.6"]</div>
+                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.7"]</div>
+                        }
                     </div>
                 </div>
                 <div>
@@ -482,49 +513,47 @@ else
         }
     }
 
+    private string overrideAbout = "";
+    private List<string> overrideProgram = new();
+    private List<string> overrideIncluded = new();
+    private string overrideNote = "";
+
     private void ApplyRetreatOverride()
     {
         if (retreat == null || retreat.Id != SpecialRetreatId) return;
 
         retreat = retreat with
         {
-            Title = "С 9 по 19 мая\nВ Черногории г. Бар состоится РЕТРИТ",
+            Title = "Ретрит в Черногории\nВозврат к себе",
             Location = "Бар, Черногория",
-            Description = @"с Александром Украинцевым (Саишварарамой)
-Практикующим йогом, психоаналитиком, духовным учителем, руководителем духовного центра Ади Парашакти.
-
-Александр с каждым участником проведет индивидуальную консультацию, даст рекомендации по дальнейшей самостоятельной или совместной с ним работе.
-
-Программа включает занятия по:
-
-• Раджа йоге («королевской йоге»)
-
-• Практикам пранаям и медитаций
-
-• Личная консультация учителя по всем жизненным вопросам, которые вас волнуют
-
-• Присутствие на огненной церемонии Ягья — она работает как «кармическая хирургия» по очистке наших тонких тел.
-
-• Посещение скального монастыря Острог, известного чудесами исцеления, медитация в месте силы.
-
-• Посещение старого города Будва, прогулка по красивым, атмосферным улочкам, обмен впечатлениями.
-
-Если вы уже находитесь в городе Бар, то стоимость будет без учёта жилья и трансфера.
-
-В полную стоимость ретрита входит:
-— Проживание в апартаментах на двоих
-— Утренние практики йоги
-— Обучающая программа у Александра Украинцева
-— 1 индивидуальная консультация Александра по любым вопросам
-— Участие в 2 церемониях ягьи
-— Поездка в скальный монастырь Острог
-— Поездка в старый город Будва
-— Трансфер из аэропорта
-
-Дополнительные консультации, а также индивидуальные ягьи у Александра, можно заказать по предварительной записи.
-
-По всем вопросам обращаться в WhatsApp / Viber: +380939152051"
+            Description = "Погружение в себя на берегу Адриатического моря с Александром Украинцевым (Саишварарамой) — практикующим йогом, психоаналитиком и духовным учителем. Индивидуальный подход к каждому участнику."
         };
+
+        overrideAbout = "Александр с каждым участником проведёт индивидуальную консультацию, даст рекомендации по дальнейшей самостоятельной или совместной с ним работе.";
+
+        overrideProgram = new()
+        {
+            "Раджа йога («королевская йога»)",
+            "Практики пранаям и медитаций",
+            "Личная консультация учителя по всем жизненным вопросам",
+            "Огненная церемония Ягья — «кармическая хирургия» по очистке тонких тел",
+            "Посещение скального монастыря Острог — медитация в месте силы",
+            "Посещение старого города Будва — прогулка по атмосферным улочкам",
+        };
+
+        overrideIncluded = new()
+        {
+            "Проживание в апартаментах на двоих",
+            "Утренние практики йоги",
+            "Обучающая программа у Александра Украинцева",
+            "1 индивидуальная консультация по любым вопросам",
+            "Участие в 2 церемониях ягьи",
+            "Поездка в скальный монастырь Острог",
+            "Поездка в старый город Будва",
+            "Трансфер из аэропорта",
+        };
+
+        overrideNote = "Если вы уже находитесь в городе Бар — стоимость без учёта жилья и трансфера. Дополнительные консультации и индивидуальные ягьи — по предварительной записи.";
     }
 
     private void OpenLightbox(int index) { lightboxIndex = index; showLightbox = true; }
