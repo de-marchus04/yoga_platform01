@@ -1,6 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/retreats/11111111-1111-1111-1111-111111111111",
+      "destination": "/retreats/me01",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -47,15 +54,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=604800, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/retreats/me01",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex"
         }
       ]
     },
