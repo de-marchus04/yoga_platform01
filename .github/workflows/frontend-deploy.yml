@@ -72,6 +72,9 @@ jobs:
           sed -i "s/?v=20260408/?v=${SHORT_SHA}/g" publish/wwwroot/index.html
           echo "Asset version tag set to ?v=${SHORT_SHA}"
 
+      - name: Remove source maps from publish output
+        run: find publish/wwwroot/_framework -name '*.map' -delete 2>/dev/null || true
+
       - name: Validate public API URL
         run: |
           test -n "$FRONTEND_PUBLIC_API_BASE_URL" || {

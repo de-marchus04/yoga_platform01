@@ -8,6 +8,7 @@
     <title>shakti.ashram</title>
     <base href="/" />
     <meta name="theme-color" content="#8C6B3A" />
+    <meta name="vercel-live" content="off" />
     <link rel="manifest" href="manifest.json" />
 
     <!-- Dark theme FOUC prevention: runs before CSS renders -->
@@ -21,7 +22,7 @@
     <!-- Google Fonts — Variant A: Editorial Luxury -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500&display=optional" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="app.css?v=20260408" />
     <link rel="stylesheet" href="css/admin.css?v=20260408" />
@@ -164,8 +165,9 @@
         Blazor.start({
             loadBootResource: function (type, name, defaultUri, integrity) {
                 if (type !== 'dotnetjs') {
+                    var bustUrl = defaultUri + '?v=' + Date.now();
                     _total++;
-                    return fetch(defaultUri, { cache: 'no-cache' }).then(function (r) {
+                    return fetch(bustUrl, { integrity: integrity, cache: 'no-cache' }).then(function (r) {
                         _loaded++;
                         var fill = document.getElementById('loading-fill');
                         if (fill) fill.style.width = Math.round(_loaded / _total * 100) + '%';
