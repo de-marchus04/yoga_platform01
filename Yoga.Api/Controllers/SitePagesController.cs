@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
@@ -18,9 +17,6 @@ namespace Yoga.Api.Controllers
             _context = context;
         }
 
-        /// <summary>
-        /// GET /api/sitepages/{slug}?lang=ru — returns all translated fields for a site page.
-        /// </summary>
         [HttpGet("{slug}")]
         public async Task<ActionResult<SitePageDto>> GetPage(string slug, [FromQuery] string lang = "ru")
         {
@@ -32,25 +28,6 @@ namespace Yoga.Api.Controllers
                 .ToDictionaryAsync(t => t.Field, t => t.Value);
 
             return Ok(new SitePageDto(page.Slug, fields));
-        }
-
-        /// <summary>
-        /// GET /api/sitepages — list all site pages.
-        /// </summary>
-        [HttpGet]
-        public async Task<ActionResult<List<SitePage>>> GetPages()
-        {
-            return await _context.SitePages.ToListAsync();
-        }
-
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpPost]
-        public async Task<ActionResult<SitePage>> CreatePage([FromBody] SitePage page)
-        {
-            page.Id = Guid.NewGuid();
-            _context.SitePages.Add(page);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetPage), new { slug = page.Slug }, page);
         }
     }
 }

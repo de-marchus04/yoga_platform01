@@ -14,7 +14,6 @@ namespace Yoga.Client.Services
             _http = http;
         }
 
-        /// <summary>Base API URL for use by SignalR hub connection.</summary>
         public string ApiBaseUrl => _http.BaseAddress?.AbsoluteUri.TrimEnd('/') ?? string.Empty;
 
         public string ResolveMediaUrl(string? url)
@@ -61,67 +60,12 @@ namespace Yoga.Client.Services
             }
         }
 
-        // Retreats
-        public async Task<List<RetreatDto>> GetActiveRetreatsAsync(string lang = "ru")
-        {
-            var result = await GetSafeAsync<List<RetreatDto>>($"api/retreats?lang={lang}");
-            return result ?? new List<RetreatDto>();
-        }
-
-        public async Task<List<RetreatDto>> GetUpcomingRetreatsAsync(string lang = "ru")
-        {
-            var result = await GetSafeAsync<List<RetreatDto>>($"api/retreats/upcoming?lang={lang}");
-            return result ?? new List<RetreatDto>();
-        }
-
-        public async Task<List<RetreatDto>> GetPastRetreatsAsync(string lang = "ru")
-        {
-            var result = await GetSafeAsync<List<RetreatDto>>($"api/retreats/past?lang={lang}");
-            return result ?? new List<RetreatDto>();
-        }
-
-        public async Task<RetreatDto?> GetRetreatByIdAsync(Guid id, string lang = "ru")
-        {
-            return await GetSafeAsync<RetreatDto>($"api/retreats/{id}?lang={lang}");
-        }
-
-        public async Task<RetreatDto?> GetRetreatBySlugAsync(string slug, string lang = "ru")
-        {
-            if (string.IsNullOrWhiteSpace(slug)) return null;
-            return await GetSafeAsync<RetreatDto>($"api/retreats/by-slug/{Uri.EscapeDataString(slug)}?lang={lang}");
-        }
-
-        public async Task<List<YagyaDto>> GetActiveYagyasAsync(string lang = "ru")
-        {
-            var result = await GetSafeAsync<List<YagyaDto>>($"api/yagyas?lang={lang}");
-            return result ?? new List<YagyaDto>();
-        }
-
-        public async Task<List<YagyaDto>> GetUpcomingYagyasAsync(string lang = "ru")
-        {
-            var result = await GetSafeAsync<List<YagyaDto>>($"api/yagyas/upcoming?lang={lang}");
-            return result ?? new List<YagyaDto>();
-        }
-
-        public async Task<List<YagyaDto>> GetPastYagyasAsync(string lang = "ru")
-        {
-            var result = await GetSafeAsync<List<YagyaDto>>($"api/yagyas/past?lang={lang}");
-            return result ?? new List<YagyaDto>();
-        }
-
-        public async Task<YagyaDto?> GetYagyaByIdAsync(Guid id, string lang = "ru")
-        {
-            return await GetSafeAsync<YagyaDto>($"api/yagyas/{id}?lang={lang}");
-        }
-
-        // Leads
         public async Task<bool> SubmitLeadAsync(Lead lead)
         {
             var response = await _http.PostAsJsonAsync("api/leads", lead);
             return response.IsSuccessStatusCode;
         }
 
-        // Courses
         public async Task<List<CourseDto>> GetCoursesAsync(string lang = "ru")
         {
             var result = await GetSafeAsync<List<CourseDto>>($"api/courses?lang={lang}");
@@ -133,7 +77,6 @@ namespace Yoga.Client.Services
             return await GetSafeAsync<CourseDto>($"api/courses/{slug}?lang={lang}");
         }
 
-        // Consultations
         public async Task<List<ConsultationDto>> GetConsultationsAsync(string lang = "ru")
         {
             var result = await GetSafeAsync<List<ConsultationDto>>($"api/consultations?lang={lang}");
@@ -145,36 +88,18 @@ namespace Yoga.Client.Services
             return await GetSafeAsync<ConsultationDto>($"api/consultations/{slug}?lang={lang}");
         }
 
-        // Blog
-        public async Task<List<BlogPostDto>> GetBlogPostsAsync(string lang = "ru", string? category = null, string? section = null, Guid? relatedEntityId = null)
-        {
-            var url = $"api/blog?lang={lang}";
-            if (!string.IsNullOrEmpty(category)) url += $"&category={category}";
-            if (!string.IsNullOrEmpty(section)) url += $"&section={section}";
-            if (relatedEntityId.HasValue) url += $"&relatedEntityId={relatedEntityId}";
-            var result = await GetSafeAsync<List<BlogPostDto>>(url);
-            return result ?? new();
-        }
-
-        public async Task<BlogPostDto?> GetBlogPostAsync(string slug, string lang = "ru")
-        {
-            return await GetSafeAsync<BlogPostDto>($"api/blog/{slug}?lang={lang}");
-        }
-
-        // Site Pages
         public async Task<SitePageDto?> GetSitePageAsync(string slug, string lang = "ru")
         {
             return await GetSafeAsync<SitePageDto>($"api/sitepages/{slug}?lang={lang}");
         }
 
-        // Email domain validation
         public async Task<bool> ValidateEmailDomainAsync(string domain)
         {
             try
             {
                 var result = await GetSafeAsync<EmailValidationResult>(
                     $"api/validate-email?domain={Uri.EscapeDataString(domain)}");
-                return result?.Valid ?? true; // lenient on error
+                return result?.Valid ?? true;
             }
             catch
             {

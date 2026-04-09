@@ -3,8 +3,6 @@
 @inject ApiService Api
 @inject LocalizationService Loc
 @inject NavigationManager Nav
-@inject UserAuthService UserAuth
-@inject UserApiService UserApi
 @implements IDisposable
 
 <PageTitle>@(DisplayCourseTitle() ?? Loc["nav.courses"])</PageTitle>
@@ -403,20 +401,6 @@ else
         </section>
     }
 
-    <RelatedBlog EntityId="course?.Id" Section="courses" />
-
-    @if (hasAccess)
-    {
-        <section class="premium-access-section">
-            <div class="container" style="text-align:center;">
-                <span class="page-eyebrow">@P("Доступ открыт", "Доступ відкрито", "Access granted")</span>
-                <h2>@P("Вы записаны на этот курс", "Ви записані на цей курс", "You are enrolled in this course")</h2>
-                <p>@P("Перейдите в личный кабинет, чтобы начать обучение.", "Перейдіть до особистого кабінету, щоб почати навчання.", "Go to your cabinet to start learning.")</p>
-                <a href="/account/course/@course!.Id" class="btn btn-primary">@P("Перейти к материалам", "Перейти до матеріалів", "Go to materials")</a>
-            </div>
-        </section>
-    }
-
     <section class="page-cta">
         <div class="container" style="text-align:center;">
             @if (!string.IsNullOrEmpty(course?.CtaHeading))
@@ -443,7 +427,6 @@ else
 
     private CourseDto? course;
     private bool loading = true;
-    private bool hasAccess;
 
     private bool HasPresImage1 => !string.IsNullOrEmpty(course?.PresentationImage1Url);
     private bool HasPresImage2 => !string.IsNullOrEmpty(course?.PresentationImage2Url);
@@ -678,15 +661,9 @@ else
         }
 
         loading = true;
-        hasAccess = false;
         try
         {
             course = await Api.GetCourseAsync(ApiCourseSlug(canonicalSlug), Loc.CurrentLang);
-            if (course != null && await UserAuth.IsAuthenticatedAsync())
-            {
-                var check = await UserApi.CheckAccessAsync(course.Id, null);
-                hasAccess = check?.HasAccess ?? false;
-            }
         }
         catch { course = null; }
         loading = false;

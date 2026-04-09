@@ -1,7 +1,5 @@
-using System.Text;
 using System.Text.Json;
 using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -9,12 +7,10 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Yoga.Api.Data;
-using Yoga.Api.Hubs;
 using Yoga.Api.Options;
 using Yoga.Api.Services;
 
@@ -47,28 +43,9 @@ builder.Services.AddControllers()
         opts.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger with JWT Support
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Yoga Enterprise API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer"
-    });
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
-            },
-            Array.Empty<string>()
-        }
-    });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Yoga Enterprise API (public vitrina)", Version = "v1" });
 });
 
 // DbContext
@@ -89,11 +66,8 @@ builder.Services.AddProblemDetails(options =>
 
 // Services
 builder.Services.AddHttpClient<ITelegramService, TelegramService>();
-builder.Services.AddHttpClient<GoogleTranslateService>();
-builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
 builder.Services.AddSingleton<IEmailService, ResendEmailService>();
 builder.Services.AddHttpClient("Resend");
-builder.Services.AddScoped<PublicContentResetService>();
 builder.Services.AddScoped<LocalFileStorageService>();
 builder.Services.AddScoped<S3FileStorageService>();
 builder.Services.AddScoped<IFileStorageService>(sp =>
@@ -103,39 +77,9 @@ builder.Services.AddScoped<IFileStorageService>(sp =>
         ? sp.GetRequiredService<S3FileStorageService>()
         : sp.GetRequiredService<LocalFileStorageService>();
 });
-builder.Services.AddSignalR();
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "ready" })
     .AddCheck<StorageHealthCheck>("storage", tags: new[] { "ready" });
-
-// JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var jwtSecret = jwtSettings["SecretKey"];
-if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
-{
-    throw new InvalidOperationException("JwtSettings:SecretKey must be configured and contain at least 32 characters.");
-}
-
-var secretKey = Encoding.UTF8.GetBytes(jwtSecret);
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"],
-        ValidAudience = jwtSettings["Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(secretKey)
-    };
-});
 
 builder.Services.AddCors(options =>
 {
@@ -317,11 +261,7 @@ app.UseRateLimiter();
 
 app.UseStaticFiles();
 
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.MapControllers();
-app.MapHub<BlogHub>("/blogHub");
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = _ => false,

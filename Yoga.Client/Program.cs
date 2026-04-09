@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Yoga.Client;
@@ -35,9 +34,6 @@ builder.Services.AddScoped<LocalizationService>(sp =>
     return new LocalizationService(staticHttp, apiHttp);
 });
 
-// SignalR blog hub service (singleton — persists across page navigations)
-builder.Services.AddSingleton<BlogHubService>();
-
 // Toast service
 builder.Services.AddScoped<ToastService>();
 
@@ -47,29 +43,7 @@ builder.Services.AddScoped<Yoga.Client.Services.ModalService>();
 // Catalog State service
 builder.Services.AddScoped<Yoga.Client.Services.CatalogStateService>();
 
-// Auth services
-builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<CompositeAuthStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<CompositeAuthStateProvider>());
-builder.Services.AddScoped<AdminAuthService>();
-builder.Services.AddScoped<UserAuthService>();
-builder.Services.AddTransient<AdminHttpHandler>();
-builder.Services.AddTransient<UserHttpHandler>();
 builder.Services.AddTransient<HttpErrorInterceptor>();
-
-// Admin API client with JWT handler and Error Interceptor
-builder.Services.AddHttpClient<AdminApiService>(client =>
-{
-        client.BaseAddress = apiBaseUri;
-}).AddHttpMessageHandler<AdminHttpHandler>()
-  .AddHttpMessageHandler<HttpErrorInterceptor>();
-
-// User API client with JWT handler
-builder.Services.AddHttpClient<UserApiService>(client =>
-{
-        client.BaseAddress = apiBaseUri;
-}).AddHttpMessageHandler<UserHttpHandler>()
-  .AddHttpMessageHandler<HttpErrorInterceptor>();
 
 var host = builder.Build();
 

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
@@ -84,49 +83,5 @@ namespace Yoga.Api.Controllers
         }
 
         private static string ResolveConsultationSlug(string slug) => slug.Trim().ToLowerInvariant();
-
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpPost]
-        public async Task<ActionResult<Consultation>> CreateConsultation([FromBody] Consultation item)
-        {
-            item.Id = Guid.NewGuid();
-            _context.Consultations.Add(item);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetConsultation), new { slug = item.Slug }, item);
-        }
-
-        // GET: api/consultations/all (Admin Only)
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpGet("all")]
-        public async Task<ActionResult<List<Consultation>>> GetAllConsultations()
-        {
-            return await _context.Consultations.OrderBy(c => c.SortOrder).ToListAsync();
-        }
-
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdateConsultation(Guid id, [FromBody] Consultation item)
-        {
-            if (id != item.Id) return BadRequest();
-            _context.Entry(item).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> DeleteConsultation(Guid id)
-        {
-            var item = await _context.Consultations.FindAsync(id);
-            if (item == null) return NotFound();
-
-            var translations = await _context.Translations
-                .Where(t => t.EntityType == "Consultation" && t.EntityId == id)
-                .ToListAsync();
-            _context.Translations.RemoveRange(translations);
-            _context.Consultations.Remove(item);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
     }
 }

@@ -56,72 +56,6 @@
     </div>
 </section>
 
-<section class="retreats-section" id="retreats">
-    <div class="container">
-        <div class="section-header reveal">
-            <p class="section-eyebrow">@Loc["page.home.retreats.eyebrow"]</p>
-            <h2>@Loc["page.home.retreats.h2"]</h2>
-            <div class="section-divider"></div>
-        </div>
-
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="error-text">
-                <strong>Данные временно недоступны:</strong> @errorMessage
-            </div>
-        }
-
-        @if (retreats == null)
-        {
-            <div class="retreat-showcase reveal">
-                <div class="retreat-photo skeleton" style="min-height:400px;"></div>
-                <div class="retreat-info">
-                    <div class="skeleton skeleton-text" style="width:30%; margin-bottom:1rem;"></div>
-                    <div class="skeleton skeleton-title" style="margin-bottom:1.5rem;"></div>
-                    <div class="skeleton skeleton-text" style="width:80%; margin-bottom:0.6rem;"></div>
-                    <div class="skeleton skeleton-text" style="width:60%; margin-bottom:2rem;"></div>
-                    <div class="skeleton skeleton-text" style="height:3rem; width:50%;"></div>
-                </div>
-            </div>
-        }
-        else if (!retreats.Any() && string.IsNullOrEmpty(errorMessage))
-        {
-            <div style="text-align:center;color:var(--text-muted);max-width:760px;margin:0 auto;">
-                <p style="margin-bottom:1rem;">Раздел ретритов очищен и готов к новому наполнению.</p>
-                <p>Сюда нужно добавить активные программы с названием, локацией, датами, кратким описанием результата, ключевым визуалом и CTA для отправки заявки.</p>
-            </div>
-        }
-        else
-        {
-            int ri = 0;
-            foreach (var retreat in retreats)
-            {
-                ri++;
-                var imgUrl = !string.IsNullOrEmpty(retreat.ImageUrl)
-                    ? ApiService.ResolveMediaUrl(retreat.ImageUrl)
-                    : "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1200&q=80";
-                <div class="retreat-showcase @(ri % 2 == 0 ? "retreat-showcase--reversed" : "") reveal">
-                    <div class="retreat-photo">
-                        <img src="@imgUrl" alt="@retreat.Title" loading="lazy" />
-                    </div>
-                    <div class="retreat-info">
-                        <p class="retreat-location">@retreat.Location</p>
-                        <p class="retreat-dates">@retreat.StartDate.ToString("dd MMM yyyy") — @retreat.EndDate.ToString("dd MMM yyyy")</p>
-                        <h3>@retreat.Title</h3>
-                        <div class="retreat-divider"></div>
-                        <p class="retreat-description">@retreat.Description</p>
-                        @if (!string.IsNullOrEmpty(retreat.PriceLabel))
-                        {
-                            <p class="retreat-price">@retreat.PriceLabel</p>
-                        }
-                        <button class="btn btn-outline" @onclick="() => OpenLeadModalForRetreat(retreat)">@Loc["page.home.retreats.cta"]</button>
-                    </div>
-                </div>
-            }
-        }
-    </div>
-</section>
-
 <section class="directions-section">
     <div class="container">
         <div class="section-header reveal">
@@ -142,7 +76,7 @@
                 <p>@F("Dir2Text", Loc["page.home.directions.02.text"])</p>
                 <span class="direction-link">@F("Dir2LinkText", Loc["page.home.directions.02.link"])</span>
             </a>
-            <a href="/retreats/actual" class="direction-block reveal reveal-d2">
+            <a href="/consultations" class="direction-block reveal reveal-d2">
                 <div class="direction-number">@Loc["page.home.directions.03"]</div>
                 <h3>@F("Dir3Title", Loc["page.home.directions.03.h3"])</h3>
                 <p>@F("Dir3Text", Loc["page.home.directions.03.text"])</p>
@@ -177,7 +111,7 @@
             <h2>@F("Format2Title", Loc["page.home.formats.h2.2"])</h2>
             <div class="section-divider" style="margin:2rem 0;"></div>
             <p>@F("Format2Text", Loc["page.home.formats.text2"])</p>
-            <a href="/retreats/actual" class="btn btn-outline">@F("Format2Cta", Loc["page.home.formats.cta2"])</a>
+            <a href="/consultations" class="btn btn-outline">@F("Format2Cta", Loc["page.home.formats.cta2"])</a>
         </div>
     </div>
 </section>
@@ -215,39 +149,6 @@
     </div>
 </section>
 
-<section class="blog-section">
-    <div class="container">
-        <div class="section-header reveal">
-            <p class="section-eyebrow">@Loc["page.home.blog.eyebrow"]</p>
-            <h2>@Loc["page.home.blog.h2"]</h2>
-            <div class="section-divider"></div>
-        </div>
-        <div class="blog-grid">
-            <a href="/blog/articles" class="blog-card reveal">
-                <span class="blog-tag">@Loc["page.home.blog.1.tag"]</span>
-                <h3>@Loc["page.home.blog.1.h3"]</h3>
-                <p>@Loc["page.home.blog.1.text"]</p>
-                <span class="blog-read-more">@Loc["page.home.blog.readmore"]</span>
-            </a>
-            <a href="/blog/articles" class="blog-card reveal reveal-d1">
-                <span class="blog-tag">@Loc["page.home.blog.2.tag"]</span>
-                <h3>@Loc["page.home.blog.2.h3"]</h3>
-                <p>@Loc["page.home.blog.2.text"]</p>
-                <span class="blog-read-more">@Loc["page.home.blog.readmore"]</span>
-            </a>
-            <a href="/blog/articles" class="blog-card reveal reveal-d2">
-                <span class="blog-tag">@Loc["page.home.blog.3.tag"]</span>
-                <h3>@Loc["page.home.blog.3.h3"]</h3>
-                <p>@Loc["page.home.blog.3.text"]</p>
-                <span class="blog-read-more">@Loc["page.home.blog.readmore"]</span>
-            </a>
-        </div>
-        <div class="blog-footer reveal">
-            <a href="/blog/articles" class="btn btn-outline">@Loc["page.home.blog.all"]</a>
-        </div>
-    </div>
-</section>
-
 <section class="cta-section">
     <div class="cta-overlay reveal">
         <p class="section-eyebrow" style="color:rgba(255,255,255,0.45);">@Loc["page.home.cta.eyebrow"]</p>
@@ -258,8 +159,6 @@
 </section>
 
 @code {
-    private List<Yoga.Shared.DTOs.RetreatDto>? retreats;
-    private string? errorMessage;
     private Yoga.Shared.DTOs.SitePageDto? pageData;
 
     protected override async Task OnInitializedAsync()
@@ -269,18 +168,6 @@
 
     private async Task LoadDataAsync()
     {
-        try
-        {
-            retreats = await CatalogState.GetActiveRetreatsAsync(Loc.CurrentLang);
-            errorMessage = null;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = "Публичный сайт не смог получить данные из API. Укажите абсолютный production API URL для внешнего frontend-hosting и проверьте CORS/SSL на backend.";
-            Console.WriteLine(ex.Message);
-            retreats = new List<Yoga.Shared.DTOs.RetreatDto>();
-        }
-
         try
         {
             pageData = await ApiService.GetSitePageAsync("home", Loc.CurrentLang);
@@ -298,16 +185,6 @@
     {
         ModalService.Show<LeadModal>();
     }
-
-    private void OpenLeadModalForRetreat(Yoga.Shared.DTOs.RetreatDto retreat)
-    {
-        ModalService.Show<LeadModal>(new Dictionary<string, object>
-        {
-            { "ContextTitle", retreat.Title },
-            { "TargetRetreatId", retreat.Id }
-        });
-    }
-
 
     protected override void OnInitialized()
     {

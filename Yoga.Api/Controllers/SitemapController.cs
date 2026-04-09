@@ -22,17 +22,14 @@ namespace Yoga.Api.Controllers
             sb.AppendLine("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             sb.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
 
-            // Static pages
             AddUrl(sb, "/", "weekly", "1.0");
             AddUrl(sb, "/about", "monthly", "0.8");
             AddUrl(sb, "/contacts", "monthly", "0.6");
-            AddUrl(sb, "/blog", "daily", "0.8");
-            AddUrl(sb, "/blog/articles", "daily", "0.7");
-            AddUrl(sb, "/blog/photos", "weekly", "0.6");
-            AddUrl(sb, "/blog/videos", "weekly", "0.6");
-            AddUrl(sb, "/retreats/past", "monthly", "0.5");
+            AddUrl(sb, "/privacy", "yearly", "0.3");
+            AddUrl(sb, "/terms", "yearly", "0.3");
+            AddUrl(sb, "/courses", "weekly", "0.85");
+            AddUrl(sb, "/consultations", "weekly", "0.85");
 
-            // Courses
             var courses = await _context.Courses
                 .Where(c => c.IsActive)
                 .Select(c => c.Slug)
@@ -40,31 +37,12 @@ namespace Yoga.Api.Controllers
             foreach (var slug in courses)
                 AddUrl(sb, $"/courses/{slug}", "weekly", "0.8");
 
-            // Consultations
             var consultations = await _context.Consultations
                 .Where(c => c.IsActive)
                 .Select(c => c.Slug)
                 .ToListAsync();
             foreach (var slug in consultations)
                 AddUrl(sb, $"/consultations/{slug}", "weekly", "0.7");
-
-            // Retreats (canonical slug URL when set)
-            var retreats = await _context.Retreats
-                .Select(r => new { r.Id, r.Slug })
-                .ToListAsync();
-            foreach (var r in retreats)
-            {
-                var path = !string.IsNullOrWhiteSpace(r.Slug) ? $"/retreats/{r.Slug}" : $"/retreats/{r.Id}";
-                AddUrl(sb, path, "monthly", "0.7");
-            }
-
-            // Blog posts
-            var posts = await _context.BlogPosts
-                .Where(p => p.IsActive)
-                .Select(p => p.Slug)
-                .ToListAsync();
-            foreach (var slug in posts)
-                AddUrl(sb, $"/blog/{slug}", "monthly", "0.6");
 
             sb.AppendLine("</urlset>");
             return Content(sb.ToString(), "application/xml", Encoding.UTF8);

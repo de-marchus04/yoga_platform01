@@ -16,10 +16,6 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
     public TestWebApplicationFactory()
     {
-        Environment.SetEnvironmentVariable("JwtSettings__SecretKey", "TestingSecretKeyForJwtTokenGeneration123!");
-        Environment.SetEnvironmentVariable("JwtSettings__Issuer", "YogaEnterpriseApi");
-        Environment.SetEnvironmentVariable("JwtSettings__Audience", "YogaEnterpriseClient");
-        Environment.SetEnvironmentVariable("JwtSettings__ExpiryMinutes", "1440");
         Environment.SetEnvironmentVariable("Security__AllowedOrigins__0", "https://localhost");
         Environment.SetEnvironmentVariable("Security__EnableHsts", "false");
         Environment.SetEnvironmentVariable("ErrorTracking__Enabled", "false");

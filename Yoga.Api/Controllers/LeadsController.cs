@@ -1,15 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
 using Yoga.Api.Services;
-using Yoga.Shared.DTOs;
-using System.Security.Claims;
 using Yoga.Shared.Models;
 
 namespace Yoga.Api.Controllers
@@ -20,18 +15,13 @@ namespace Yoga.Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ITelegramService _telegramService;
-        private readonly IAuditTrailService _auditTrail;
-        private readonly IEmailService _emailService;
 
-        public LeadsController(AppDbContext context, ITelegramService telegramService, IAuditTrailService auditTrail, IEmailService emailService)
+        public LeadsController(AppDbContext context, ITelegramService telegramService)
         {
             _context = context;
             _telegramService = telegramService;
-            _auditTrail = auditTrail;
-            _emailService = emailService;
         }
 
-        // POST: api/leads (Public - anyone can submit a lead)
         [HttpPost]
         [EnableRateLimiting("leads")]
         public async Task<IActionResult> CreateLead([FromBody] Lead lead)
@@ -48,366 +38,15 @@ namespace Yoga.Api.Controllers
             _context.Leads.Add(lead);
             await _context.SaveChangesAsync();
 
-            // Auto-create customer account if contact is a valid email
-            if (IsValidEmail(lead.ContactDetails))
-            {
-                var emailLower = lead.ContactDetails.Trim().ToLowerInvariant();
-                var existing = await _context.Customers.AnyAsync(c => c.Email == emailLower);
-                if (!existing)
-                {
-                    var tempPassword = GeneratePassword();
-                    var customer = new Customer
-                    {
-                        Email = emailLower,
-                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword),
-                        FullName = lead.Name,
-                        Messenger = lead.Messager
-                    };
-                    _context.Customers.Add(customer);
-                    lead.CustomerId = customer.Id;
-                    await _context.SaveChangesAsync();
-
-                    _ = _emailService.SendWelcomeAsync(emailLower, lead.Name, tempPassword);
-                }
-                else
-                {
-                    // Link lead to existing customer
-                    var existingCustomer = await _context.Customers.FirstAsync(c => c.Email == emailLower);
-                    lead.CustomerId = existingCustomer.Id;
-                    await _context.SaveChangesAsync();
-                }
-            }
-
-            // Send async notification to Telegram
             _ = _telegramService.SendLeadNotificationAsync(lead);
 
             return Ok(new { message = "Lead submitted successfully." });
-        }
-
-        // GET: api/leads (Admin Only — paginated)
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpGet]
-        public async Task<ActionResult<PaginatedResult<LeadSummaryDto>>> GetLeads(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
-            [FromQuery] string? filter = null)
-        {
-            page = Math.Max(1, page);
-            pageSize = Math.Clamp(pageSize, 1, 100);
-            var query = _context.Leads.AsQueryable();
-
-            if (filter == "unprocessed")
-                query = query.Where(l => !l.IsProcessed);
-            else if (filter == "processed")
-                query = query.Where(l => l.IsProcessed);
-
-            var totalCount = await query.CountAsync();
-
-            var items = await query
-                .OrderByDescending(l => l.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(l => new LeadSummaryDto(
-                    l.Id, l.Name, l.ContactDetails, l.Messager, l.Comment, l.CreatedAt, l.IsProcessed,
-                    l.Status, l.TargetFormat, l.AdminNotes,
-                    l.CourseId, l.ConsultationId, l.RetreatId,
-                    _context.Courses.Where(c => c.Id == l.CourseId).Select(c => c.Slug).FirstOrDefault(),
-                    _context.Consultations.Where(c => c.Id == l.ConsultationId).Select(c => c.Slug).FirstOrDefault(),
-                    _context.Retreats.Where(r => r.Id == l.RetreatId).Select(r => r.Title).FirstOrDefault()
-                ))
-                .ToListAsync();
-
-            return Ok(new PaginatedResult<LeadSummaryDto>(items, totalCount, page, pageSize));
-        }
-
-        // PUT: api/leads/{id}/process (Admin Only)
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpPut("{id}/process")]
-        public async Task<IActionResult> MarkAsProcessed(Guid id, [FromQuery] bool processed = true)
-        {
-            var lead = await _context.Leads.FindAsync(id);
-            if (lead == null) return NotFound();
-
-            lead.IsProcessed = processed;
-            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
-                User,
-                HttpContext,
-                "lead-processed-flag-updated",
-                nameof(Lead),
-                lead.Id,
-                $"Updated processed flag for lead '{lead.Name}' to {processed}.",
-                new { lead.Status, lead.CustomerId, lead.CourseId, lead.ConsultationId, lead.RetreatId, processed }));
-            await _context.SaveChangesAsync();
-
-            return Ok(lead);
-        }
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpPut("{id}/status")]
-        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] string status)
-        {
-            var lead = await _context.Leads.FindAsync(id);
-            if (lead == null) return NotFound();
-
-            lead.Status = status;
-            // Optionally update IsProcessed based on Status
-            if (status == "Успешно" || status == "Отказ") lead.IsProcessed = true;
-            else lead.IsProcessed = false;
-
-            await EnsureAutomaticLiveEventGrantAsync(lead);
-
-            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
-                User,
-                HttpContext,
-                "lead-status-updated",
-                nameof(Lead),
-                lead.Id,
-                $"Updated lead '{lead.Name}' status to '{status}'.",
-                new { lead.IsProcessed, lead.CustomerId, lead.CourseId, lead.ConsultationId, lead.RetreatId }));
-            await _context.SaveChangesAsync();
-            return Ok();
-        }
-
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpPut("{id}/notes")]
-        public async Task<IActionResult> UpdateNotes(Guid id, [FromBody] string notes)
-        {
-            var lead = await _context.Leads.FindAsync(id);
-            if (lead == null) return NotFound();
-
-            lead.AdminNotes = notes;
-            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
-                User,
-                HttpContext,
-                "lead-notes-updated",
-                nameof(Lead),
-                lead.Id,
-                $"Updated admin notes for lead '{lead.Name}'.",
-                new { noteLength = notes?.Length ?? 0, lead.Status, lead.CustomerId }));
-            await _context.SaveChangesAsync();
-            return Ok();
-        }
-        // DELETE: api/leads/{id} (Admin Only)
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLead(Guid id)
-        {
-            var lead = await _context.Leads.FindAsync(id);
-            if (lead == null) return NotFound();
-
-            _context.Leads.Remove(lead);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        // POST: api/leads/{id}/create-customer — Create customer account from a lead
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpPost("{id}/create-customer")]
-        public async Task<IActionResult> CreateCustomerFromLead(Guid id, [FromBody] CreateCustomerFromLeadRequest req)
-        {
-            var lead = await _context.Leads.FindAsync(id);
-            if (lead == null) return NotFound();
-
-            if (await _context.Customers.AnyAsync(c => c.Email == req.Email))
-                return Conflict(new { message = "Email already exists" });
-
-            var customer = new Customer
-            {
-                Email = req.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
-                FullName = req.FullName,
-                Phone = req.Phone,
-                Messenger = req.Messenger
-            };
-            _context.Customers.Add(customer);
-
-            lead.CustomerId = customer.Id;
-            lead.Status = "Успешно";
-            lead.IsProcessed = true;
-
-            await EnsureAutomaticLiveEventGrantAsync(lead);
-
-            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
-                User,
-                HttpContext,
-                "customer-created-from-lead",
-                nameof(Customer),
-                customer.Id,
-                $"Created customer '{customer.Email}' from lead '{lead.Name}'.",
-                new { leadId = lead.Id, customer.FullName, customer.Email, customer.Phone, customer.Messenger }));
-
-            await _context.SaveChangesAsync();
-            return Ok(new { customerId = customer.Id });
-        }
-
-        // POST: api/leads/{id}/grant-access — Grant access to the customer linked to this lead
-        [Authorize(Roles = "SuperAdmin")]
-        [HttpPost("{id}/grant-access")]
-        public async Task<IActionResult> GrantAccessFromLead(Guid id, [FromBody] GrantAccessFromLeadRequest req)
-        {
-            var lead = await _context.Leads.FindAsync(id);
-            if (lead == null) return NotFound();
-
-            var customer = await _context.Customers.FindAsync(req.CustomerId);
-            if (customer == null) return NotFound(new { message = "Customer not found" });
-
-            if (!Enum.TryParse<AccessType>(req.AccessType, true, out var accessType))
-                return BadRequest(new { message = "Invalid access type" });
-
-            var adminId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                          ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
-
-            var grant = new CustomerAccessGrant
-            {
-                CustomerId = req.CustomerId,
-                AccessType = accessType,
-                CourseId = req.CourseId,
-                ConsultationId = req.ConsultationId,
-                RetreatId = req.RetreatId,
-                LiveEventId = req.LiveEventId,
-                EndsAt = req.EndsAt,
-                Notes = req.Notes,
-                SourceLeadId = id,
-                GrantedByAdminId = Guid.TryParse(adminId, out var aid) ? aid : null
-            };
-            _context.CustomerAccessGrants.Add(grant);
-
-            // Link lead to customer if not already linked
-            if (lead.CustomerId == null) lead.CustomerId = req.CustomerId;
-
-            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
-                User,
-                HttpContext,
-                "access-granted-from-lead",
-                nameof(CustomerAccessGrant),
-                grant.Id,
-                $"Granted {grant.AccessType} access from lead '{lead.Name}' to customer {req.CustomerId}.",
-                new
-                {
-                    leadId = lead.Id,
-                    req.CustomerId,
-                    grant.AccessType,
-                    grant.CourseId,
-                    grant.ConsultationId,
-                    grant.RetreatId,
-                    grant.LiveEventId,
-                    grant.EndsAt
-                }));
-
-            await _context.SaveChangesAsync();
-            return Ok(new { grant.Id });
-        }
-
-        private async Task EnsureAutomaticLiveEventGrantAsync(Lead lead)
-        {
-            if (!string.Equals(lead.Status, "Успешно", StringComparison.OrdinalIgnoreCase))
-                return;
-
-            if (lead.CustomerId is not Guid customerId)
-                return;
-
-            if (!IsOnlineTarget(lead.TargetFormat))
-                return;
-
-            var liveEventId = await ResolveLiveEventIdAsync(lead);
-            if (liveEventId is not Guid targetLiveEventId)
-                return;
-
-            var alreadyGranted = await _context.CustomerAccessGrants.AnyAsync(grant =>
-                grant.CustomerId == customerId
-                && grant.Status == "Active"
-                && grant.AccessType == AccessType.LiveEvent
-                && grant.LiveEventId == targetLiveEventId);
-
-            if (alreadyGranted)
-                return;
-
-            var grant = new CustomerAccessGrant
-            {
-                CustomerId = customerId,
-                AccessType = AccessType.LiveEvent,
-                LiveEventId = targetLiveEventId,
-                SourceLeadId = lead.Id,
-                GrantedByAdminId = GetAdminId(),
-                Notes = "Auto-granted from approved online lead"
-            };
-
-            _context.CustomerAccessGrants.Add(grant);
-            _context.AdminAuditLogs.Add(_auditTrail.CreateEntry(
-                User,
-                HttpContext,
-                "access-grant-created-auto",
-                nameof(CustomerAccessGrant),
-                grant.Id,
-                $"Automatically granted live event access for approved online lead '{lead.Name}'.",
-                new
-                {
-                    lead.Id,
-                    lead.CourseId,
-                    lead.ConsultationId,
-                    lead.TargetFormat,
-                    grant.CustomerId,
-                    grant.LiveEventId,
-                    grant.AccessType
-                }));
-        }
-
-        private async Task<Guid?> ResolveLiveEventIdAsync(Lead lead)
-        {
-            if (lead.CourseId is Guid courseId)
-            {
-                return await _context.Courses
-                    .Where(course => course.Id == courseId && course.IsActive && course.IsOnline)
-                    .Select(course => course.LiveEventId)
-                    .FirstOrDefaultAsync();
-            }
-
-            if (lead.ConsultationId is Guid consultationId)
-            {
-                return await _context.Consultations
-                    .Where(item => item.Id == consultationId && item.IsActive && item.IsOnline)
-                    .Select(item => item.LiveEventId)
-                    .FirstOrDefaultAsync();
-            }
-
-            return null;
-        }
-
-        private static bool IsOnlineTarget(string? targetFormat)
-        {
-            if (string.IsNullOrWhiteSpace(targetFormat))
-                return false;
-
-            return string.Equals(targetFormat.Trim(), "Online", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(targetFormat.Trim(), "Онлайн", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private Guid? GetAdminId()
-        {
-            var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                      ?? User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
-            return Guid.TryParse(sub, out var id) ? id : null;
         }
 
         private static bool IsValidPhone(string phone)
         {
             var digits = Regex.Replace(phone, @"[^\d]", "");
             return digits.Length >= 7 && digits.Length <= 15 && Regex.IsMatch(phone.Trim(), @"^\+\d");
-        }
-
-        private static bool IsValidEmail(string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value)) return false;
-            return Regex.IsMatch(value.Trim(), @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-        }
-
-        private static string GeneratePassword()
-        {
-            const string chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-            var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
-            var bytes = new byte[10];
-            rng.GetBytes(bytes);
-            return new string(bytes.Select(b => chars[b % chars.Length]).ToArray());
         }
     }
 }

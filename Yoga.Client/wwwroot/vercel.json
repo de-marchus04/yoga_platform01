@@ -11,14 +11,6 @@
       "destination": "https://api.medisha.space/uploads/$1"
     },
     {
-      "source": "/blogHub/(.*)",
-      "destination": "https://api.medisha.space/blogHub/$1"
-    },
-    {
-      "source": "/blogHub",
-      "destination": "https://api.medisha.space/blogHub"
-    },
-    {
       "source": "/health/(.*)",
       "destination": "https://api.medisha.space/health/$1"
     },
@@ -47,15 +39,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=604800, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/retreats/me01",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex"
         }
       ]
     }
