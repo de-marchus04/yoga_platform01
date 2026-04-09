@@ -39,23 +39,46 @@ jobs:
           dotnet restore Yoga.Client/Yoga.Client.csproj --nologo
           dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --no-restore --nologo
 
+      # ubuntu-latest has no Chrome; Lighthouse/LHCI need a real browser or reports never land in .lighthouseci.
+      - name: Install Chrome for Lighthouse
+        uses: browser-actions/setup-chrome@v1
+        id: chrome
+        with:
+          chrome-version: stable
+          install-dependencies: true
+
       - name: Run Lighthouse CI
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: npx --yes @lhci/cli@0.14.0 autorun
+
+      - name: Verify reports exist
+        run: |
+          echo "=== .lighthouseci ==="
+          ls -laR .lighthouseci 2>/dev/null || true
+          echo "=== lighthouse-ci-reports ==="
+          ls -laR lighthouse-ci-reports 2>/dev/null || true
+          n=$(find .lighthouseci lighthouse-ci-reports -type f 2>/dev/null | wc -l)
+          if [ "$n" -eq 0 ]; then
+            echo "::error::Lighthouse CI wrote no files (check Chrome CHROME_PATH, serve, and collect logs above)."
+            exit 1
+          fi
+          echo "Report files: $n"
 
       - name: List report files (for log)
         if: always()
         run: |
           echo "=== .lighthouseci contents ==="
-          ls -laR .lighthouseci 2>/dev/null || echo "(no reports dir)"
-          for f in .lighthouseci/*.html; do
-            [ -f "$f" ] || continue
-            echo "HTML report: $f"
-          done
+          ls -laR .lighthouseci 2>/dev/null || echo "(no .lighthouseci)"
+          echo "=== lighthouse-ci-reports ==="
+          ls -laR lighthouse-ci-reports 2>/dev/null || echo "(no lighthouse-ci-reports)"
 
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-ci-reports
-          path: .lighthouseci
+          path: |
+            .lighthouseci
+            lighthouse-ci-reports
           if-no-files-found: warn

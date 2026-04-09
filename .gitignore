@@ -78,3 +78,4 @@ node_modules/
 
 # Lighthouse CI (локальный npx lhci autorun)
 .lighthouseci/
+lighthouse-ci-reports/
