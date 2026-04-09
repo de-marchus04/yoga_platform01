@@ -1,6 +1,16 @@
 {
   "type": "module",
+  "scripts": {
+    "quality:prep-lhci": "node scripts/prep-lighthouserc.mjs",
+    "quality:lhci-summary": "node scripts/lhci-summary.mjs",
+    "quality:layout-shifts": "node scripts/layout-shift-capture.mjs",
+    "quality:axe": "node scripts/axe-capture.mjs"
+  },
   "dependencies": {
     "google-translate-api-x": "^10.7.2"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "playwright": "^1.50.1"
   }
 }

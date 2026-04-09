@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Yoga.Api.Data;
+using Yoga.Api.Services;
 using Yoga.Shared.DTOs;
 using Yoga.Shared.Models;
 
@@ -56,13 +57,18 @@ namespace Yoga.Api.Controllers
         // POST: api/retreats (Admin Only)
         [Authorize(Roles = "SuperAdmin")]
         [HttpPost]
-        public async Task<ActionResult<Retreat>> CreateRetreat([FromBody] Retreat retreat)
+        public async Task<IActionResult> CreateRetreat([FromBody] Retreat retreat)
         {
+            var err = await ValidateRetreatSlugAsync(retreat);
+            if (err != null) return err;
+
             retreat.Id = Guid.NewGuid();
+            if (!string.IsNullOrWhiteSpace(retreat.Slug))
+                retreat.Slug = retreat.Slug.Trim();
             _context.Retreats.Add(retreat);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetActiveRetreats), new { id = retreat.Id }, retreat);
+            return CreatedAtAction(nameof(GetRetreat), new { id = retreat.Id }, retreat);
         }
 
         // PUT: api/retreats/{id} (Admin Only)
@@ -74,6 +80,11 @@ namespace Yoga.Api.Controllers
             {
                 return BadRequest();
             }
+
+            var err = await ValidateRetreatSlugAsync(retreat, excludeId: id);
+            if (err != null) return err;
+            if (!string.IsNullOrWhiteSpace(retreat.Slug))
+                retreat.Slug = retreat.Slug.Trim();
 
             _context.Entry(retreat).State = EntityState.Modified;
 
@@ -165,6 +176,25 @@ namespace Yoga.Api.Controllers
                 var ct = translations.Where(t => t.EntityId == r.Id).ToDictionary(t => t.Field, t => t.Value);
                 return ToRetreatDto(r, ct);
             });
+        }
+
+        private async Task<IActionResult?> ValidateRetreatSlugAsync(Retreat retreat, Guid? excludeId = null)
+        {
+            if (retreat.IsActive)
+            {
+                if (string.IsNullOrWhiteSpace(retreat.Slug))
+                    return BadRequest("Active retreats require a public slug (e.g. me01, ua02).");
+                if (!RetreatSlugRules.IsValidFormat(retreat.Slug))
+                    return BadRequest(RetreatSlugRules.FormatError);
+            }
+            else if (!string.IsNullOrWhiteSpace(retreat.Slug) && !RetreatSlugRules.IsValidFormat(retreat.Slug))
+                return BadRequest(RetreatSlugRules.FormatError);
+
+            var slug = retreat.Slug?.Trim();
+            if (string.IsNullOrEmpty(slug)) return null;
+
+            var taken = await _context.Retreats.AnyAsync(r => r.Slug == slug && (!excludeId.HasValue || r.Id != excludeId.Value));
+            return taken ? Conflict($"Slug '{slug}' is already in use.") : null;
         }
 
         private static RetreatDto ToRetreatDto(Retreat r, Dictionary<string, string> ct) =>

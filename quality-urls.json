@@ -1,0 +1,25 @@
+{
+  "$comment": "Paths for Lighthouse CI, layout-shift capture, and axe. Keep in sync with prep-lighthouserc.mjs output. Seed retreat slug me01 matches AppDbContext.",
+  "baseUrl": "http://127.0.0.1:5234",
+  "paths": [
+    "/",
+    "/about",
+    "/contacts",
+    "/retreats",
+    "/retreats/actual",
+    "/retreats/upcoming",
+    "/retreats/past",
+    "/retreats/me01",
+    "/blog",
+    "/blog/articles",
+    "/courses",
+    "/courses/pranayama",
+    "/consultations",
+    "/consultations/spiritual-development",
+    "/yagyas",
+    "/yagyas/upcoming",
+    "/yagyas/past",
+    "/privacy",
+    "/terms"
+  ]
+}

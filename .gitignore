@@ -79,3 +79,6 @@ node_modules/
 # Lighthouse CI (локальный npx lhci autorun)
 .lighthouseci/
 lighthouse-ci-reports/
+lighthouserc.ci.json
+layout-shifts-report.json
+axe-report.json

@@ -1,6 +1,6 @@
-# Lighthouse CI — Web Vitals / CLS on published Blazor WASM (static serve, SPA fallback).
-# Download the "lighthouse-ci-reports" artifact from the workflow run for HTML/JSON (same signals as browser overlays, in machine-readable form).
-# Assertions use level "warn" so the job stays green while surfacing issues in logs; tighten to "error" in lighthouserc.json to block merges.
+# Lighthouse CI + programmatic layout-shift JSON + axe sweep (quality-urls.json matrix).
+# Artifacts: lighthouse-ci-reports, layout-shifts-report.json, axe-report.json.
+# workflow_dispatch: optional input quality_base_url (e.g. https://xxx.vercel.app) to run Playwright steps against a preview instead of local publish.
 
 name: Lighthouse CI
 
@@ -9,16 +9,23 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      quality_base_url:
+        description: "Optional origin for layout-shift + axe only (e.g. Vercel preview URL). Leave empty to use local publish + serve."
+        required: false
+        default: ""
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  QUALITY_BASE_URL: ${{ github.event.inputs.quality_base_url || '' }}
 
 permissions:
   contents: read
 
 jobs:
   lhci:
-    name: Lighthouse (static publish)
+    name: Lighthouse + quality matrix
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -39,7 +46,12 @@ jobs:
           dotnet restore Yoga.Client/Yoga.Client.csproj --nologo
           dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --no-restore --nologo
 
-      # ubuntu-latest has no Chrome; Lighthouse/LHCI need a real browser or reports never land in .lighthouseci.
+      - name: Install npm dependencies (Playwright + axe)
+        run: npm install --no-audit --no-fund
+
+      - name: Prep Lighthouse URL list from quality-urls.json
+        run: node scripts/prep-lighthouserc.mjs
+
       - name: Install Chrome for Lighthouse
         uses: browser-actions/setup-chrome@v1
         id: chrome
@@ -50,9 +62,35 @@ jobs:
       - name: Run Lighthouse CI
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
-        run: npx --yes @lhci/cli@0.14.0 autorun
+        run: npx --yes @lhci/cli@0.14.0 autorun --config=./lighthouserc.ci.json
 
-      - name: Verify reports exist
+      - name: Lighthouse summary (log)
+        if: always()
+        run: node scripts/lhci-summary.mjs
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Layout-shift capture + axe (local serve or preview URL)
+        env:
+          LAYOUT_SHIFT_FAIL: "0"
+          AXE_FAIL_SERIOUS: "0"
+        run: |
+          if [ -n "$QUALITY_BASE_URL" ]; then
+            echo "Using QUALITY_BASE_URL=$QUALITY_BASE_URL for Playwright steps"
+            node scripts/layout-shift-capture.mjs
+            node scripts/axe-capture.mjs
+          else
+            npx --yes serve@14 publish/wwwroot -l 5234 -s &
+            SERVE_PID=$!
+            sleep 3
+            node scripts/layout-shift-capture.mjs
+            node scripts/axe-capture.mjs
+            kill $SERVE_PID
+          fi
+
+      - name: Verify Lighthouse output exists
+        if: always()
         run: |
           echo "=== .lighthouseci ==="
           ls -laR .lighthouseci 2>/dev/null || true
@@ -60,7 +98,7 @@ jobs:
           ls -laR lighthouse-ci-reports 2>/dev/null || true
           n=$(find .lighthouseci lighthouse-ci-reports -type f 2>/dev/null | wc -l)
           if [ "$n" -eq 0 ]; then
-            echo "::error::Lighthouse CI wrote no files (check Chrome CHROME_PATH, serve, and collect logs above)."
+            echo "::error::Lighthouse CI wrote no files (check Chrome CHROME_PATH and collect logs above)."
             exit 1
           fi
           echo "Report files: $n"
@@ -73,7 +111,7 @@ jobs:
           echo "=== lighthouse-ci-reports ==="
           ls -laR lighthouse-ci-reports 2>/dev/null || echo "(no lighthouse-ci-reports)"
 
-      - name: Upload Lighthouse reports
+      - name: Upload Lighthouse + quality JSON artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -81,4 +119,6 @@ jobs:
           path: |
             .lighthouseci
             lighthouse-ci-reports
+            layout-shifts-report.json
+            axe-report.json
           if-no-files-found: warn

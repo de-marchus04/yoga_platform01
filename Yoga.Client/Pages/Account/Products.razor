@@ -114,7 +114,8 @@ else
     {
         "Course" when g.CourseId.HasValue && g.Status == "Active" => $"/account/course/{g.CourseId}",
         "Consultation" when g.ConsultationSlug != null => $"/consultations/{CanonicalConsultationSlug(g.ConsultationSlug)}",
-        "Retreat" when g.RetreatId.HasValue => $"/retreats/{g.RetreatId}",
+        "Retreat" when !string.IsNullOrWhiteSpace(g.RetreatSlug) && g.Status == "Active" => $"/retreats/{g.RetreatSlug}",
+        "Retreat" when g.RetreatId.HasValue && g.Status == "Active" => "/retreats/actual",
         "Yagya" when g.YagyaId.HasValue => $"/yagyas/{g.YagyaId}",
         _ => null
     };

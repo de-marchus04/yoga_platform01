@@ -1,5 +1,4 @@
-@page "/retreats/{Id:guid}"
-@page "/retreats/{RetreatSlug}"
+@page "/retreats/{RetreatSegment}"
 @inject LocalizationService Loc
 @inject Yoga.Client.Services.ApiService ApiService
 @inject NavigationManager Nav
@@ -143,17 +142,9 @@ else
                     {
                         <p>@block</p>
                     }
-                    @if (!string.IsNullOrEmpty(overrideAbout))
-                    {
-                        <p>@overrideAbout</p>
-                    }
-                    @if (!string.IsNullOrEmpty(overrideNote))
-                    {
-                        <p style="font-size:0.85rem; color:var(--text-muted); font-style:italic; margin-top:1.5rem;">@overrideNote</p>
-                    }
                 </div>
                 <div class="rd2-about__for-whom">
-                    <h4 class="rd2-about__for-whom-title">@Loc["rd.about.for_whom"]</h4>
+                    <h3 class="rd2-about__for-whom-title">@Loc["rd.about.for_whom"]</h3>
                     <ul class="rd2-about__for-whom-list">
                         <li>@Loc["rd.about.whom1"]</li>
                         <li>@Loc["rd.about.whom2"]</li>
@@ -187,19 +178,6 @@ else
             @if (!string.IsNullOrWhiteSpace(r.Program))
             {
                 <div class="rd2-program-html">@((MarkupString)r.Program)</div>
-            }
-            else if (overrideProgram.Any())
-            {
-                @foreach (var item in overrideProgram)
-                {
-                    <details class="rd2-itinerary__day">
-                        <summary>
-                            <span class="rd2-itinerary__day-chip">•</span>
-                            <span class="rd2-itinerary__day-title">@item</span>
-                            <svg class="rd2-itinerary__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-                        </summary>
-                    </details>
-                }
             }
             else
             {
@@ -273,29 +251,19 @@ else
             <h2 class="rd2-inclusions__title">@Loc["rd.included.h2"]</h2>
             <div class="rd2-inclusions__grid">
                 <div>
-                    <h4 style="margin-bottom:1rem; font-family:var(--font-sans); font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; color:var(--accent);">@Loc["rd.included.col1"]</h4>
+                    <h3 style="margin-bottom:1rem; font-family:var(--font-sans); font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; color:var(--accent);">@Loc["rd.included.col1"]</h3>
                     <div>
-                        @if (overrideIncluded.Any())
-                        {
-                            @foreach (var item in overrideIncluded)
-                            {
-                                <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @item</div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.1"]</div>
-                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.2"]</div>
-                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.3"]</div>
-                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.4"]</div>
-                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.5"]</div>
-                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.6"]</div>
-                            <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.7"]</div>
-                        }
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.1"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.2"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.3"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.4"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.5"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.6"]</div>
+                        <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--yes">✓</span> @Loc["page.retreat.detail.included.7"]</div>
                     </div>
                 </div>
                 <div>
-                    <h4 style="margin-bottom:1rem; font-family:var(--font-sans); font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted);">@Loc["rd.included.col2"]</h4>
+                    <h3 style="margin-bottom:1rem; font-family:var(--font-sans); font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; color:var(--text-muted);">@Loc["rd.included.col2"]</h3>
                     <div>
                         <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--no">✕</span> @Loc["rd.excluded.1"]</div>
                         <div class="rd2-inclusions__item"><span class="rd2-inclusions__icon rd2-inclusions__icon--no">✕</span> @Loc["rd.excluded.2"]</div>
@@ -446,14 +414,12 @@ else
 }
 
 @code {
-    [Parameter] public Guid Id { get; set; }
-    [Parameter] public string? RetreatSlug { get; set; }
+    [Parameter] public string? RetreatSegment { get; set; }
 
     private RetreatDto? retreat;
     private bool notFound = false;
     private List<RetreatDto> otherRetreats = new();
-    private Guid _loadedForId;
-    private string? _loadedForSlug;
+    private string? _loadedSegment;
 
     private bool showLightbox;
     private int lightboxIndex;
@@ -499,15 +465,12 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        var slug = string.IsNullOrWhiteSpace(RetreatSlug) ? null : RetreatSlug.Trim();
-        if (slug == _loadedForSlug && Id == _loadedForId && retreat != null)
+        var seg = string.IsNullOrWhiteSpace(RetreatSegment) ? null : RetreatSegment.Trim();
+        if (seg == _loadedSegment && retreat != null)
             return;
-        _loadedForSlug = slug;
-        _loadedForId = Id;
+        _loadedSegment = seg;
         await LoadData();
     }
-
-    private static readonly Guid SpecialRetreatId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     private async Task LoadData()
     {
@@ -515,20 +478,22 @@ else
         retreat = null;
         try
         {
-            var slug = string.IsNullOrWhiteSpace(RetreatSlug) ? null : RetreatSlug.Trim();
-            if (!string.IsNullOrEmpty(slug))
-                retreat = await ApiService.GetRetreatBySlugAsync(slug, Loc.CurrentLang);
-            else if (Id != Guid.Empty)
-                retreat = await ApiService.GetRetreatByIdAsync(Id, Loc.CurrentLang);
-            else
+            var seg = string.IsNullOrWhiteSpace(RetreatSegment) ? null : RetreatSegment.Trim();
+            if (string.IsNullOrEmpty(seg))
             {
                 notFound = true;
                 return;
             }
 
+            if (Guid.TryParse(seg, out _))
+            {
+                notFound = true;
+                return;
+            }
+
+            retreat = await ApiService.GetRetreatBySlugAsync(seg, Loc.CurrentLang);
             if (retreat == null) { notFound = true; return; }
-            ApplyRetreatOverride();
-            if (!string.IsNullOrWhiteSpace(retreat.Slug) && slug != retreat.Slug)
+            if (!string.IsNullOrWhiteSpace(retreat.Slug) && !string.Equals(seg, retreat.Slug, StringComparison.OrdinalIgnoreCase))
                 Nav.NavigateTo($"/retreats/{retreat.Slug}", replace: true);
 
             var all = await CatalogState.GetActiveRetreatsAsync(Loc.CurrentLang);
@@ -540,49 +505,6 @@ else
         }
     }
 
-    private string overrideAbout = "";
-    private List<string> overrideProgram = new();
-    private List<string> overrideIncluded = new();
-    private string overrideNote = "";
-
-    private void ApplyRetreatOverride()
-    {
-        if (retreat == null || retreat.Id != SpecialRetreatId) return;
-
-        retreat = retreat with
-        {
-            Title = "Ретрит в Черногории\nВозврат к себе",
-            Location = "Бар, Черногория",
-            Description = "Погружение в себя на берегу Адриатического моря с Александром Украинцевым (Саишварарамой) — практикующим йогом, психоаналитиком и духовным учителем. Индивидуальный подход к каждому участнику."
-        };
-
-        overrideAbout = "Александр с каждым участником проведёт индивидуальную консультацию, даст рекомендации по дальнейшей самостоятельной или совместной с ним работе.";
-
-        overrideProgram = new()
-        {
-            "Раджа йога («королевская йога»)",
-            "Практики пранаям и медитаций",
-            "Личная консультация учителя по всем жизненным вопросам",
-            "Огненная церемония Ягья — «кармическая хирургия» по очистке тонких тел",
-            "Посещение скального монастыря Острог — медитация в месте силы",
-            "Посещение старого города Будва — прогулка по атмосферным улочкам",
-        };
-
-        overrideIncluded = new()
-        {
-            "Проживание в апартаментах на двоих",
-            "Утренние практики йоги",
-            "Обучающая программа у Александра Украинцева",
-            "1 индивидуальная консультация по любым вопросам",
-            "Участие в 2 церемониях ягьи",
-            "Поездка в скальный монастырь Острог",
-            "Поездка в старый город Будва",
-            "Трансфер из аэропорта",
-        };
-
-        overrideNote = "Если вы уже находитесь в городе Бар — стоимость без учёта жилья и трансфера. Дополнительные консультации и индивидуальные ягьи — по предварительной записи.";
-    }
-
     private void OpenLightbox(int index) { lightboxIndex = index; showLightbox = true; }
     private void CloseLightbox() => showLightbox = false;
     private void NextImage() => lightboxIndex = (lightboxIndex + 1) % GalleryImages.Count;
@@ -590,8 +512,7 @@ else
 
     private async void Refresh()
     {
-        _loadedForSlug = null;
-        _loadedForId = Guid.Empty;
+        _loadedSegment = null;
         await LoadData();
         await InvokeAsync(StateHasChanged);
     }

@@ -82,6 +82,7 @@ namespace Yoga.Shared.DTOs
         string? ConsultationName = null,
         string? ConsultationSlug = null,
         string? RetreatTitle = null,
+        string? RetreatSlug = null,
         string? LiveEventTitle = null,
         Guid? YagyaId = null,
         string? YagyaTitle = null

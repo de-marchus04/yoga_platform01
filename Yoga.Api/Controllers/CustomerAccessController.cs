@@ -39,7 +39,7 @@ namespace Yoga.Api.Controllers
                     g.Id, g.CustomerId, g.Customer.FullName, g.AccessType.ToString(),
                     g.CourseId, g.ConsultationId, g.RetreatId, g.LiveEventId,
                     g.StartsAt, g.EndsAt, g.Status, g.SourceLeadId, g.Notes, g.CreatedAt,
-                    null, null, null, null, null, null, g.YagyaId, null
+                    null, null, null, null, null, null, null, g.YagyaId, null
                 )).ToListAsync();
 
             return Ok(new PaginatedResult<AccessGrantDto>(items, total, page, pageSize));

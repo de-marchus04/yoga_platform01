@@ -221,8 +221,8 @@ namespace Yoga.Api.Controllers
             var consultSlugs = consultIds.Any()
                 ? await _context.Consultations.Where(c => consultIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Slug)
                 : new();
-            var retreatTitles = retreatIds.Any()
-                ? await _context.Retreats.Where(r => retreatIds.Contains(r.Id)).ToDictionaryAsync(r => r.Id, r => r.Title)
+            var retreatRows = retreatIds.Any()
+                ? await _context.Retreats.Where(r => retreatIds.Contains(r.Id)).ToDictionaryAsync(r => r.Id, r => (r.Title, r.Slug))
                 : new();
             var eventTitles = eventIds.Any()
                 ? await _context.LiveEvents.Where(e => eventIds.Contains(e.Id)).ToDictionaryAsync(e => e.Id, e => e.Title)
@@ -247,7 +247,8 @@ namespace Yoga.Api.Controllers
                 CourseSlug: g.CourseId != null && courseSlugs.TryGetValue(g.CourseId.Value, out var cs) ? cs : null,
                 ConsultationName: g.ConsultationId != null && translations.TryGetValue(g.ConsultationId.Value, out var conN) ? conN : null,
                 ConsultationSlug: g.ConsultationId != null && consultSlugs.TryGetValue(g.ConsultationId.Value, out var conS) ? conS : null,
-                RetreatTitle: g.RetreatId != null && retreatTitles.TryGetValue(g.RetreatId.Value, out var rt) ? rt : null,
+                RetreatTitle: g.RetreatId != null && retreatRows.TryGetValue(g.RetreatId.Value, out var rr) ? rr.Title : null,
+                RetreatSlug: g.RetreatId != null && retreatRows.TryGetValue(g.RetreatId.Value, out var rs) ? rs.Slug : null,
                 LiveEventTitle: g.LiveEventId != null && eventTitles.TryGetValue(g.LiveEventId.Value, out var et) ? et : null,
                 YagyaId: g.YagyaId,
                 YagyaTitle: g.YagyaId != null ? (translations.TryGetValue(g.YagyaId.Value, out var yt) ? yt : (yagyaTitles.TryGetValue(g.YagyaId.Value, out var yft) ? yft : null)) : null
