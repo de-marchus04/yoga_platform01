@@ -107,7 +107,6 @@
     // Structured backend targeting
     [Parameter] public Guid? TargetCourseId { get; set; }
     [Parameter] public Guid? TargetConsultationId { get; set; }
-    [Parameter] public Guid? TargetRetreatId { get; set; }
     [Parameter] public string TargetFormat { get; set; } = string.Empty; // "Online" or "Offline"
 
     [Inject] private Yoga.Client.Services.ApiService ApiService { get; set; } = default!;
@@ -195,7 +194,6 @@
         // Apply robust references
         leadModel.CourseId = TargetCourseId;
         leadModel.ConsultationId = TargetConsultationId;
-        leadModel.RetreatId = TargetRetreatId;
         leadModel.TargetFormat = TargetFormat;
 
         var success = await ApiService.SubmitLeadAsync(leadModel);

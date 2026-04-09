@@ -8,12 +8,6 @@
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Database=YogaLifeEnterpriseDb;Username=postgres;Password=YOUR_PASSWORD"
   },
-  "JwtSettings": {
-    "SecretKey": "YOUR_JWT_SECRET_KEY_MINIMUM_32_CHARS_HERE",
-    "Issuer": "YogaEnterpriseApi",
-    "Audience": "YogaEnterpriseClient",
-    "ExpiryMinutes": 1440
-  },
   "TelegramSettings": {
     "BotToken": "YOUR_TELEGRAM_BOT_TOKEN",
     "ChatId": "YOUR_TELEGRAM_CHAT_ID"

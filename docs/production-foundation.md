@@ -25,9 +25,6 @@ This document defines the initial production-ready foundation for the platform.
 ## Required production environment inputs
 
 - `ConnectionStrings__DefaultConnection`
-- `JwtSettings__SecretKey`
-- `JwtSettings__Issuer`
-- `JwtSettings__Audience`
 - `Security__AllowedOrigins__0`
 - `TelegramSettings__BotToken`
 - `TelegramSettings__ChatId`
@@ -47,7 +44,7 @@ This document defines the initial production-ready foundation for the platform.
 ## Security baseline
 
 - API CORS is no longer open by default. Production environments must set `Security__AllowedOrigins__*` explicitly.
-- JWT startup now fails fast if `JwtSettings__SecretKey` is missing or shorter than 32 characters.
+- The public vitrina API does not expose JWT-authenticated user flows; protect infrastructure secrets (database, storage, Telegram) as usual.
 - API and client reverse proxy add baseline security headers: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy`.
 - Forwarded headers are enabled so the API can respect proxy-provided scheme and client IP information.
 - `EnableHsts` should stay enabled outside development when TLS termination is in place.
@@ -61,7 +58,7 @@ This document defines the initial production-ready foundation for the platform.
 
 ## Production notes
 
-- `docker-compose.yml` should be driven from a real `.env` file or a secrets manager; do not rely on fallback JWT secrets in production.
+- `docker-compose.yml` should be driven from a real `.env` file or a secrets manager.
 - For multiple public domains, add `Security__AllowedOrigins__1`, `Security__AllowedOrigins__2`, and so on.
 - TLS certificate management is still handled by the public ingress layer; the included nginx config currently adds security headers but does not provision certificates by itself.
 
@@ -75,5 +72,5 @@ This document defines the initial production-ready foundation for the platform.
 
 1. Add centralized logging and error tracking.
 2. Add backup automation and a restore playbook.
-3. Add minimum automated tests for lead-to-access critical flows.
+3. Add minimum automated tests for public API flows (e.g. leads, catalog endpoints).
 4. Add server-side download proxy if signed URL distribution must stay fully opaque to the browser.

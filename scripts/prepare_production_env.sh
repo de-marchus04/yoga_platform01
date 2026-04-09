@@ -9,7 +9,6 @@ if [[ -f "${target_file}" ]]; then
   exit 1
 fi
 
-jwt_secret="$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 64)"
 postgres_password="$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)"
 
 cat > "${target_file}" <<EOF
@@ -17,11 +16,6 @@ cat > "${target_file}" <<EOF
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=${postgres_password}
 POSTGRES_DB=YogaLifeEnterpriseDb
-
-# JWT
-JWT_SECRET_KEY=${jwt_secret}
-JWT_ISSUER=YogaEnterpriseApi
-JWT_AUDIENCE=YogaEnterpriseClient
 
 # Public origin for API CORS in production
 APP_ORIGIN=https://medisha.space

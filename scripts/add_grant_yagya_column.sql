@@ -1,1 +1,0 @@
-ALTER TABLE "CustomerAccessGrants" ADD COLUMN IF NOT EXISTS "YagyaId" UUID;

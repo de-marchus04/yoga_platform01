@@ -6,9 +6,9 @@
 <PageTitle>@(F("MetaTitle", Loc["page.home.title"]))</PageTitle>
 
 <HeadContent>
-    <meta name="description" content="@(F("MetaDescription", "Эксклюзивные авторские ретриты и программы обучения. Погружение в тишину и возврат к себе."))" />
-    <meta property="og:title" content="@(F("MetaTitle", "shakti.ashram | Премиальные Ретриты"))" />
-    <meta property="og:description" content="@(F("MetaDescription", "Бутиковые туры и практики осознанности. Забронируйте свое место."))" />
+    <meta name="description" content="@(F("MetaDescription", "Авторские курсы и консультации: практика осознанности и возврат к себе."))" />
+    <meta property="og:title" content="@(F("MetaTitle", "shakti.ashram | Курсы и консультации"))" />
+    <meta property="og:description" content="@(F("MetaDescription", "Программы обучения и личное сопровождение. Оставьте заявку — подберём формат."))" />
     <meta property="og:image" content="https://www.medisha.space/img/og-preview.jpg" />
     <meta property="og:type" content="website" />
 </HeadContent>
@@ -22,7 +22,7 @@
         <button class="btn btn-primary" style="align-self:flex-start" @onclick="OpenLeadModal">@Loc["page.home.hero.cta"]</button>
     </div>
     <div class="hero-photo">
-        <img src="@(F("HeroImage", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1400&q=80"))" alt="Йога ретрит" width="1400" height="934" fetchpriority="high" decoding="async" />
+        <img src="@(F("HeroImage", "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1400&q=80"))" alt="Практика йоги" width="1400" height="934" fetchpriority="high" decoding="async" />
     </div>
 </section>
 
@@ -39,7 +39,7 @@
     <div class="container stats-grid">
         <div class="stat-item reveal">
             <span class="stat-number">@F("Stats1Value", "12+")</span>
-            <span class="stat-label">@F("Stats1Label", Loc["page.home.stats.retreats"])</span>
+            <span class="stat-label">@F("Stats1Label", Loc["page.home.stats.programs"])</span>
         </div>
         <div class="stat-item reveal reveal-d1">
             <span class="stat-number">@F("Stats2Value", "300+")</span>
@@ -76,7 +76,7 @@
                 <p>@F("Dir2Text", Loc["page.home.directions.02.text"])</p>
                 <span class="direction-link">@F("Dir2LinkText", Loc["page.home.directions.02.link"])</span>
             </a>
-            <a href="/consultations" class="direction-block reveal reveal-d2">
+            <a href="/about" class="direction-block reveal reveal-d2">
                 <div class="direction-number">@Loc["page.home.directions.03"]</div>
                 <h3>@F("Dir3Title", Loc["page.home.directions.03.h3"])</h3>
                 <p>@F("Dir3Text", Loc["page.home.directions.03.text"])</p>

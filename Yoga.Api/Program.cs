@@ -66,8 +66,6 @@ builder.Services.AddProblemDetails(options =>
 
 // Services
 builder.Services.AddHttpClient<ITelegramService, TelegramService>();
-builder.Services.AddSingleton<IEmailService, ResendEmailService>();
-builder.Services.AddHttpClient("Resend");
 builder.Services.AddScoped<LocalFileStorageService>();
 builder.Services.AddScoped<S3FileStorageService>();
 builder.Services.AddScoped<IFileStorageService>(sp =>
@@ -133,12 +131,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddRateLimiter(opts =>
 {
     opts.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    opts.AddFixedWindowLimiter("auth", o =>
-    {
-        o.PermitLimit = 10;
-        o.Window = TimeSpan.FromMinutes(1);
-        o.QueueLimit = 0;
-    });
     opts.AddFixedWindowLimiter("leads", o =>
     {
         o.PermitLimit = 5;
@@ -248,7 +240,7 @@ app.Use(async (context, next) =>
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
         "font-src 'self' https://fonts.gstatic.com; " +
         "img-src 'self' data: https: blob:; " +
-        "connect-src 'self' https://api.medisha.space wss://api.medisha.space; " +
+        "connect-src 'self' https://api.medisha.space; " +
         "frame-ancestors 'none'");
     await next();
 });

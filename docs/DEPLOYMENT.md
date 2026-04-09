@@ -44,9 +44,6 @@ Minimum required values:
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
 - `POSTGRES_DB`
-- `JWT_SECRET_KEY`
-- `JWT_ISSUER`
-- `JWT_AUDIENCE`
 - `APP_ORIGIN`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
@@ -155,11 +152,10 @@ After upgrade:
 
 1. Check API logs.
 2. Check client logs.
-3. Open admin login.
-4. Verify one customer cabinet flow.
-5. Verify the Vercel alias returns `200` for `/`, `/about`, `/contacts`, `/privacy`, `/terms`, and `/account/login`.
-6. Open the published `appsettings.json` and confirm `Api.PublicBaseUrl` points to the production API origin.
-7. Verify the `Deploy Blazor Frontend` workflow completed successfully.
+3. Verify the Vercel alias returns `200` for `/`, `/about`, `/contacts`, `/privacy`, and `/terms`.
+4. Open the published `appsettings.json` and confirm `Api.PublicBaseUrl` points to the production API origin.
+5. Verify the `Deploy Blazor Frontend` workflow completed successfully.
+6. After a squash migration deploy, use a **fresh** PostgreSQL database (or full schema reset) before relying on `Database.Migrate()` — see `docs/VITRINA_PUBLIC_SITE.md`.
 
 ## Rollback Procedure
 
@@ -178,11 +174,6 @@ After upgrade:
 
 After deployment, verify:
 
-1. Admin login.
-2. Lead creation from public site.
-3. Lead processing in admin area.
-4. Customer creation or linking.
-5. Premium resource access.
-6. Live event watch flow.
-7. Audit page visibility.
-8. Public Vercel routes resolve without `404`.
+1. Lead creation from the public site (`POST /api/leads`).
+2. Course and consultation pages load with API data.
+3. Public Vercel routes resolve without `404` for `/`, `/courses`, `/consultations`, `/about`, `/contacts`, `/privacy`, `/terms`.

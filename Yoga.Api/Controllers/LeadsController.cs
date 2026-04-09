@@ -33,7 +33,6 @@ namespace Yoga.Api.Controllers
 
             lead.Id = Guid.NewGuid();
             lead.CreatedAt = DateTime.UtcNow;
-            lead.IsProcessed = false;
 
             _context.Leads.Add(lead);
             await _context.SaveChangesAsync();

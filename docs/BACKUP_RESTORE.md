@@ -64,15 +64,8 @@ Run this before calling the platform release-ready:
 1. Create a fresh restore database.
 2. Restore the latest backup into that database.
 3. Start the API against the restored database in an isolated environment.
-4. Verify these entities exist and are coherent:
-   - admin users
-   - customers
-   - subscriptions
-   - access grants
-   - premium resources
-   - live events
-   - audit logs
-5. Verify customer login and premium/live access against the restored environment.
+4. Verify vitrina data is coherent: `Courses`, `Consultations`, `Translations`, `SitePages`, `Leads` (as applicable).
+5. Smoke-test the public site against the restored API (home, catalog pages, one lead submission in a non-production environment).
 
 ## RTO And RPO
 

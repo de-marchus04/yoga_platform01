@@ -67,50 +67,8 @@ namespace Yoga.Shared.DTOs
 
     public record ForWhomItem(string Title, string Text, string? ImageUrl = null);
 
-    public record BlogPostDto(
-        Guid Id,
-        string Slug,
-        string Category,
-        string Title,
-        string Excerpt,
-        string Tag,
-        string? MediaUrl,
-        DateTime PublishedAt,
-        string[] Sections,
-        Guid? RelatedCourseId,
-        Guid? RelatedConsultationId,
-        Guid? RelatedRetreatId,
-        string? Content = null,
-        Guid? RelatedYagyaId = null
-    );
-
     public record SitePageDto(
         string Slug,
         Dictionary<string, string> Fields
-    );
-
-    public record RetreatDto(
-        Guid Id,
-        string Title,
-        string Description,
-        string Location,
-        DateTime StartDate,
-        DateTime EndDate,
-        string? ImageUrl,
-        string? PriceLabel,
-        string? Program,
-        string? Slug
-    );
-
-    public record YagyaDto(
-        Guid Id,
-        string Title,
-        string Description,
-        string Location,
-        DateTime StartDate,
-        DateTime EndDate,
-        string? ImageUrl,
-        string? PriceLabel,
-        string? Program
     );
 }

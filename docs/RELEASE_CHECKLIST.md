@@ -4,7 +4,6 @@ Use this checklist before declaring the platform production-ready.
 
 ## Security
 
-- `JWT_SECRET_KEY` is unique, secret, and at least 32 characters.
 - `Security__AllowedOrigins__*` contains only real production origins.
 - TLS is active on the public domain.
 - HSTS is enabled only after HTTPS is verified.
@@ -19,7 +18,7 @@ Use this checklist before declaring the platform production-ready.
 - API and client logs show no startup failures.
 - `Build Blazor WASM` succeeds on `main`.
 - `Deploy Blazor Frontend` succeeds when started from GitHub Actions.
-- Vercel alias returns `200` for `/`, `/about`, `/contacts`, `/privacy`, `/terms`, and `/account/login`.
+- Vercel alias returns `200` for `/`, `/about`, `/contacts`, `/privacy`, and `/terms`.
 - Vercel Git auto-deploy remains disconnected for the public frontend project.
 
 ## Data Protection
@@ -31,13 +30,9 @@ Use this checklist before declaring the platform production-ready.
 ## Product Flows
 
 - Public lead form works.
-- Admin can process a lead.
-- Admin can create a customer from a lead.
-- Admin can grant or revoke access.
-- Admin can upload premium media and live recordings.
-- Admin audit page shows recent actions.
-- Customer can access premium resources.
-- Customer can access live event recordings.
+- Course catalog and course detail pages load from the public API.
+- Consultation catalog and detail pages load from the public API.
+- Sitemap and health endpoints respond as expected.
 
 ## Observability
 
