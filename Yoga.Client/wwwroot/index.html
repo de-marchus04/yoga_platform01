@@ -120,6 +120,42 @@
             }
         });
 
+        window.ylScrollToElementId = function (id) {
+            var el = typeof id === 'string' ? document.getElementById(id) : null;
+            if (!el) return;
+            var reduced = false;
+            try {
+                reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            } catch (e) { }
+            el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+        };
+
+        window.ylRd2StickyInit = function () {
+            if (window.__ylRd2StickyIO) {
+                window.__ylRd2StickyIO.disconnect();
+                window.__ylRd2StickyIO = null;
+            }
+            var hero = document.getElementById('rd2-hero');
+            var bar = document.getElementById('rd2-sticky-bar');
+            if (!hero || !bar) return;
+            var io = new IntersectionObserver(function (entries) {
+                var e = entries[0];
+                var show = !e.isIntersecting;
+                bar.classList.toggle('rd2-sticky-bar--visible', show);
+            }, { threshold: 0, rootMargin: '-76px 0px 0px 0px' });
+            io.observe(hero);
+            window.__ylRd2StickyIO = io;
+        };
+
+        window.ylRd2StickyDispose = function () {
+            if (window.__ylRd2StickyIO) {
+                window.__ylRd2StickyIO.disconnect();
+                window.__ylRd2StickyIO = null;
+            }
+            var bar = document.getElementById('rd2-sticky-bar');
+            if (bar) bar.classList.remove('rd2-sticky-bar--visible');
+        };
+
         window.downloadTextFile = function (filename, content) {
             var blob = new Blob([content], { type: 'text/calendar;charset=utf-8;' });
             var url = URL.createObjectURL(blob);

@@ -16,7 +16,7 @@
     </div>
 </section>
 
-<section class="retreats-section">
+<section class="retreats-section @(items == null || !items.Any() ? "retreats-section--center-body" : "")">
     <div class="container">
         @if (items == null)
         {

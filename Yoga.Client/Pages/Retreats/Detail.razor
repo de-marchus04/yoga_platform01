@@ -3,7 +3,8 @@
 @inject LocalizationService Loc
 @inject Yoga.Client.Services.ApiService ApiService
 @inject NavigationManager Nav
-@implements IDisposable
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 @using Yoga.Shared.DTOs
 @using Yoga.Client.Helpers
 
@@ -53,7 +54,7 @@ else
     var duration = (r.EndDate - r.StartDate).Days;
 
     <!-- 1. HERO -->
-    <section class="rd2-hero" style="background-image: url('@heroImg');">
+    <section id="rd2-hero" class="rd2-hero" style="background-image: url('@heroImg');">
         <a href="/retreats/actual" class="rd2-hero__breadcrumb">← @Loc["page.retreat.detail.back"]</a>
         <div class="rd2-hero__inner">
             <p class="section-eyebrow" style="color:var(--accent);">@Loc["page.retreats.eyebrow"]</p>
@@ -81,16 +82,16 @@ else
                 }
             </div>
         </div>
-        <div class="rd2-hero__scroll" aria-hidden="true">
+        <button type="button" class="rd2-hero__scroll" @onclick="ScrollToContentAsync" aria-label="@Loc["rd.scroll"]">
             <span>@Loc["rd.scroll"]</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg>
-        </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
     </section>
 
     <!-- 2. STICKY BAR -->
     @if (!IsPast)
     {
-        <div class="rd2-sticky-bar">
+        <div id="rd2-sticky-bar" class="rd2-sticky-bar">
             <div class="container rd2-sticky-bar__inner">
                 <span class="rd2-sticky-bar__title">@Truncate(r.Title, 50)</span>
                 <span class="rd2-sticky-bar__spacer"></span>
@@ -104,7 +105,7 @@ else
     }
 
     <!-- 3. QUICK FACTS -->
-    <section class="rd2-facts">
+    <section id="rd2-content-start" class="rd2-facts">
         <div class="rd2-facts__grid">
             <div class="rd2-facts__item">
                 <svg class="rd2-facts__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -455,6 +456,7 @@ else
 
     private bool showLightbox;
     private int lightboxIndex;
+    private Guid? _stickyBarBoundForRetreatId;
 
     private bool IsPast => retreat?.EndDate.ToUniversalTime() < DateTime.UtcNow;
 
@@ -468,7 +470,31 @@ else
         "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
     };
 
-    protected override async Task OnInitializedAsync() => Loc.OnLanguageChanged += Refresh;
+    protected override Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Refresh;
+        return Task.CompletedTask;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (retreat == null || notFound || IsPast)
+        {
+            _stickyBarBoundForRetreatId = null;
+            try { await JS.InvokeVoidAsync("ylRd2StickyDispose"); } catch { /* prerender / disconnected */ }
+            return;
+        }
+
+        if (_stickyBarBoundForRetreatId == retreat.Id)
+            return;
+        _stickyBarBoundForRetreatId = retreat.Id;
+        try { await JS.InvokeVoidAsync("ylRd2StickyInit"); } catch { /* prerender */ }
+    }
+
+    private async Task ScrollToContentAsync()
+    {
+        try { await JS.InvokeVoidAsync("ylScrollToElementId", "rd2-content-start"); } catch { }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -587,7 +613,12 @@ else
         _ => ru
     };
 
-    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
+    public async ValueTask DisposeAsync()
+    {
+        Loc.OnLanguageChanged -= Refresh;
+        _stickyBarBoundForRetreatId = null;
+        try { await JS.InvokeVoidAsync("ylRd2StickyDispose"); } catch { }
+    }
 
     private static string Truncate(string? s, int max) =>
         string.IsNullOrEmpty(s) ? "" : s.Length <= max ? s : s[..max] + "…";
