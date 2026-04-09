@@ -83,18 +83,19 @@ else
             </div>
         </div>
         <button type="button" class="rd2-hero__scroll" @onclick="ScrollToContentAsync" aria-label="@Loc["rd.scroll"]">
-            <span>@Loc["rd.scroll"]</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            <span class="rd2-hero__scroll-bounce" aria-hidden="true">
+                <span>@Loc["rd.scroll"]</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
         </button>
     </section>
 
-    <!-- 2. STICKY BAR -->
+    <!-- Sticky booking bar: shown after the hero scrolls away so the main CTA stays reachable on long pages. -->
     @if (!IsPast)
     {
         <div id="rd2-sticky-bar" class="rd2-sticky-bar">
             <div class="container rd2-sticky-bar__inner">
                 <span class="rd2-sticky-bar__title">@Truncate(r.Title, 50)</span>
-                <span class="rd2-sticky-bar__spacer"></span>
                 @if (!string.IsNullOrWhiteSpace(r.PriceLabel))
                 {
                     <span class="rd2-sticky-bar__price">@r.PriceLabel</span>
