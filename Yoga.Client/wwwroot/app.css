@@ -11,6 +11,8 @@
   --section-bg-warm:  #F0EDE8;
   --format-bg-online: #F6F3EE;
   --text-on-dark:     #E0DCD4;
+  /* Small caps / eyebrow on dark photo heroes (WCAG vs dark overlay; not --accent) */
+  --text-eyebrow-on-photo: #E8DFD2;
   --text-main:       #1A1A1A;
   --text-muted:      #6B6B6B;
   --divider:         #E4DDD4;
@@ -48,6 +50,14 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Modals/toasts live outside <main> in App.razor — named region for axe landmark rules */
+.yl-a11y-overlays {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9990;
 }
 
 /* --- RESET & GLOBALS --- */
@@ -859,7 +869,7 @@ textarea:focus-visible {
   font-weight: 400;
   letter-spacing: 5px;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--text-eyebrow-on-photo);
   margin-bottom: 1rem;
 }
 
@@ -888,9 +898,11 @@ textarea:focus-visible {
   line-height: 1.7;
 }
 
-/* .section-eyebrow inside any photo-hero is always accent – regardless of theme */
-.page-hero-content .section-eyebrow {
-  color: var(--accent);
+/* Eyebrow on dark photo heroes — high contrast vs overlay (axe color-contrast) */
+.page-hero-content .section-eyebrow,
+.retreat-detail-hero-content .section-eyebrow,
+.rd2-hero .section-eyebrow {
+  color: var(--text-eyebrow-on-photo);
 }
 
 /* Intro paragraph under hero title — readable line length on list pages */
@@ -3608,10 +3620,6 @@ details[open] > .program-module-summary .program-module-toggle {
   color: rgba(224,220,212,0.72);
 }
 
-.retreat-detail-hero-content .section-eyebrow {
-  color: var(--accent);
-}
-
 /* Safety: explicitly keep light in light-theme where inherited color would be dark */
 [data-theme="light"] .retreat-detail-hero-content h1 { color: var(--text-on-dark); }
 [data-theme="light"] .retreat-detail-hero-content p  { color: rgba(224,220,212,0.72); }
@@ -3620,7 +3628,7 @@ details[open] > .program-module-summary .program-module-toggle {
 
 .retreat-back-link {
   display: inline-block;
-  color: var(--accent);
+  color: rgba(255, 255, 255, 0.78);
   text-decoration: none;
   font-family: var(--font-sans);
   font-size: 0.7rem;
@@ -3630,7 +3638,10 @@ details[open] > .program-module-summary .program-module-toggle {
   transition: opacity 0.2s;
 }
 
-.retreat-back-link:hover { opacity: 0.6; }
+.retreat-back-link:hover {
+  opacity: 1;
+  color: #ffffff;
+}
 
 .retreat-meta-pills {
   display: flex;
@@ -3653,8 +3664,8 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 
 .meta-pill-past {
-  border-color: rgba(160,140,100,0.45);
-  color: var(--accent);
+  border-color: rgba(232, 223, 210, 0.45);
+  color: var(--text-eyebrow-on-photo);
 }
 
 .meta-pill-icon {
@@ -3662,7 +3673,7 @@ details[open] > .program-module-summary .program-module-toggle {
   width: 0.9rem;
   height: 0.9rem;
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--text-eyebrow-on-photo);
   opacity: 0.95;
 }
 
@@ -4863,8 +4874,11 @@ details[open] > .program-module-summary .program-module-toggle {
     margin: 0;
 }
 .cookie-consent-text a {
-    color: var(--accent, #C9A96E);
+    color: var(--text-eyebrow-on-photo);
     text-decoration: underline;
+}
+.cookie-consent-text a:hover {
+    color: #ffffff;
 }
 .cookie-consent-actions {
     display: flex;
@@ -5492,13 +5506,13 @@ details[open] > .program-module-summary .program-module-toggle {
 }
 .rd2-hero__pill-icon {
   display: inline-flex;
-  color: var(--accent);
+  color: var(--text-eyebrow-on-photo);
   font-size: 0.9rem;
 }
 .rd2-hero__pill--past {
-  background: rgba(140,107,58,0.25);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: rgba(232, 223, 210, 0.12);
+  border-color: rgba(232, 223, 210, 0.55);
+  color: var(--text-eyebrow-on-photo);
 }
 
 /* breadcrumb */
