@@ -21,7 +21,6 @@ on:
         default: ""
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   # inputs exist only for workflow_dispatch; avoid touching github.event.inputs on push/PR
   QUALITY_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.quality_base_url || '' }}
 
@@ -34,15 +33,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "24"
 
       - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
 
@@ -58,15 +57,25 @@ jobs:
         run: node scripts/prep-lighthouserc.mjs
 
       - name: Install Chrome for Lighthouse
-        uses: browser-actions/setup-chrome@v1
+        uses: browser-actions/setup-chrome@v2
         id: chrome
         with:
           chrome-version: stable
           install-dependencies: true
 
+      # Hyphen in output name: use bracket form — dot form is parsed as subtraction, leaving CHROME_PATH empty.
+      - name: Verify Chrome binary
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs['chrome-path'] }}
+        run: |
+          echo "CHROME_BIN=$CHROME_BIN"
+          test -n "$CHROME_BIN"
+          test -x "$CHROME_BIN"
+          "$CHROME_BIN" --version
+
       - name: Run Lighthouse CI
         env:
-          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+          CHROME_PATH: ${{ steps.chrome.outputs['chrome-path'] }}
         run: npx --yes @lhci/cli@0.14.0 autorun --config=./lighthouserc.ci.json
 
       - name: Lighthouse summary (log)
@@ -118,7 +127,7 @@ jobs:
 
       - name: Upload Lighthouse + quality JSON artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lighthouse-ci-reports
           path: |
