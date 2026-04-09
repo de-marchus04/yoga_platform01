@@ -2,6 +2,11 @@ name: Deploy Blazor Frontend
 
 on:
   workflow_dispatch:
+  # Auto-deploy after a successful push build on main (manual-only before was why nothing appeared in the runs list).
+  workflow_run:
+    workflows: ["Build Blazor WASM"]
+    types: [completed]
+    branches: [main]
 
 env:
   FRONTEND_PUBLIC_API_BASE_URL: ${{ vars.FRONTEND_PUBLIC_API_BASE_URL }}
@@ -22,10 +27,13 @@ jobs:
   deploy:
     name: Deploy Static Frontend To Vercel
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
