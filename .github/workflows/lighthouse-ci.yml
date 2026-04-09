@@ -1,6 +1,10 @@
 # Lighthouse CI + programmatic layout-shift JSON + axe sweep (quality-urls.json matrix).
+# Runs on GitHub-hosted ubuntu-latest (Linux VM — not your local OS).
 # Artifacts: lighthouse-ci-reports, layout-shifts-report.json, axe-report.json.
 # workflow_dispatch: optional input quality_base_url (e.g. https://xxx.vercel.app) to run Playwright steps against a preview instead of local publish.
+#
+# Local (after publish): npm run quality:playwright — serve on 5234 + layout-shift + axe.
+# Full local chain: npm run quality:local
 
 name: Lighthouse CI
 
@@ -18,7 +22,8 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  QUALITY_BASE_URL: ${{ github.event.inputs.quality_base_url || '' }}
+  # inputs exist only for workflow_dispatch; avoid touching github.event.inputs on push/PR
+  QUALITY_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.quality_base_url || '' }}
 
 permissions:
   contents: read
@@ -69,9 +74,11 @@ jobs:
         run: node scripts/lhci-summary.mjs
 
       - name: Install Playwright Chromium
+        if: always()
         run: npx playwright install chromium
 
       - name: Layout-shift capture + axe (local serve or preview URL)
+        if: always()
         env:
           LAYOUT_SHIFT_FAIL: "0"
           AXE_FAIL_SERIOUS: "0"
@@ -81,12 +88,10 @@ jobs:
             node scripts/layout-shift-capture.mjs
             node scripts/axe-capture.mjs
           else
-            npx --yes serve@14 publish/wwwroot -l 5234 -s &
-            SERVE_PID=$!
-            sleep 3
-            node scripts/layout-shift-capture.mjs
-            node scripts/axe-capture.mjs
-            kill $SERVE_PID
+            npx start-server-and-test \
+              "npx --yes serve@14 publish/wwwroot -l 5234 -s" \
+              "http-get://127.0.0.1:5234" \
+              "node scripts/layout-shift-capture.mjs && node scripts/axe-capture.mjs"
           fi
 
       - name: Verify Lighthouse output exists

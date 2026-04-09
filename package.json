@@ -4,13 +4,16 @@
     "quality:prep-lhci": "node scripts/prep-lighthouserc.mjs",
     "quality:lhci-summary": "node scripts/lhci-summary.mjs",
     "quality:layout-shifts": "node scripts/layout-shift-capture.mjs",
-    "quality:axe": "node scripts/axe-capture.mjs"
+    "quality:axe": "node scripts/axe-capture.mjs",
+    "quality:playwright": "start-server-and-test \"npx --yes serve@14 publish/wwwroot -l 5234 -s\" http-get://127.0.0.1:5234 \"npm run quality:layout-shifts && npm run quality:axe\"",
+    "quality:local": "dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo && npm run quality:prep-lhci && npm run quality:playwright"
   },
   "dependencies": {
     "google-translate-api-x": "^10.7.2"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.1",
-    "playwright": "^1.50.1"
+    "playwright": "^1.50.1",
+    "start-server-and-test": "^2.0.8"
   }
 }
