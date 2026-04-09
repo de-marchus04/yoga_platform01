@@ -34,6 +34,8 @@
 </head>
 
 <body>
+    <!-- Named region wraps Blazor root + cursor helper so axe "region" sees all body content inside a landmark. -->
+    <div class="yl-body-root" role="region" aria-label="shakti.ashram">
     <div id="app" style="min-height:100vh;">
         <div style="position:absolute; top:50vh; width:100%; text-align:center; font-family: 'Cormorant Garamond', serif; color: #8C6B3A; font-size: 1.8rem; font-weight: 300; letter-spacing: 4px;">
             <span class="brand-wordmark" style="font-style: italic;">
@@ -45,7 +47,8 @@
         </div>
     </div>
 
-    <div id="cursor-dot" aria-hidden="true"></div>
+    <div id="cursor-dot" aria-hidden="true" role="presentation"></div>
+    </div>
 
     <script src="_framework/blazor.webassembly.js" autostart="false"></script>
     <script>

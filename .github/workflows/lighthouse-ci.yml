@@ -73,10 +73,11 @@ jobs:
           test -x "$CHROME_BIN"
           "$CHROME_BIN" --version
 
+      # LHCI_GITHUB_APP_TOKEN is only required for non-filesystem upload targets (e.g. temporary-public-storage).
       - name: Run Lighthouse CI
         env:
           CHROME_PATH: ${{ steps.chrome.outputs['chrome-path'] }}
-        run: npx --yes @lhci/cli@0.14.0 autorun --config=./lighthouserc.ci.json
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.ci.json
 
       - name: Lighthouse summary (log)
         if: always()

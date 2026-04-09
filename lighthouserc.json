@@ -5,7 +5,8 @@
       "settings": {
         "preset": "desktop",
         "onlyCategories": ["performance", "accessibility", "best-practices", "seo"],
-        "skipAudits": ["is-on-https"]
+        "skipAudits": ["is-on-https"],
+        "chromeFlags": "--no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage"
       },
       "staticDistDir": "./publish/wwwroot",
       "isSinglePageApplication": true,

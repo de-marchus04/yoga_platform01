@@ -155,7 +155,7 @@
 
     @if (menuOpen)
     {
-        <div class="mobile-backdrop" @onclick="CloseMenu"></div>
+        <div class="mobile-backdrop" role="presentation" aria-hidden="true" @onclick="CloseMenu"></div>
     }
     <nav id="mobile-menu" class="mobile-nav @(menuOpen ? "open" : "")" aria-hidden="@(!menuOpen)" aria-label="Mobile menu">
         <ul class="mobile-nav-menu">

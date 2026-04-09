@@ -25,7 +25,19 @@ for (const path of quality.paths) {
     const results = await new AxeBuilder({ page }).analyze();
     const serious = results.violations.filter((v) => v.impact === "serious");
     const moderate = results.violations.filter((v) => v.impact === "moderate");
-    summary.push({ url, violations: results.violations.length, serious: serious.length, moderate: moderate.length, ids: results.violations.map((v) => v.id) });
+    summary.push({
+      url,
+      violations: results.violations.length,
+      serious: serious.length,
+      moderate: moderate.length,
+      ids: results.violations.map((v) => v.id),
+      violationsDetail: results.violations.map((v) => ({
+        id: v.id,
+        impact: v.impact,
+        help: v.help,
+        targets: v.nodes.slice(0, 5).map((n) => n.target.join(" ")),
+      })),
+    });
     console.log(`axe: ${url}  violations=${results.violations.length} serious=${serious.length}`);
     for (const v of results.violations.slice(0, 8)) {
       console.log(`  - [${v.impact}] ${v.id}: ${v.help}`);

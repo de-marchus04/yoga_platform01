@@ -4928,6 +4928,8 @@ details[open] > .program-module-summary .program-module-toggle {
 .hero-photo {
   position: relative;
   overflow: hidden;
+  aspect-ratio: 1400 / 934;
+  min-height: 0;
 }
 .hero-photo img {
   width: 100%;
@@ -4953,6 +4955,7 @@ details[open] > .program-module-summary .program-module-toggle {
     min-height: auto;
   }
   .hero-photo {
+    aspect-ratio: auto;
     height: 55vw;
     min-height: 320px;
   }
@@ -4975,6 +4978,7 @@ details[open] > .program-module-summary .program-module-toggle {
     font-size: 2.4rem;
   }
   .hero-photo {
+    aspect-ratio: auto;
     height: 65vw;
     min-height: 260px;
   }
@@ -5108,6 +5112,9 @@ details[open] > .program-module-summary .program-module-toggle {
   line-height: 1;
   display: block;
 }
+.stats-section .stat-number {
+  color: var(--text-eyebrow-on-photo);
+}
 .stat-label {
   font-family: var(--font-sans);
   font-size: 0.65rem;
@@ -5117,6 +5124,10 @@ details[open] > .program-module-summary .program-module-toggle {
   opacity: 0.5;
   font-weight: 400;
   display: block;
+}
+.stats-section .stat-label {
+  color: rgba(232, 228, 220, 0.88);
+  opacity: 1;
 }
 @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
 
@@ -5235,7 +5246,7 @@ details[open] > .program-module-summary .program-module-toggle {
   font-size: 0.68rem;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--text-eyebrow-on-photo);
   font-weight: 400;
 }
 @media (max-width: 768px) { .philosophy-quote p { font-size: 1.6rem; } }
