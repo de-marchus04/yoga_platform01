@@ -75,3 +75,6 @@ publish/
 .vercel
 .env*.local
 node_modules/
+
+# Lighthouse CI (локальный npx lhci autorun)
+.lighthouseci/

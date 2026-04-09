@@ -1,0 +1,61 @@
+# Lighthouse CI — Web Vitals / CLS on published Blazor WASM (static serve, SPA fallback).
+# Download the "lighthouse-ci-reports" artifact from the workflow run for HTML/JSON (same signals as browser overlays, in machine-readable form).
+# Assertions use level "warn" so the job stays green while surfacing issues in logs; tighten to "error" in lighthouserc.json to block merges.
+
+name: Lighthouse CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+jobs:
+  lhci:
+    name: Lighthouse (static publish)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish Blazor WebAssembly
+        run: |
+          dotnet restore Yoga.Client/Yoga.Client.csproj --nologo
+          dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --no-restore --nologo
+
+      - name: Run Lighthouse CI
+        run: npx --yes @lhci/cli@0.14.0 autorun
+
+      - name: List report files (for log)
+        if: always()
+        run: |
+          echo "=== .lighthouseci contents ==="
+          ls -laR .lighthouseci 2>/dev/null || echo "(no reports dir)"
+          for f in .lighthouseci/*.html; do
+            [ -f "$f" ] || continue
+            echo "HTML report: $f"
+          done
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-ci-reports
+          path: .lighthouseci
+          if-no-files-found: warn
