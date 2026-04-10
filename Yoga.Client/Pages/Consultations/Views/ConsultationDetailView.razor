@@ -1,0 +1,183 @@
+@if (Loading)
+{
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <div class="public-loading-state public-loading-state-on-dark">Загружаем консультацию</div>
+        </div>
+    </section>
+}
+else if (Item == null)
+{
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <h1>@P("Карточка консультации очищена", "Картку консультації очищено", "The consultation page has been cleared")</h1>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            <p style="max-width:760px; color:var(--text-muted);">@P("Сюда нужно добавить оффер консультации: с каким запросом приходит клиент, как проходит сессия, в каком формате идёт работа, какой результат человек получает и почему стоит записаться именно к вам.", "Сюди потрібно додати оффер консультації: з яким запитом приходить клієнт, як проходить сесія, у якому форматі йде робота, який результат людина отримує і чому варто записатися саме до вас.", "Use this page for the consultation offer: what problem the client comes with, how the session works, which format is used, what result the person gets, and why they should book with you specifically.")</p>
+            <a href="/consultations" class="btn btn-outline" style="margin-top:1.5rem; display:inline-flex;">@P("Вернуться к каталогу консультаций", "Повернутися до каталогу консультацій", "Back to the consultations catalog")</a>
+        </div>
+    </section>
+}
+else
+{
+    <section class="page-hero">
+        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrEmpty(Item.ImageUrl) ? "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1600&q=80" : Api.ResolveMediaUrl(Item.ImageUrl))');"></div>
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
+            @if (!string.IsNullOrEmpty(Item.Eyebrow))
+            {
+                <p class="section-eyebrow">@Item.Eyebrow</p>
+            }
+
+            <div class="format-badges">
+                @if (Item.IsOnline)
+                {
+                    <span class="format-badge format-badge-online">Онлайн</span>
+                }
+                @if (Item.IsOffline)
+                {
+                    <span class="format-badge format-badge-offline">Офлайн</span>
+                }
+            </div>
+
+            <h1>@DisplayTitle</h1>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            @if (!string.IsNullOrEmpty(Item.Subtitle))
+            {
+                <p>@Item.Subtitle</p>
+            }
+        </div>
+    </section>
+
+    @if (!string.IsNullOrEmpty(Item.Duration) || !string.IsNullOrEmpty(Item.Format) || !string.IsNullOrEmpty(Item.LanguageOffered) || !string.IsNullOrEmpty(Item.PriceLabel))
+    {
+        <section class="format-strip">
+            <div class="format-strip-grid">
+                @if (!string.IsNullOrEmpty(Item.Duration))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Длительность</span>
+                        <span class="format-strip-value">@Item.Duration</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Item.Format))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Формат</span>
+                        <span class="format-strip-value">@Item.Format</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Item.LanguageOffered))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Язык</span>
+                        <span class="format-strip-value">@Item.LanguageOffered</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Item.PriceLabel))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">Стоимость</span>
+                        <span class="format-strip-value">@Item.PriceLabel</span>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="overview-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <p class="section-eyebrow">@Loc["section.overview.eyebrow"]</p>
+                <h2>@Loc["section.overview.h2"]</h2>
+                <div class="section-divider"></div>
+            </div>
+            <div class="overview-grid">
+                <div class="overview-desc reveal">
+                    @if (!string.IsNullOrEmpty(Item.Quote))
+                    {
+                        <blockquote class="consultation-quote">
+                            <p>@Item.Quote</p>
+                        </blockquote>
+                    }
+                    @if (!string.IsNullOrEmpty(Item.Description))
+                    {
+                        @foreach (var para in Item.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            <p>@para</p>
+                        }
+                    }
+                </div>
+                @if (Item.Benefits.Length > 0)
+                {
+                    <div class="overview-benefits reveal reveal-d1">
+                        <h4>@Loc["section.benefits.h4"]</h4>
+                        @foreach (var benefit in Item.Benefits)
+                        {
+                            <div class="benefit-item"><span class="benefit-check"></span><span>@benefit</span></div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    @if (Item.ForWhom.Length > 0)
+    {
+        <section class="for-whom-section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <p class="section-eyebrow">@Loc["section.forwhom.eyebrow"]</p>
+                    <h2>@Loc["section.forwhom.h2"]</h2>
+                    <div class="section-divider"></div>
+                </div>
+                <div class="for-whom-grid">
+                    @{ int fwIdx = 0; }
+                    @foreach (var fw in Item.ForWhom)
+                    {
+                        var delayClass = fwIdx switch { 1 => "reveal-d1", 2 => "reveal-d2", _ => "" };
+                        <div class="for-whom-card reveal @delayClass">
+                            <h3>@fw.Title</h3>
+                            <p>@fw.Text</p>
+                        </div>
+                        fwIdx++;
+                    }
+                </div>
+            </div>
+        </section>
+    }
+
+    <section class="page-cta">
+        <div class="container" style="text-align:center;">
+            @if (!string.IsNullOrEmpty(Item?.CtaHeading))
+            {
+                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
+                <h2>@Item?.CtaHeading</h2>
+                <p>@Item?.CtaText</p>
+            }
+            else
+            {
+                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
+                <h2>@Loc["section.cta.h2"]</h2>
+                <p>@Loc["section.cta.text"]</p>
+            }
+            <button class="btn btn-primary" @onclick="OnCtaClick">@Loc["section.cta.btn"]</button>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public ConsultationDto? Item { get; set; }
+    [Parameter] public bool Loading { get; set; }
+    [Parameter] public string? DisplayTitle { get; set; }
+    [Parameter] public EventCallback OnCtaClick { get; set; }
+
+    [Inject] private LocalizationService Loc { get; set; } = default!;
+    [Inject] private ApiService Api { get; set; } = default!;
+
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
+}
