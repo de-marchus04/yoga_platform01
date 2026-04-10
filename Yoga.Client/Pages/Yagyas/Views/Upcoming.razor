@@ -32,7 +32,7 @@
                 <div class="yag-upcoming__grid">
                     @foreach (var item in Items)
                     {
-                        <a class="yag-upcoming__card" href="/yagyas/@item.Slug">
+                        <a class="yag-upcoming__card" href="/yagyas/@Ref(item)">
                             @if (!string.IsNullOrEmpty(item.ImageUrl))
                             {
                                 <div class="yag-upcoming__card-image">
@@ -72,6 +72,9 @@
     [Parameter] public List<YagyaDto>? Items { get; set; }
     [Inject] private LocalizationService Loc { get; set; } = default!;
     [Inject] private ApiService Api { get; set; } = default!;
+
+    private static string Ref(YagyaDto item) =>
+        !string.IsNullOrEmpty(item.Slug) ? item.Slug : item.Id.ToString();
 
     private string FormatMonth(DateTime d) => Loc.CurrentLang switch
     {

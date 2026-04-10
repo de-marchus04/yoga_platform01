@@ -32,7 +32,7 @@
                 <div class="yag-past__list">
                     @foreach (var item in Items)
                     {
-                        <a class="yag-past__card" href="/yagyas/@item.Slug">
+                        <a class="yag-past__card" href="/yagyas/@Ref(item)">
                             @if (!string.IsNullOrEmpty(item.ImageUrl))
                             {
                                 <div class="yag-past__card-image">
@@ -67,6 +67,9 @@
     [Parameter] public List<YagyaDto>? Items { get; set; }
     [Inject] private LocalizationService Loc { get; set; } = default!;
     [Inject] private ApiService Api { get; set; } = default!;
+
+    private static string Ref(YagyaDto item) =>
+        !string.IsNullOrEmpty(item.Slug) ? item.Slug : item.Id.ToString();
 
     private string FormatDate(DateTime d)
     {

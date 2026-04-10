@@ -50,12 +50,18 @@ namespace Yoga.Api.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{slug}")]
-        public async Task<ActionResult<YagyaDto>> GetYagya(string slug, [FromQuery] string lang = "uk")
+        [HttpGet("{slugOrId}")]
+        public async Task<ActionResult<YagyaDto>> GetYagya(string slugOrId, [FromQuery] string lang = "uk")
         {
-            var item = await _context.Yagyas
-                .Include(y => y.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
-                .FirstOrDefaultAsync(y => y.Slug == slug && y.IsActive);
+            Yagya? item;
+            if (Guid.TryParse(slugOrId, out var id))
+                item = await _context.Yagyas
+                    .Include(y => y.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
+                    .FirstOrDefaultAsync(y => y.Id == id && y.IsActive);
+            else
+                item = await _context.Yagyas
+                    .Include(y => y.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
+                    .FirstOrDefaultAsync(y => y.Slug == slugOrId && y.IsActive);
 
             if (item is null) return NotFound();
 

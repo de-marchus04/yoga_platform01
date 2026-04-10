@@ -50,12 +50,18 @@ namespace Yoga.Api.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{slug}")]
-        public async Task<ActionResult<RetreatDto>> GetRetreat(string slug, [FromQuery] string lang = "uk")
+        [HttpGet("{slugOrId}")]
+        public async Task<ActionResult<RetreatDto>> GetRetreat(string slugOrId, [FromQuery] string lang = "uk")
         {
-            var item = await _context.Retreats
-                .Include(r => r.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
-                .FirstOrDefaultAsync(r => r.Slug == slug && r.IsActive);
+            Retreat? item;
+            if (Guid.TryParse(slugOrId, out var id))
+                item = await _context.Retreats
+                    .Include(r => r.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
+                    .FirstOrDefaultAsync(r => r.Id == id && r.IsActive);
+            else
+                item = await _context.Retreats
+                    .Include(r => r.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
+                    .FirstOrDefaultAsync(r => r.Slug == slugOrId && r.IsActive);
 
             if (item is null) return NotFound();
 

@@ -1,9 +1,9 @@
 .lead-modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(10, 10, 10, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: rgba(26, 26, 26, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14,19 +14,19 @@
 }
 
 .lead-modal-content {
-    background: linear-gradient(170deg, #252220 0%, #1A1816 40%, #16140F 100%);
-    padding: 3rem 3.5rem 3.5rem;
+    background: #FAFAF7;
+    padding: 2.8rem 3rem 3rem;
     border-radius: 18px;
-    max-width: 480px;
+    max-width: 460px;
     width: 100%;
     max-height: calc(100dvh - 2rem);
     position: relative;
     overflow-y: auto;
     box-sizing: border-box;
-    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(140,107,58,0.15);
+    box-shadow: 0 24px 64px rgba(26,26,26,0.18), 0 0 0 1px rgba(140,107,58,0.10);
 }
 
-/* decorative top glow */
+/* decorative top accent line */
 .lead-modal-content::before {
     content: '';
     position: absolute;
@@ -38,15 +38,15 @@
     border-radius: 18px 18px 0 0;
 }
 
-/* subtle radial decor behind heading */
+/* subtle warm radial glow */
 .lead-modal-content::after {
     content: '';
     position: absolute;
-    top: -40px;
-    right: -40px;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(140,107,58,0.08) 0%, transparent 70%);
+    top: -30px;
+    right: -30px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(140,107,58,0.06) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
 }
@@ -61,14 +61,14 @@
     font-size: 2rem;
     font-weight: 400;
     font-style: italic;
-    color: rgba(255,255,255,0.92);
+    color: #1A1A1A;
     margin-bottom: 0.4rem;
 }
 
 .lead-modal-content > p {
     font-size: 0.88rem;
     font-weight: 300;
-    color: rgba(255,255,255,0.45);
+    color: #6B6B6B;
     margin-bottom: 2rem;
     letter-spacing: 0.02em;
     line-height: 1.6;
@@ -81,11 +81,11 @@
     width: 2.4rem;
     height: 2.4rem;
     font-size: 1.2rem;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(26,26,26,0.04);
+    border: 1px solid #E4DDD4;
     border-radius: 50%;
     cursor: pointer;
-    color: rgba(255,255,255,0.5);
+    color: #6B6B6B;
     line-height: 1;
     display: inline-flex;
     align-items: center;
@@ -96,9 +96,9 @@
     touch-action: manipulation;
 }
 .close-btn:hover {
-    color: rgba(255,255,255,0.9);
-    background: rgba(255,255,255,0.1);
-    border-color: rgba(255,255,255,0.2);
+    color: #1A1A1A;
+    background: rgba(26,26,26,0.08);
+    border-color: rgba(26,26,26,0.2);
 }
 
 .form-group {
@@ -111,23 +111,23 @@
     font-weight: 400;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
+    color: #8C8078;
 }
 .form-control {
     width: 100%;
     padding: 0.85rem 0;
     border: none;
-    border-bottom: 1px solid rgba(255,255,255,0.12);
+    border-bottom: 1px solid #E4DDD4;
     border-radius: 0;
     font-size: 0.95rem;
     font-family: var(--font-sans);
     font-weight: 300;
-    color: rgba(255,255,255,0.88);
+    color: #1A1A1A;
     background: transparent;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 .form-control::placeholder {
-    color: rgba(255,255,255,0.25);
+    color: #B0A89E;
 }
 .form-control:focus {
     outline: none;
@@ -145,12 +145,12 @@ select.form-control {
     cursor: pointer;
 }
 select.form-control option {
-    background: #1A1816;
-    color: rgba(255,255,255,0.88);
+    background: #FAFAF7;
+    color: #1A1A1A;
 }
 
 ::deep .validation-message {
-    color: #f87171;
+    color: #c0392b;
     font-size: 0.78rem;
     margin-top: 0.3rem;
     line-height: 1.4;
@@ -160,7 +160,7 @@ select.form-control option {
     width: 100%;
 }
 
-/* ——— Submit button — expressive gold ——— */
+/* ——— Submit button — warm bronze ——— */
 .lead-modal-content .btn.btn-primary.w-100 {
     margin-top: 0.8rem;
     padding: 1rem 2rem;
@@ -176,18 +176,18 @@ select.form-control option {
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.35s ease;
-    box-shadow: 0 4px 20px rgba(140,107,58,0.3);
+    box-shadow: 0 4px 16px rgba(140,107,58,0.25);
     position: relative;
     overflow: hidden;
 }
 .lead-modal-content .btn.btn-primary.w-100:hover:not([disabled]) {
     background-position: 100% 0;
     transform: translateY(-1px);
-    box-shadow: 0 8px 30px rgba(140,107,58,0.45);
+    box-shadow: 0 8px 24px rgba(140,107,58,0.35);
 }
 .lead-modal-content .btn.btn-primary.w-100:active:not([disabled]) {
     transform: translateY(0) scale(0.98);
-    box-shadow: 0 2px 12px rgba(140,107,58,0.25);
+    box-shadow: 0 2px 10px rgba(140,107,58,0.2);
 }
 .lead-modal-content .btn.btn-primary.w-100[disabled] {
     opacity: 0.5;
@@ -197,14 +197,14 @@ select.form-control option {
 .success-message {
     padding: 2.5rem 2rem;
     text-align: center;
-    color: #C9A66B;
+    color: var(--accent);
     font-family: var(--font-serif);
     font-style: italic;
     font-size: 1.35rem;
     font-weight: 400;
-    border: 1px solid rgba(140,107,58,0.2);
+    border: 1px solid #E4DDD4;
     border-radius: 12px;
-    background: rgba(140,107,58,0.06);
+    background: #F0EDE8;
 }
 
 .modal-context-label {
@@ -212,11 +212,11 @@ select.form-control option {
     font-size: 0.62rem;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
+    color: #8C8078;
     margin-bottom: 0.8rem;
 }
 .modal-context-label strong {
-    color: rgba(255,255,255,0.7);
+    color: #1A1A1A;
 }
 
 /* ——— Responsive ——— */
@@ -292,23 +292,23 @@ select.form-control option {
     flex: 1;
     padding: 0.45rem 0.75rem;
     background: transparent;
-    border: 1px solid rgba(140,107,58,0.3);
+    border: 1px solid #E4DDD4;
     border-radius: 6px;
-    color: rgba(255,255,255,0.5);
+    color: #6B6B6B;
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .contact-mode-btn.active {
-    background: rgba(140,107,58,0.15);
-    border-color: rgba(140,107,58,0.7);
-    color: #d4a843;
+    background: rgba(140,107,58,0.08);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .contact-mode-btn:hover:not(.active) {
-    border-color: rgba(140,107,58,0.5);
-    color: rgba(255,255,255,0.8);
+    border-color: rgba(140,107,58,0.4);
+    color: #1A1A1A;
 }
 
 /* Field validation hints (name, etc) — mirrors PhoneInput hints */
@@ -319,13 +319,13 @@ select.form-control option {
 }
 
 .field-validation-hint.error {
-    color: #e07070;
+    color: #c0392b;
 }
 
 .field-validation-hint.ok {
-    color: #7abf7a;
+    color: #5a9a5a;
 }
 
 .input-error {
-    border-bottom-color: #e07070 !important;
+    border-bottom-color: #c0392b !important;
 }

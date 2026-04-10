@@ -32,7 +32,7 @@
                 <div class="ret-upcoming__grid">
                     @foreach (var item in Items)
                     {
-                        <a class="ret-upcoming__card" href="/retreats/@item.Slug">
+                        <a class="ret-upcoming__card" href="/retreats/@Ref(item)">
                             <div class="ret-upcoming__card-image">
                                 @if (!string.IsNullOrEmpty(item.ImageUrl))
                                 {
@@ -72,6 +72,9 @@
     [Parameter] public List<RetreatDto>? Items { get; set; }
     [Inject] private LocalizationService Loc { get; set; } = default!;
     [Inject] private ApiService Api { get; set; } = default!;
+
+    private static string Ref(RetreatDto item) =>
+        !string.IsNullOrEmpty(item.Slug) ? item.Slug : item.Id.ToString();
 
     private string FormatMonth(DateTime d) => Loc.CurrentLang switch
     {

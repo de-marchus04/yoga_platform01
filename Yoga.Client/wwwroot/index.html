@@ -113,6 +113,14 @@
             document.body.style.overflow = locks.size > 0 ? 'hidden' : '';
         };
 
+        /* Close modal on Escape key */
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                var btn = document.querySelector('.lead-modal-backdrop .close-btn');
+                if (btn) btn.click();
+            }
+        });
+
         /* Auto-release menu scroll lock when viewport returns to desktop width */
         window.addEventListener('resize', function () {
             if (window.innerWidth > 1180 && window.__ylScrollLocks && window.__ylScrollLocks.has('menu')) {
