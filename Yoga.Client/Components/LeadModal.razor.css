@@ -1,6 +1,7 @@
 .lead-modal-backdrop {
     position: fixed;
     inset: 0;
+    pointer-events: auto;
     background: rgba(26, 26, 26, 0.45);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
