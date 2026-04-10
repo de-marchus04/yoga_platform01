@@ -71,4 +71,59 @@ namespace Yoga.Shared.DTOs
         string Slug,
         Dictionary<string, string> Fields
     );
+
+    public record RetreatSubcategoryDto(
+        Guid Id,
+        string Slug,
+        string Title,
+        string Description,
+        string ImageUrl,
+        int SortOrder
+    );
+
+    public record RetreatDto(
+        Guid Id,
+        string Slug,
+        string Title,
+        string Subtitle,
+        string Eyebrow,
+        string Description,
+        string[] Benefits,
+        string ImageUrl,
+        string Duration,
+        string Location,
+        string Format,
+        string PriceLabel,
+        ForWhomItem[] ForWhom,
+        string CtaHeading,
+        string CtaText,
+        List<RetreatSubcategoryDto> Subcategories
+    );
+
+    public record YagyaSubcategoryDto(
+        Guid Id,
+        string Slug,
+        string Title,
+        string Description,
+        string ImageUrl,
+        int SortOrder
+    );
+
+    public record YagyaDto(
+        Guid Id,
+        string Slug,
+        string Title,
+        string Subtitle,
+        string Eyebrow,
+        string Description,
+        string[] Benefits,
+        string ImageUrl,
+        string Duration,
+        string Format,
+        string PriceLabel,
+        ForWhomItem[] ForWhom,
+        string CtaHeading,
+        string CtaText,
+        List<YagyaSubcategoryDto> Subcategories
+    );
 }

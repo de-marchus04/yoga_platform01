@@ -1,0 +1,142 @@
+@page "/retreats"
+@page "/yagyas"
+@page "/blog"
+@inject NavigationManager Nav
+@inject ApiService Api
+@inject LocalizationService Loc
+@implements IDisposable
+
+<PageTitle>@F("MetaTitle", FallbackMetaTitle())</PageTitle>
+<HeadContent>
+    <meta name="description" content="@F("HeroSubtitle", "")" />
+</HeadContent>
+
+@if (loading)
+{
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <div class="public-loading-state">@Loc["common.loading"]</div>
+        </div>
+    </section>
+}
+else
+{
+    <section class="page-hero">
+        <div class="page-hero-bg" style="background-image: url('@F("HeroImageUrl", DefaultHeroImage())');"></div>
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
+            <p class="section-eyebrow">@EyebrowText()</p>
+            <h1>@F("HeroTitle", FallbackHeroTitle())</h1>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            <p>@F("HeroSubtitle", FallbackSubtitle())</p>
+        </div>
+    </section>
+
+    @if (!string.IsNullOrEmpty(F("Content")))
+    {
+        <section class="story-section">
+            <div class="container">
+                @((MarkupString)F("Content"))
+            </div>
+        </section>
+    }
+}
+
+@code {
+    private SitePageDto? pageData;
+    private string _slug = "retreats";
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        Loc.OnLanguageChanged += Refresh;
+        SyncSlug();
+        await LoadPage();
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            SyncSlug();
+            await LoadPage();
+            StateHasChanged();
+        });
+    }
+
+    private void SyncSlug()
+    {
+        var path = new Uri(Nav.Uri).AbsolutePath.Trim('/').ToLowerInvariant();
+        _slug = path switch
+        {
+            "yagyas" => "yagyas",
+            "blog" => "blog",
+            _ => "retreats"
+        };
+    }
+
+    private async Task LoadPage()
+    {
+        loading = true;
+        try
+        {
+            pageData = await Api.GetSitePageAsync(_slug, Loc.CurrentLang);
+        }
+        catch
+        {
+            pageData = null;
+        }
+
+        loading = false;
+    }
+
+    private string F(string field, string fallback = "")
+    {
+        var val = pageData?.Fields != null && pageData.Fields.TryGetValue(field, out var v) && !string.IsNullOrEmpty(v) ? v : fallback;
+        return field.Contains("Image", StringComparison.OrdinalIgnoreCase) ? Api.ResolveMediaUrl(val) : val;
+    }
+
+    private string EyebrowText() => _slug switch
+    {
+        "yagyas" => Loc["page.yagyas.eyebrow"],
+        "blog" => Loc["page.blog.eyebrow"],
+        _ => Loc["page.retreats.eyebrow"]
+    };
+
+    private string FallbackMetaTitle() => _slug switch
+    {
+        "yagyas" => Loc["page.yagyas.title"],
+        "blog" => Loc["page.blog.title"],
+        _ => Loc["page.retreats.title"]
+    };
+
+    private string FallbackHeroTitle() => _slug switch
+    {
+        "yagyas" => Loc["page.yagyas.h1"],
+        "blog" => Loc["page.blog.h1"],
+        _ => Loc["page.retreats.h1"]
+    };
+
+    private string FallbackSubtitle() => _slug switch
+    {
+        "yagyas" => Loc["page.yagyas.subtitle"],
+        "blog" => Loc["page.blog.subtitle"],
+        _ => Loc["page.retreats.subtitle"]
+    };
+
+    private static string DefaultHeroImage() =>
+        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80";
+
+    private async void Refresh()
+    {
+        await LoadPage();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+        Loc.OnLanguageChanged -= Refresh;
+    }
+}

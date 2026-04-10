@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Yoga.Shared.Models;
 
@@ -15,8 +16,13 @@ namespace Yoga.Api.Data
         public DbSet<CourseModule> CourseModules => Set<CourseModule>();
         public DbSet<CourseLesson> CourseLessons => Set<CourseLesson>();
         public DbSet<Consultation> Consultations => Set<Consultation>();
+        public DbSet<Retreat> Retreats => Set<Retreat>();
+        public DbSet<RetreatSubcategory> RetreatSubcategories => Set<RetreatSubcategory>();
+        public DbSet<Yagya> Yagyas => Set<Yagya>();
+        public DbSet<YagyaSubcategory> YagyaSubcategories => Set<YagyaSubcategory>();
         public DbSet<SitePage> SitePages => Set<SitePage>();
         public DbSet<UiTranslation> UiTranslations => Set<UiTranslation>();
+        public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -88,6 +94,48 @@ namespace Yoga.Api.Data
                 e.HasIndex(x => x.Slug).IsUnique();
             });
 
+            modelBuilder.Entity<Retreat>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Slug).HasMaxLength(64).IsRequired();
+                e.HasIndex(x => x.Slug).IsUnique();
+            });
+
+            modelBuilder.Entity<RetreatSubcategory>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Slug).HasMaxLength(64).IsRequired();
+                e.HasOne(x => x.Retreat)
+                    .WithMany(r => r.Subcategories)
+                    .HasForeignKey(x => x.RetreatId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Yagya>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Slug).HasMaxLength(64).IsRequired();
+                e.HasIndex(x => x.Slug).IsUnique();
+            });
+
+            modelBuilder.Entity<YagyaSubcategory>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Slug).HasMaxLength(64).IsRequired();
+                e.HasOne(x => x.Yagya)
+                    .WithMany(y => y.Subcategories)
+                    .HasForeignKey(x => x.YagyaId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<AdminUser>(e =>
+            {
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Login).HasMaxLength(64).IsRequired();
+                e.HasIndex(x => x.Login).IsUnique();
+                e.Property(x => x.PasswordHash).HasMaxLength(256).IsRequired();
+            });
+
             var coursePranavidya = Guid.Parse("22222222-2222-2222-2222-222222222201");
             var courseMeditation = Guid.Parse("22222222-2222-2222-2222-222222222202");
             var courseYoga = Guid.Parse("22222222-2222-2222-2222-222222222203");
@@ -106,29 +154,54 @@ namespace Yoga.Api.Data
                 new Consultation { Id = consultYouth, Slug = "youth", SortOrder = 2, IsActive = true, IsOnline = true, IsOffline = true },
                 new Consultation { Id = consultPersonal, Slug = "personal", SortOrder = 3, IsActive = true, IsOnline = true, IsOffline = true });
 
+            var retreatMountain = Guid.Parse("55555555-5555-5555-5555-555555555501");
+            var retreatSilence = Guid.Parse("55555555-5555-5555-5555-555555555502");
+
+            modelBuilder.Entity<Retreat>().HasData(
+                new Retreat { Id = retreatMountain, Slug = "mountain-practice", SortOrder = 1, IsActive = true },
+                new Retreat { Id = retreatSilence, Slug = "silence-retreat", SortOrder = 2, IsActive = true });
+
+            var yagyaFire = Guid.Parse("66666666-6666-6666-6666-666666666601");
+            var yagyaNewYear = Guid.Parse("66666666-6666-6666-6666-666666666602");
+
+            modelBuilder.Entity<Yagya>().HasData(
+                new Yagya { Id = yagyaFire, Slug = "fire-ceremony", SortOrder = 1, IsActive = true },
+                new Yagya { Id = yagyaNewYear, Slug = "new-year-intention", SortOrder = 2, IsActive = true });
+
             var pageAbout = Guid.Parse("44444444-4444-4444-4444-444444444401");
             var pageContacts = Guid.Parse("44444444-4444-4444-4444-444444444402");
             var pageHome = Guid.Parse("44444444-4444-4444-4444-444444444403");
             var pageCourses = Guid.Parse("44444444-4444-4444-4444-444444444404");
             var pageConsultations = Guid.Parse("44444444-4444-4444-4444-444444444405");
+            var pageRetreats = Guid.Parse("44444444-4444-4444-4444-444444444406");
+            var pageYagyas = Guid.Parse("44444444-4444-4444-4444-444444444407");
+            var pageBlog = Guid.Parse("44444444-4444-4444-4444-444444444408");
 
             modelBuilder.Entity<SitePage>().HasData(
                 new SitePage { Id = pageAbout, Slug = "about" },
                 new SitePage { Id = pageContacts, Slug = "contacts" },
                 new SitePage { Id = pageHome, Slug = "home" },
                 new SitePage { Id = pageCourses, Slug = "courses" },
-                new SitePage { Id = pageConsultations, Slug = "consultations" });
+                new SitePage { Id = pageConsultations, Slug = "consultations" },
+                new SitePage { Id = pageRetreats, Slug = "retreats" },
+                new SitePage { Id = pageYagyas, Slug = "yagyas" },
+                new SitePage { Id = pageBlog, Slug = "blog" });
 
             var translations = BuildSeedTranslations(
                 coursePranavidya, courseMeditation, courseYoga,
-                consultSpiritual, consultYouth, consultPersonal);
+                consultSpiritual, consultYouth, consultPersonal,
+                retreatMountain, retreatSilence,
+                yagyaFire, yagyaNewYear);
 
-            modelBuilder.Entity<Translation>().HasData(translations);
+            var sectionTranslations = BuildSitePageSectionTranslations(pageRetreats, pageYagyas, pageBlog);
+            modelBuilder.Entity<Translation>().HasData(translations.Concat(sectionTranslations).ToArray());
         }
 
         private static Translation[] BuildSeedTranslations(
             Guid c1, Guid c2, Guid c3,
-            Guid s1, Guid s2, Guid s3)
+            Guid s1, Guid s2, Guid s3,
+            Guid r1, Guid r2,
+            Guid y1, Guid y2)
         {
             var list = new List<Translation>();
             var seq = 0;
@@ -236,6 +309,105 @@ namespace Yoga.Api.Data
             Tri(s3, "Consultation", "ForWhom", "Сложный выбор~Разобрать варианты|Усталость и перегруз~Найти опору", "Hard choices~Sorting options|Fatigue and overload~Finding footing", "Складний вибір~Розібрати варіанти|Втома та перевантаження~Знайти опору");
             Tri(s3, "Consultation", "CtaHeading", "Записаться", "Book", "Записатися");
             Tri(s3, "Consultation", "CtaText", "Напишите, что хотите разобрать — ответим с вариантами времени.", "Tell us what you'd like to unpack — we'll reply with time options.", "Напишіть, що хочете розібрати — відповімо з варіантами часу.");
+
+            // Retreats
+            Tri(r1, "Retreat", "Title", "Горная практика", "Mountain practice", "Гірська практика");
+            Tri(r1, "Retreat", "Subtitle", "Природа, тишина, глубина", "Nature, silence, depth", "Природа, тиша, глибина");
+            Tri(r1, "Retreat", "Eyebrow", "Ретрит", "Retreat", "Ретрит");
+            Tri(r1, "Retreat", "Description", "Выездной интенсив в горах: утренние практики, медитация, совместная работа.", "Mountain intensive: morning practices, meditation, group work.", "Виїзний інтенсив у горах: ранкові практики, медитація, спільна робота.");
+            Tri(r1, "Retreat", "Benefits", "Перезагрузка|Глубокая практика|Общение в кругу единомышленников", "Reset|Deep practice|Community", "Перезавантаження|Глибока практика|Спілкування з однодумцями");
+            Tri(r1, "Retreat", "ImageUrl", "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80");
+            Tri(r1, "Retreat", "Duration", "5 дней", "5 days", "5 днів");
+            Tri(r1, "Retreat", "Location", "Карпаты, Украина", "Carpathians, Ukraine", "Карпати, Україна");
+            Tri(r1, "Retreat", "Format", "Офлайн", "In person", "Офлайн");
+            Tri(r1, "Retreat", "PriceLabel", "По запросу", "On request", "За запитом");
+            Tri(r1, "Retreat", "ForWhom", "Практикующим~Углубление опыта|Новичкам~Безопасное погружение", "Experienced~Deepen your experience|Beginners~A safe immersion", "Практикуючим~Поглиблення досвіду|Новачкам~Безпечне занурення");
+            Tri(r1, "Retreat", "CtaHeading", "Забронировать место", "Reserve a spot", "Забронювати місце");
+            Tri(r1, "Retreat", "CtaText", "Места ограничены — оставьте заявку заранее.", "Spots are limited — apply in advance.", "Місць обмаль — залиште заявку заздалегідь.");
+
+            Tri(r2, "Retreat", "Title", "Ретрит тишины", "Silence retreat", "Ретрит тиші");
+            Tri(r2, "Retreat", "Subtitle", "Слушать тишину внутри", "Listening to inner silence", "Слухати тишу всередині");
+            Tri(r2, "Retreat", "Eyebrow", "Ретрит", "Retreat", "Ретрит");
+            Tri(r2, "Retreat", "Description", "Три дня молчания: медитация, ходьба, дневник. Минимум слов — максимум внимания.", "Three days of silence: meditation, walking, journalling. Minimum words — maximum attention.", "Три дні мовчання: медитація, ходьба, щоденник. Мінімум слів — максимум уваги.");
+            Tri(r2, "Retreat", "Benefits", "Ясность мысли|Снижение тревоги|Возврат энергии", "Mental clarity|Reduced anxiety|Energy restored", "Ясність думки|Зниження тривоги|Повернення енергії");
+            Tri(r2, "Retreat", "ImageUrl", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80");
+            Tri(r2, "Retreat", "Duration", "3 дня", "3 days", "3 дні");
+            Tri(r2, "Retreat", "Location", "Вне города", "Outside the city", "За містом");
+            Tri(r2, "Retreat", "Format", "Офлайн", "In person", "Офлайн");
+            Tri(r2, "Retreat", "PriceLabel", "По запросу", "On request", "За запитом");
+            Tri(r2, "Retreat", "ForWhom", "Опытным практикам~Углубление тишины|Всем, кто устал~Перезагрузка без лишнего", "Experienced practitioners~Deepening silence|Anyone tired~A reset without extras", "Досвідченим практикам~Поглиблення тиші|Усім, хто втомився~Перезавантаження без зайвого");
+            Tri(r2, "Retreat", "CtaHeading", "Записаться на ретрит", "Sign up for the retreat", "Записатися на ретрит");
+            Tri(r2, "Retreat", "CtaText", "Напишите — подскажем даты и условия.", "Write to us — we'll share dates and details.", "Напишіть — підкажемо дати й умови.");
+
+            // Yagyas
+            Tri(y1, "Yagya", "Title", "Огненная церемония", "Fire ceremony", "Вогняна церемонія");
+            Tri(y1, "Yagya", "Subtitle", "Очищение через огонь", "Purification through fire", "Очищення через вогонь");
+            Tri(y1, "Yagya", "Eyebrow", "Ягья", "Yagya", "Ягʼя");
+            Tri(y1, "Yagya", "Description", "Групповой ведический ритуал с мантрами и подношениями огню.", "A group Vedic ritual with mantras and fire offerings.", "Груповий ведичний ритуал з мантрами та підношеннями вогню.");
+            Tri(y1, "Yagya", "Benefits", "Очищение пространства|Совместная медитация|Символическое обновление", "Space cleansing|Group meditation|Symbolic renewal", "Очищення простору|Спільна медитація|Символічне оновлення");
+            Tri(y1, "Yagya", "ImageUrl", "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=1200&q=80");
+            Tri(y1, "Yagya", "Duration", "2–3 часа", "2–3 hours", "2–3 години");
+            Tri(y1, "Yagya", "Format", "Очно", "In person", "Очно");
+            Tri(y1, "Yagya", "PriceLabel", "Пожертвование", "Donation", "Пожертва");
+            Tri(y1, "Yagya", "ForWhom", "Всем желающим~Опыт не обязателен|Практикующим~Дополнение к практике", "Everyone~No experience needed|Practitioners~A complement to practice", "Усім бажаючим~Досвід не обов'язковий|Практикуючим~Доповнення до практики");
+            Tri(y1, "Yagya", "CtaHeading", "Участвовать", "Join", "Взяти участь");
+            Tri(y1, "Yagya", "CtaText", "Оставьте заявку — пришлём детали ближайшей церемонии.", "Apply — we'll send details of the next ceremony.", "Залиште заявку — надішлемо деталі найближчої церемонії.");
+
+            Tri(y2, "Yagya", "Title", "Новогоднее намерение", "New Year intention", "Новорічний намір");
+            Tri(y2, "Yagya", "Subtitle", "Вход в новый цикл осознанно", "Entering a new cycle mindfully", "Вхід у новий цикл усвідомлено");
+            Tri(y2, "Yagya", "Eyebrow", "Ягья", "Yagya", "Ягʼя");
+            Tri(y2, "Yagya", "Description", "Церемония коллективного намерения в преддверии нового года.", "A ceremony of collective intention on the eve of the new year.", "Церемонія колективного наміру напередодні нового року.");
+            Tri(y2, "Yagya", "Benefits", "Ясность целей|Энергия группы|Ритуал перехода", "Clarity of goals|Group energy|A rite of passage", "Ясність цілей|Енергія групи|Ритуал переходу");
+            Tri(y2, "Yagya", "ImageUrl", "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=1200&q=80", "https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=1200&q=80");
+            Tri(y2, "Yagya", "Duration", "3 часа", "3 hours", "3 години");
+            Tri(y2, "Yagya", "Format", "Очно", "In person", "Очно");
+            Tri(y2, "Yagya", "PriceLabel", "Пожертвование", "Donation", "Пожертва");
+            Tri(y2, "Yagya", "ForWhom", "Всем~Открытое мероприятие|Семьям~Можно с детьми от 7 лет", "Everyone~Open event|Families~Children 7+ welcome", "Усім~Відкритий захід|Родинам~Можна з дітьми від 7 років");
+            Tri(y2, "Yagya", "CtaHeading", "Присоединиться", "Join", "Приєднатися");
+            Tri(y2, "Yagya", "CtaText", "Узнайте дату и место — оставьте заявку.", "Find out the date and venue — apply now.", "Дізнайтеся дату й місце — залиште заявку.");
+
+            return list.ToArray();
+        }
+
+        private static Translation[] BuildSitePageSectionTranslations(Guid retreatsId, Guid yagyasId, Guid blogId)
+        {
+            var list = new List<Translation>();
+            var n = 0;
+
+            void Tri(Guid entityId, string field, string ru, string en, string uk)
+            {
+                foreach (var (lang, val) in new[] { ("ru", ru), ("en", en), ("uk", uk) })
+                {
+                    n++;
+                    list.Add(new Translation
+                    {
+                        Id = Guid.Parse($"cccccccc-cccc-4ccc-8ccc-{n:D12}"),
+                        EntityId = entityId,
+                        EntityType = "SitePage",
+                        Field = field,
+                        Language = lang,
+                        Value = val
+                    });
+                }
+            }
+
+            Tri(retreatsId, "MetaTitle", "Ретриты | shakti.ashram", "Retreats | shakti.ashram", "Ретрити | shakti.ashram");
+            Tri(retreatsId, "HeroTitle", "Ретриты", "Retreats", "Ретрити");
+            Tri(retreatsId, "HeroSubtitle", "Погружение в практику вне суеты повседневности.", "Immersion in practice away from everyday rush.", "Занурення в практику поза метушнею буднів.");
+            Tri(retreatsId, "HeroImageUrl", "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=80");
+            Tri(retreatsId, "Content", "<p>Здесь появятся анонсы ретритов и подробности программ. Чтобы узнать о ближайших датах, <a href=\"/contacts\">свяжитесь с нами</a>.</p>", "<p>Retreat announcements and programme details will appear here. To ask about upcoming dates, <a href=\"/contacts\">contact us</a>.</p>", "<p>Тут з’являться анонси ретритів і деталі програм. Щоб дізнатися про найближчі дати, <a href=\"/contacts\">напишіть нам</a>.</p>");
+
+            Tri(yagyasId, "MetaTitle", "Ягьи | shakti.ashram", "Yagyas | shakti.ashram", "Ягʼї | shakti.ashram");
+            Tri(yagyasId, "HeroTitle", "Ягьи", "Yagyas", "Ягʼї");
+            Tri(yagyasId, "HeroSubtitle", "Совместные ритуалы и практики для общего намерения.", "Group rituals and practices for a shared intention.", "Спільні ритуали та практики для спільного наміру.");
+            Tri(yagyasId, "HeroImageUrl", "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=1600&q=80");
+            Tri(yagyasId, "Content", "<p>Расписание и описание ягьев будет публиковаться на этой странице. По вопросам участия напишите через <a href=\"/contacts\">контакты</a>.</p>", "<p>Schedules and descriptions of yagyas will be published here. For participation questions, use our <a href=\"/contacts\">contacts page</a>.</p>", "<p>Розклад і опис ягʼїв публікуватимуться тут. З питань участі звертайтеся через <a href=\"/contacts\">контакти</a>.</p>");
+
+            Tri(blogId, "MetaTitle", "Блог | shakti.ashram", "Blog | shakti.ashram", "Блог | shakti.ashram");
+            Tri(blogId, "HeroTitle", "Блог", "Blog", "Блог");
+            Tri(blogId, "HeroSubtitle", "Статьи, заметки и материалы для практики.", "Articles, notes and materials for practice.", "Статті, нотатки та матеріали для практики.");
+            Tri(blogId, "HeroImageUrl", "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=80", "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1600&q=80");
+            Tri(blogId, "Content", "<p>Публикации блога появятся здесь. Подпишитесь на наши каналы в <a href=\"/contacts\">соцсетях</a>, чтобы не пропустить выход материалов.</p>", "<p>Blog posts will appear here. Follow our channels via <a href=\"/contacts\">contacts</a> so you do not miss new materials.</p>", "<p>Публікації блогу з’являтимуться тут. Слідкуйте за нашими каналами у <a href=\"/contacts\">соцмережах</a>, щоб не пропустити матеріали.</p>");
 
             return list.ToArray();
         }

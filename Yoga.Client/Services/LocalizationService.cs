@@ -12,7 +12,7 @@ public class LocalizationService
     private Dictionary<string, string> _translations = new();
     private bool _initialized = false;
 
-    public string CurrentLang { get; private set; } = "ru";
+    public string CurrentLang { get; private set; } = "uk";
     public event Action? OnLanguageChanged;
 
     public LocalizationService(HttpClient http, HttpClient apiHttp)
@@ -33,12 +33,12 @@ public class LocalizationService
         try
         {
             var saved = await js.InvokeAsync<string?>("localStorage.getItem", "yl-lang");
-            CurrentLang = saved is "ru" or "uk" or "en" ? saved : "ru";
+            CurrentLang = saved is "uk" or "en" or "ru" ? saved : "uk";
         }
         catch
         {
             // localStorage unavailable (Safari Private Mode, blocked cookies, etc.) — use default
-            CurrentLang = "ru";
+            CurrentLang = "uk";
         }
         await LoadAsync(CurrentLang);
     }

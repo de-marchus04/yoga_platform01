@@ -21,7 +21,7 @@ namespace Yoga.Api.Controllers
         /// GET /api/courses?lang=ru — public list of active courses with translations.
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<List<CourseDto>>> GetCourses([FromQuery] string lang = "ru")
+        public async Task<ActionResult<List<CourseDto>>> GetCourses([FromQuery] string lang = "uk")
         {
             var courses = await _context.Courses
                 .Where(c => c.IsActive)
@@ -56,7 +56,7 @@ namespace Yoga.Api.Controllers
         /// GET /api/courses/{slug}?lang=ru — single course by slug with translations.
         /// </summary>
         [HttpGet("{slug}")]
-        public async Task<ActionResult<CourseDto>> GetCourse(string slug, [FromQuery] string lang = "ru")
+        public async Task<ActionResult<CourseDto>> GetCourse(string slug, [FromQuery] string lang = "uk")
         {
             slug = ResolveCourseSlug(slug);
 

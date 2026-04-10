@@ -1,0 +1,105 @@
+.admin-login-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+.admin-login-modal-content {
+    background: linear-gradient(170deg, #252220 0%, #1A1816 40%, #16140F 100%);
+    padding: 2.5rem 2.75rem 2.75rem;
+    border-radius: 18px;
+    max-width: 420px;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(140, 107, 58, 0.15);
+}
+
+.admin-login-modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent) 30%, #C9A66B 50%, var(--accent) 70%, transparent);
+    border-radius: 18px 18px 0 0;
+}
+
+.admin-login-modal-content h2 {
+    font-family: var(--font-serif);
+    font-size: 1.75rem;
+    font-weight: 400;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.92);
+    margin-bottom: 0.35rem;
+}
+
+.admin-login-modal-content > p {
+    font-size: 0.88rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 1.5rem;
+    line-height: 1.55;
+}
+
+.admin-login-modal-content .form-group {
+    margin-bottom: 1.1rem;
+}
+
+.admin-login-modal-content label {
+    display: block;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.55);
+    margin-bottom: 0.35rem;
+}
+
+.admin-login-modal-content .form-control {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+    box-sizing: border-box;
+}
+
+.admin-login-error {
+    padding: 0.65rem 0.85rem;
+    margin-bottom: 1rem;
+    border-radius: 10px;
+    background: rgba(180, 60, 60, 0.15);
+    border: 1px solid rgba(220, 90, 90, 0.35);
+    color: rgba(255, 200, 200, 0.95);
+    font-size: 0.85rem;
+}
+
+.admin-login-modal-content .close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1.1rem;
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-login-modal-content .btn-primary.w-100 {
+    margin-top: 0.5rem;
+    width: 100%;
+}

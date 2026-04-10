@@ -18,7 +18,7 @@ namespace Yoga.Api.Controllers
         }
 
         [HttpGet("{slug}")]
-        public async Task<ActionResult<SitePageDto>> GetPage(string slug, [FromQuery] string lang = "ru")
+        public async Task<ActionResult<SitePageDto>> GetPage(string slug, [FromQuery] string lang = "uk")
         {
             var page = await _context.SitePages.FirstOrDefaultAsync(p => p.Slug == slug);
             if (page == null) return NotFound();

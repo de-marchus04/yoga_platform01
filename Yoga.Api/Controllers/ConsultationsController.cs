@@ -21,7 +21,7 @@ namespace Yoga.Api.Controllers
         /// GET /api/consultations?lang=ru — public list of active consultations with translations.
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<List<ConsultationDto>>> GetConsultations([FromQuery] string lang = "ru")
+        public async Task<ActionResult<List<ConsultationDto>>> GetConsultations([FromQuery] string lang = "uk")
         {
             var items = await _context.Consultations
                 .Where(c => c.IsActive)
@@ -55,7 +55,7 @@ namespace Yoga.Api.Controllers
         /// GET /api/consultations/{slug}?lang=ru
         /// </summary>
         [HttpGet("{slug}")]
-        public async Task<ActionResult<ConsultationDto>> GetConsultation(string slug, [FromQuery] string lang = "ru")
+        public async Task<ActionResult<ConsultationDto>> GetConsultation(string slug, [FromQuery] string lang = "uk")
         {
             slug = ResolveConsultationSlug(slug);
 

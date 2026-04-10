@@ -1,0 +1,77 @@
+@page "/yagyas"
+@inject LocalizationService Loc
+@inject ApiService Api
+@implements IDisposable
+
+<PageTitle>@Loc["page.yagyas.title"]</PageTitle>
+
+<section class="hero-section">
+    <div class="container">
+        <span class="eyebrow">@Loc["page.yagyas.eyebrow"]</span>
+        <h1>@Loc["page.yagyas.h1"]</h1>
+        <p class="section-intro">@Loc["page.yagyas.intro"]</p>
+    </div>
+</section>
+
+<section class="catalog-section">
+    <div class="container">
+        @if (items is null)
+        {
+            <div class="skeleton-grid">
+                @for (var i = 0; i < 2; i++)
+                {
+                    <div class="skeleton-card"></div>
+                }
+            </div>
+        }
+        else if (items.Count == 0)
+        {
+            <p class="empty-state">@Loc["page.yagyas.empty"]</p>
+        }
+        else
+        {
+            <div class="card-grid">
+                @foreach (var item in items)
+                {
+                    <a class="catalog-card" href="/yagyas/@item.Slug">
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <div class="catalog-card-image">
+                                <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
+                            </div>
+                        }
+                        <div class="catalog-card-body">
+                            <span class="catalog-card-eyebrow">@item.Eyebrow</span>
+                            <h3>@item.Title</h3>
+                            <p>@item.Subtitle</p>
+                            <span class="catalog-card-cta">@Loc["page.yagyas.card.cta"]</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private List<Yoga.Shared.DTOs.YagyaDto>? items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnLanguageChanged += Reload;
+        await LoadAsync();
+    }
+
+    private async void Reload()
+    {
+        await LoadAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadAsync()
+    {
+        items = await Api.GetYagyasAsync(Loc.CurrentLang);
+    }
+
+    public void Dispose() => Loc.OnLanguageChanged -= Reload;
+}

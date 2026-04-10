@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject LocalizationService Loc
 @inject ThemeService Theme
+@inject ApiService Api
 @inject IJSRuntime JS
 @implements IDisposable
 
@@ -71,17 +72,63 @@
                         </ul>
                     </li>
 
+                    <li class="dropdown @(openDropdown == "retreats" ? "open" : "")" @onmouseenter='() => OpenDropdown("retreats")' @onmouseleave="CloseDropdown">
+                        <div class="dropdown-trigger">
+                            <a href="/retreats" class="dropdown-link">@Loc["nav.retreats"]</a>
+                            <button type="button"
+                                    class="dropdown-toggle"
+                                    aria-label="Підменю ретритів"
+                                    aria-expanded="@(openDropdown == "retreats")"
+                                    aria-controls="desktop-submenu-retreats"
+                                    @onclick='() => ToggleDropdown("retreats")'>
+                                <span aria-hidden="true">▾</span>
+                            </button>
+                        </div>
+                        <ul id="desktop-submenu-retreats" class="dropdown-menu">
+                            @if (retreatSubItems != null)
+                            {
+                                @foreach (var r in retreatSubItems)
+                                {
+                                    <li><a href="/retreats/@r.Slug">@r.Title</a></li>
+                                }
+                            }
+                        </ul>
+                    </li>
+
+                    <li class="dropdown @(openDropdown == "yagyas" ? "open" : "")" @onmouseenter='() => OpenDropdown("yagyas")' @onmouseleave="CloseDropdown">
+                        <div class="dropdown-trigger">
+                            <a href="/yagyas" class="dropdown-link">@Loc["nav.yagyas"]</a>
+                            <button type="button"
+                                    class="dropdown-toggle"
+                                    aria-label="Підменю ягʼїв"
+                                    aria-expanded="@(openDropdown == "yagyas")"
+                                    aria-controls="desktop-submenu-yagyas"
+                                    @onclick='() => ToggleDropdown("yagyas")'>
+                                <span aria-hidden="true">▾</span>
+                            </button>
+                        </div>
+                        <ul id="desktop-submenu-yagyas" class="dropdown-menu">
+                            @if (yagyaSubItems != null)
+                            {
+                                @foreach (var y in yagyaSubItems)
+                                {
+                                    <li><a href="/yagyas/@y.Slug">@y.Title</a></li>
+                                }
+                            }
+                        </ul>
+                    </li>
+
                     <li><a href="/about">@Loc["nav.about"]</a></li>
                     <li><a href="/contacts">@Loc["nav.contacts"]</a></li>
                 </ul>
             </nav>
             <div class="header-controls">
                 <div class="lang-switcher header-languages">
-                    <button class="lang-btn @(Loc.CurrentLang == "ru" ? "active" : "")" @onclick='() => SetLang("ru")'>RU</button>
-                    <span class="lang-sep">·</span>
                     <button class="lang-btn @(Loc.CurrentLang == "uk" ? "active" : "")" @onclick='() => SetLang("uk")'>UK</button>
                     <span class="lang-sep">·</span>
                     <button class="lang-btn @(Loc.CurrentLang == "en" ? "active" : "")" @onclick='() => SetLang("en")'>EN</button>
+                    <span class="lang-sep">·</span>
+                    <button class="lang-btn @(Loc.CurrentLang == "ru" ? "active" : "")" @onclick='() => SetLang("ru")'>RU</button>
                 </div>
                 <button class="theme-toggle header-theme" @onclick="ToggleTheme">@(Theme.IsDark ? "☀" : "☾")</button>
                 <button class="menu-toggle" @onclick="ToggleMenu" aria-label="Menu" aria-expanded="@menuOpen" aria-controls="mobile-menu">
@@ -106,6 +153,22 @@
             <li><a href="/consultations/spiritual-development" @onclick="CloseMenu">@Loc["nav.consultations.spiritual_development"]</a></li>
             <li><a href="/consultations/youth" @onclick="CloseMenu">@Loc["nav.consultations.youth"]</a></li>
             <li><a href="/consultations/personal" @onclick="CloseMenu">@Loc["nav.consultations.personal"]</a></li>
+            <li class="mobile-section-label">@Loc["nav.retreats"]</li>
+            @if (retreatSubItems != null)
+            {
+                @foreach (var r in retreatSubItems)
+                {
+                    <li><a href="/retreats/@r.Slug" @onclick="CloseMenu">@r.Title</a></li>
+                }
+            }
+            <li class="mobile-section-label">@Loc["nav.yagyas"]</li>
+            @if (yagyaSubItems != null)
+            {
+                @foreach (var y in yagyaSubItems)
+                {
+                    <li><a href="/yagyas/@y.Slug" @onclick="CloseMenu">@y.Title</a></li>
+                }
+            }
             <li class="mobile-divider"></li>
             <li><a href="/about" @onclick="CloseMenu">@Loc["nav.about"]</a></li>
             <li><a href="/contacts" @onclick="CloseMenu">@Loc["nav.contacts"]</a></li>
@@ -115,11 +178,11 @@
         </ul>
         <div class="mobile-nav-footer">
             <div class="lang-switcher">
-                <button class="lang-btn @(Loc.CurrentLang == "ru" ? "active" : "")" @onclick='() => SetLang("ru")'>RU</button>
-                <span class="lang-sep">·</span>
                 <button class="lang-btn @(Loc.CurrentLang == "uk" ? "active" : "")" @onclick='() => SetLang("uk")'>UK</button>
                 <span class="lang-sep">·</span>
                 <button class="lang-btn @(Loc.CurrentLang == "en" ? "active" : "")" @onclick='() => SetLang("en")'>EN</button>
+                <span class="lang-sep">·</span>
+                <button class="lang-btn @(Loc.CurrentLang == "ru" ? "active" : "")" @onclick='() => SetLang("ru")'>RU</button>
             </div>
             <button class="mobile-theme-toggle" @onclick="ToggleTheme" aria-label="Toggle theme">@(Theme.IsDark ? $"☀ {Loc["footer.light_theme"]}" : $"☾ {Loc["footer.dark_theme"]}")</button>
         </div>
@@ -150,6 +213,10 @@
 
 @code {
     private bool menuOpen = false;
+    private List<NavSubItem>? retreatSubItems;
+    private List<NavSubItem>? yagyaSubItems;
+
+    private record NavSubItem(string Slug, string Title);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -158,12 +225,36 @@
             await Theme.InitAsync(JS);
             // Loc.InitAsync already called in Program.cs before RunAsync — translations pre-loaded
             Theme.OnThemeChanged += Refresh;
-            Loc.OnLanguageChanged += Refresh;
+            Loc.OnLanguageChanged += RefreshAndReload;
+            await LoadNavSubItemsAsync();
             StateHasChanged();
         }
     }
 
+    private async Task LoadNavSubItemsAsync()
+    {
+        try
+        {
+            var lang = Loc.CurrentLang;
+            var retreats = await Api.GetRetreatsAsync(lang);
+            retreatSubItems = retreats.Select(r => new NavSubItem(r.Slug, r.Title)).ToList();
+            var yagyas = await Api.GetYagyasAsync(lang);
+            yagyaSubItems = yagyas.Select(y => new NavSubItem(y.Slug, y.Title)).ToList();
+        }
+        catch
+        {
+            retreatSubItems ??= new();
+            yagyaSubItems ??= new();
+        }
+    }
+
     private void Refresh() => InvokeAsync(StateHasChanged);
+
+    private void RefreshAndReload() => InvokeAsync(async () =>
+    {
+        await LoadNavSubItemsAsync();
+        StateHasChanged();
+    });
     private async Task SetLang(string lang) => await Loc.SetLanguageAsync(lang, JS);
     private async Task ToggleTheme() => await Theme.ToggleAsync(JS);
     private string openDropdown = "";
@@ -193,6 +284,6 @@
     public void Dispose()
     {
         Theme.OnThemeChanged -= Refresh;
-        Loc.OnLanguageChanged -= Refresh;
+        Loc.OnLanguageChanged -= RefreshAndReload;
     }
 }

@@ -1,0 +1,49 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <span class="admin-logo">shakti.ashram</span>
+            <span class="admin-badge">Admin</span>
+        </div>
+        <nav class="admin-nav">
+            <a href="/admin" class="admin-nav-link">Dashboard</a>
+            <a href="/admin/courses" class="admin-nav-link">Courses</a>
+            <a href="/admin/consultations" class="admin-nav-link">Consultations</a>
+            <a href="/admin/retreats" class="admin-nav-link">Retreats</a>
+            <a href="/admin/yagyas" class="admin-nav-link">Yagyas</a>
+            <a href="/admin/pages" class="admin-nav-link">Site Pages</a>
+            <a href="/admin/leads" class="admin-nav-link">Leads</a>
+            <a href="/admin/translations" class="admin-nav-link">Translations</a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <button class="admin-logout-btn" @onclick="Logout">Logout</button>
+            <a href="/" class="admin-nav-link admin-back-link">← Back to site</a>
+        </div>
+    </aside>
+    <main class="admin-main">
+        @Body
+    </main>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var token = await JS.InvokeAsync<string?>("localStorage.getItem", "yl-admin-token");
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Nav.NavigateTo("/", forceLoad: true);
+            }
+        }
+    }
+
+    private async Task Logout()
+    {
+        await JS.InvokeVoidAsync("localStorage.removeItem", "yl-admin-token");
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+}

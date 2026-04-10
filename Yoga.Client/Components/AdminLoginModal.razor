@@ -1,0 +1,66 @@
+@inject LocalizationService Loc
+@inject ApiService Api
+@inject IJSRuntime JS
+@using Microsoft.AspNetCore.Components
+
+<div class="admin-login-modal-backdrop" @onclick="Close">
+    <div class="admin-login-modal-content" @onclick:stopPropagation>
+        <button class="close-btn" type="button" @onclick="Close" aria-label="Close">&times;</button>
+        <h2>@Loc["admin.modal.title"]</h2>
+        <p>@Loc["admin.modal.hint"]</p>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="admin-login-error" role="alert">@errorMessage</div>
+        }
+
+        <div class="form-group">
+            <label for="admin-login">@Loc["admin.modal.login"]</label>
+            <input id="admin-login" class="form-control" type="text" autocomplete="username" @bind="login" @bind:event="oninput" />
+        </div>
+        <div class="form-group">
+            <label for="admin-password">@Loc["admin.modal.password"]</label>
+            <input id="admin-password" class="form-control" type="password" autocomplete="current-password" @bind="password" @bind:event="oninput" />
+        </div>
+        <button type="button" class="btn btn-primary w-100" disabled="@busy" @onclick="SubmitAsync">
+            @(busy ? Loc["admin.modal.submitting"] : Loc["admin.modal.submit"])
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string login = "";
+    private string password = "";
+    private bool busy;
+    private string? errorMessage;
+
+    private async Task SubmitAsync()
+    {
+        errorMessage = null;
+        busy = true;
+        try
+        {
+            var result = await Api.AdminLoginAsync(login, password);
+            if (result is null)
+            {
+                errorMessage = Loc["admin.modal.error"];
+                return;
+            }
+
+            await JS.InvokeVoidAsync("localStorage.setItem", "yl-admin-token", result.Token);
+            await JS.InvokeVoidAsync("open", "/admin", "_self");
+            await Close();
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

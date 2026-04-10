@@ -26,6 +26,8 @@ namespace Yoga.Shared.Models
 
         public Guid? CourseId { get; set; }
         public Guid? ConsultationId { get; set; }
+        public Guid? RetreatId { get; set; }
+        public Guid? YagyaId { get; set; }
 
         public string TargetFormat { get; set; } = string.Empty;
     }

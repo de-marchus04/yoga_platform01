@@ -1,0 +1,54 @@
+@page "/admin"
+@layout AdminLayout
+
+<div class="admin-page-header">
+    <h1>Dashboard</h1>
+</div>
+
+<div class="admin-stat-grid">
+    <div class="admin-card admin-stat">
+        <div class="admin-stat-value">@coursesCount</div>
+        <div class="admin-stat-label">Courses</div>
+    </div>
+    <div class="admin-card admin-stat">
+        <div class="admin-stat-value">@consultationsCount</div>
+        <div class="admin-stat-label">Consultations</div>
+    </div>
+    <div class="admin-card admin-stat">
+        <div class="admin-stat-value">@retreatsCount</div>
+        <div class="admin-stat-label">Retreats</div>
+    </div>
+    <div class="admin-card admin-stat">
+        <div class="admin-stat-value">@yagyasCount</div>
+        <div class="admin-stat-label">Yagyas</div>
+    </div>
+</div>
+
+<div class="admin-card" style="margin-top: 1rem;">
+    <h3 style="margin: 0 0 0.5rem; font-size: 1rem; font-weight: 500;">Quick Links</h3>
+    <p style="font-size: 0.85rem; color: #666; margin: 0;">
+        Use the sidebar to manage your content. All changes are saved to the database and reflected on the public site immediately.
+    </p>
+</div>
+
+@code {
+    private int coursesCount;
+    private int consultationsCount;
+    private int retreatsCount;
+    private int yagyasCount;
+
+    [Inject] private ApiService Api { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var courses = await Api.GetCoursesAsync();
+        var consultations = await Api.GetConsultationsAsync();
+        var retreats = await Api.GetRetreatsAsync();
+        var yagyas = await Api.GetYagyasAsync();
+
+        coursesCount = courses.Count;
+        consultationsCount = consultations.Count;
+        retreatsCount = retreats.Count;
+        yagyasCount = yagyas.Count;
+    }
+}
