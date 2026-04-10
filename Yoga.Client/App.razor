@@ -1,4 +1,5 @@
-﻿<ErrorBoundary>
+﻿@inject NavigationManager Nav
+<ErrorBoundary>
     <ChildContent>
         <Router AppAssembly="@typeof(App).Assembly">
             <Found Context="routeData">
@@ -31,7 +32,7 @@
                     <h1>Страница временно недоступна</h1>
                     <div class="section-divider" style="margin:2rem auto;"></div>
                     <p style="color:var(--text-muted);">Интерфейс столкнулся с необработанной ошибкой. Обновите страницу. Если проблема повторяется, проверьте подключение публичного сайта к API и настройки production CORS.</p>
-                    <a class="btn btn-outline" href="/" style="margin-top:1.5rem; display:inline-flex;">Вернуться на главную</a>
+                    <button class="btn btn-outline" style="margin-top:1.5rem; display:inline-flex;" @onclick="@(() => Nav.NavigateTo("/", forceLoad: true))">Вернуться на главную</button>
                 </div>
             </section>
         </LayoutView>

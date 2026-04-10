@@ -80,11 +80,11 @@ else
                         }
                     }
                 </div>
-                @if (item.Benefits.Length > 0)
+                @if (item.Benefits?.Length > 0)
                 {
                     <div class="overview-benefits reveal reveal-d1">
                         <h4>@Loc["section.benefits.h4"]</h4>
-                        @foreach (var benefit in item.Benefits)
+                        @foreach (var benefit in item.Benefits!)
                         {
                             <div class="benefit-item"><span class="benefit-check"></span><span>@benefit</span></div>
                         }
@@ -94,7 +94,7 @@ else
         </div>
     </section>
 
-    @if (item.ForWhom.Length > 0)
+    @if (item.ForWhom?.Length > 0)
     {
         <section class="for-whom-section">
             <div class="container">

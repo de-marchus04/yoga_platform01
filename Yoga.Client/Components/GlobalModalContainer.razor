@@ -27,11 +27,15 @@
 
 @code {
     private bool _isBodyScrollLocked;
+    private Action? _onShow;
+    private Action? _onClose;
 
     protected override void OnInitialized()
     {
-        ModalService.OnShow += StateHasChanged;
-        ModalService.OnClose += StateHasChanged;
+        _onShow  = () => InvokeAsync(StateHasChanged);
+        _onClose = () => InvokeAsync(StateHasChanged);
+        ModalService.OnShow  += _onShow;
+        ModalService.OnClose += _onClose;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -47,8 +51,8 @@
 
     public void Dispose()
     {
-        ModalService.OnShow -= StateHasChanged;
-        ModalService.OnClose -= StateHasChanged;
+        ModalService.OnShow  -= _onShow;
+        ModalService.OnClose -= _onClose;
     }
 
     private void CloseModal()

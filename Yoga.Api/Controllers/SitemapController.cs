@@ -44,6 +44,20 @@ namespace Yoga.Api.Controllers
             foreach (var slug in consultations)
                 AddUrl(sb, $"/consultations/{slug}", "weekly", "0.7");
 
+            var retreats = await _context.Retreats
+                .Where(r => r.IsActive && r.Slug != "")
+                .Select(r => r.Slug)
+                .ToListAsync();
+            foreach (var slug in retreats)
+                AddUrl(sb, $"/retreats/{slug}", "monthly", "0.7");
+
+            var yagyas = await _context.Yagyas
+                .Where(y => y.IsActive && y.Slug != "")
+                .Select(y => y.Slug)
+                .ToListAsync();
+            foreach (var slug in yagyas)
+                AddUrl(sb, $"/yagyas/{slug}", "monthly", "0.7");
+
             sb.AppendLine("</urlset>");
             return Content(sb.ToString(), "application/xml", Encoding.UTF8);
         }
