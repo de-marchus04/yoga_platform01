@@ -11,9 +11,14 @@ if ($PublicApiBaseUrl -notmatch '^https://') {
     Write-Error "PublicApiBaseUrl must be an absolute https:// origin."
 }
 dotnet publish Yoga.Client/Yoga.Client.csproj -c Release -o publish --nologo
-$py = Get-Command python3 -ErrorAction SilentlyContinue
-if (-not $py) { $py = Get-Command python -ErrorAction SilentlyContinue }
-if (-not $py) { Write-Error "Python is required to patch appsettings.json (python or python3 on PATH)." }
-& $py.Source scripts/inject_public_api_url.py publish/wwwroot/appsettings.json $PublicApiBaseUrl
+$appSettingsPath = Join-Path $Root "publish\wwwroot\appsettings.json"
+$appSettings = Get-Content $appSettingsPath -Raw | ConvertFrom-Json
+if (-not $appSettings.Api) {
+    $appSettings | Add-Member -NotePropertyName Api -NotePropertyValue ([pscustomobject]@{})
+}
+$normalizedPublicApiBaseUrl = $PublicApiBaseUrl.TrimEnd('/') + "/"
+$appSettings.Api | Add-Member -Force -NotePropertyName PublicBaseUrl -NotePropertyValue $normalizedPublicApiBaseUrl
+$json = $appSettings | ConvertTo-Json -Depth 10
+[System.IO.File]::WriteAllText($appSettingsPath, $json + "`n", [System.Text.UTF8Encoding]::new($false))
 Set-Location publish/wwwroot
 npx --yes vercel@41.4.1 deploy --prod --yes
