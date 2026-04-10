@@ -1,7 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject LocalizationService Loc
 @inject ThemeService Theme
-@inject ApiService Api
 @inject IJSRuntime JS
 @implements IDisposable
 
@@ -85,13 +84,8 @@
                             </button>
                         </div>
                         <ul id="desktop-submenu-retreats" class="dropdown-menu">
-                            @if (retreatSubItems != null)
-                            {
-                                @foreach (var r in retreatSubItems)
-                                {
-                                    <li><a href="/retreats/@r.Slug">@r.Title</a></li>
-                                }
-                            }
+                            <li><a href="/retreats?period=upcoming">@Loc["nav.upcoming"]</a></li>
+                            <li><a href="/retreats?period=past">@Loc["nav.past"]</a></li>
                         </ul>
                     </li>
 
@@ -108,13 +102,8 @@
                             </button>
                         </div>
                         <ul id="desktop-submenu-yagyas" class="dropdown-menu">
-                            @if (yagyaSubItems != null)
-                            {
-                                @foreach (var y in yagyaSubItems)
-                                {
-                                    <li><a href="/yagyas/@y.Slug">@y.Title</a></li>
-                                }
-                            }
+                            <li><a href="/yagyas?period=upcoming">@Loc["nav.upcoming"]</a></li>
+                            <li><a href="/yagyas?period=past">@Loc["nav.past"]</a></li>
                         </ul>
                     </li>
 
@@ -154,21 +143,11 @@
             <li><a href="/consultations/youth" @onclick="CloseMenu">@Loc["nav.consultations.youth"]</a></li>
             <li><a href="/consultations/personal" @onclick="CloseMenu">@Loc["nav.consultations.personal"]</a></li>
             <li class="mobile-section-label">@Loc["nav.retreats"]</li>
-            @if (retreatSubItems != null)
-            {
-                @foreach (var r in retreatSubItems)
-                {
-                    <li><a href="/retreats/@r.Slug" @onclick="CloseMenu">@r.Title</a></li>
-                }
-            }
+            <li><a href="/retreats?period=upcoming" @onclick="CloseMenu">@Loc["nav.upcoming"]</a></li>
+            <li><a href="/retreats?period=past" @onclick="CloseMenu">@Loc["nav.past"]</a></li>
             <li class="mobile-section-label">@Loc["nav.yagyas"]</li>
-            @if (yagyaSubItems != null)
-            {
-                @foreach (var y in yagyaSubItems)
-                {
-                    <li><a href="/yagyas/@y.Slug" @onclick="CloseMenu">@y.Title</a></li>
-                }
-            }
+            <li><a href="/yagyas?period=upcoming" @onclick="CloseMenu">@Loc["nav.upcoming"]</a></li>
+            <li><a href="/yagyas?period=past" @onclick="CloseMenu">@Loc["nav.past"]</a></li>
             <li class="mobile-divider"></li>
             <li><a href="/about" @onclick="CloseMenu">@Loc["nav.about"]</a></li>
             <li><a href="/contacts" @onclick="CloseMenu">@Loc["nav.contacts"]</a></li>
@@ -213,48 +192,19 @@
 
 @code {
     private bool menuOpen = false;
-    private List<NavSubItem>? retreatSubItems;
-    private List<NavSubItem>? yagyaSubItems;
-
-    private record NavSubItem(string Slug, string Title);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await Theme.InitAsync(JS);
-            // Loc.InitAsync already called in Program.cs before RunAsync — translations pre-loaded
             Theme.OnThemeChanged += Refresh;
-            Loc.OnLanguageChanged += RefreshAndReload;
-            await LoadNavSubItemsAsync();
+            Loc.OnLanguageChanged += Refresh;
             StateHasChanged();
         }
     }
 
-    private async Task LoadNavSubItemsAsync()
-    {
-        try
-        {
-            var lang = Loc.CurrentLang;
-            var retreats = await Api.GetRetreatsAsync(lang);
-            retreatSubItems = retreats.Select(r => new NavSubItem(r.Slug, r.Title)).ToList();
-            var yagyas = await Api.GetYagyasAsync(lang);
-            yagyaSubItems = yagyas.Select(y => new NavSubItem(y.Slug, y.Title)).ToList();
-        }
-        catch
-        {
-            retreatSubItems ??= new();
-            yagyaSubItems ??= new();
-        }
-    }
-
     private void Refresh() => InvokeAsync(StateHasChanged);
-
-    private void RefreshAndReload() => InvokeAsync(async () =>
-    {
-        await LoadNavSubItemsAsync();
-        StateHasChanged();
-    });
     private async Task SetLang(string lang) => await Loc.SetLanguageAsync(lang, JS);
     private async Task ToggleTheme() => await Theme.ToggleAsync(JS);
     private string openDropdown = "";
@@ -284,6 +234,6 @@
     public void Dispose()
     {
         Theme.OnThemeChanged -= Refresh;
-        Loc.OnLanguageChanged -= RefreshAndReload;
+        Loc.OnLanguageChanged -= Refresh;
     }
 }
