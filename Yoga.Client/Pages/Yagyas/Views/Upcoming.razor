@@ -1,0 +1,82 @@
+@using Yoga.Shared.DTOs
+
+<div class="yag-upcoming">
+    <section class="yag-upcoming__hero">
+        <div class="container yag-upcoming__hero-inner">
+            <p class="section-eyebrow yag-upcoming__hero-eyebrow">@Loc["page.yagyas.eyebrow"]</p>
+            <h1>@Loc["page.yagyas.h1"]</h1>
+            <div class="yag-upcoming__hero-line"></div>
+            <p class="yag-upcoming__hero-intro">@Loc["page.yagyas.intro"]</p>
+        </div>
+    </section>
+
+    <section class="yag-upcoming__catalog">
+        <div class="container">
+            <div class="yag-upcoming__period-nav">
+                <span class="yag-upcoming__period-tab yag-upcoming__period-tab--active">@Loc["nav.upcoming"]</span>
+                <a class="yag-upcoming__period-tab" href="/yagyas?period=past">@Loc["nav.past"]</a>
+            </div>
+
+            @if (Items is null)
+            {
+                <div class="yag-upcoming__skeleton">
+                    @for (var i = 0; i < 2; i++) { <div class="yag-upcoming__skeleton-card"></div> }
+                </div>
+            }
+            else if (Items.Count == 0)
+            {
+                <p class="yag-upcoming__empty">@Loc["page.yagyas.empty"]</p>
+            }
+            else
+            {
+                <div class="yag-upcoming__grid">
+                    @foreach (var item in Items)
+                    {
+                        <a class="yag-upcoming__card" href="/yagyas/@item.Slug">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <div class="yag-upcoming__card-image">
+                                    <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
+                                </div>
+                            }
+                            <div class="yag-upcoming__card-body">
+                                @if (item.EventStartDate.HasValue)
+                                {
+                                    <div class="yag-upcoming__card-date">
+                                        <span class="yag-upcoming__card-day">@item.EventStartDate.Value.Day</span>
+                                        <span class="yag-upcoming__card-month">@FormatMonth(item.EventStartDate.Value)</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(item.Eyebrow))
+                                {
+                                    <span class="yag-upcoming__card-eyebrow">@item.Eyebrow</span>
+                                }
+                                <h3>@item.Title</h3>
+                                <p class="yag-upcoming__card-sub">@item.Subtitle</p>
+                                <div class="yag-upcoming__card-divider"></div>
+                                <div class="yag-upcoming__card-meta">
+                                    @if (!string.IsNullOrEmpty(item.Duration)) { <span>@item.Duration</span> }
+                                    @if (!string.IsNullOrEmpty(item.Format)) { <span>@item.Format</span> }
+                                </div>
+                                <span class="yag-upcoming__card-cta">@Loc["page.yagyas.card.cta"]</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter] public List<YagyaDto>? Items { get; set; }
+    [Inject] private LocalizationService Loc { get; set; } = default!;
+    [Inject] private ApiService Api { get; set; } = default!;
+
+    private string FormatMonth(DateTime d) => Loc.CurrentLang switch
+    {
+        "uk" => d.ToString("MMM", new System.Globalization.CultureInfo("uk-UA")).ToUpper(),
+        "en" => d.ToString("MMM", System.Globalization.CultureInfo.InvariantCulture).ToUpper(),
+        _ => d.ToString("MMM", new System.Globalization.CultureInfo("ru-RU")).ToUpper()
+    };
+}

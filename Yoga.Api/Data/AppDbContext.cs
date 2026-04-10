@@ -158,15 +158,15 @@ namespace Yoga.Api.Data
             var retreatSilence = Guid.Parse("55555555-5555-5555-5555-555555555502");
 
             modelBuilder.Entity<Retreat>().HasData(
-                new Retreat { Id = retreatMountain, Slug = "mountain-practice", SortOrder = 1, IsActive = true },
-                new Retreat { Id = retreatSilence, Slug = "silence-retreat", SortOrder = 2, IsActive = true });
+                new Retreat { Id = retreatMountain, Slug = "mountain-practice", SortOrder = 1, IsActive = true, EventStartDate = new DateTime(2026, 7, 15), EventEndDate = new DateTime(2026, 7, 19) },
+                new Retreat { Id = retreatSilence, Slug = "silence-retreat", SortOrder = 2, IsActive = true, EventStartDate = new DateTime(2026, 1, 10), EventEndDate = new DateTime(2026, 1, 12) });
 
             var yagyaFire = Guid.Parse("66666666-6666-6666-6666-666666666601");
             var yagyaNewYear = Guid.Parse("66666666-6666-6666-6666-666666666602");
 
             modelBuilder.Entity<Yagya>().HasData(
-                new Yagya { Id = yagyaFire, Slug = "fire-ceremony", SortOrder = 1, IsActive = true },
-                new Yagya { Id = yagyaNewYear, Slug = "new-year-intention", SortOrder = 2, IsActive = true });
+                new Yagya { Id = yagyaFire, Slug = "fire-ceremony", SortOrder = 1, IsActive = true, EventStartDate = new DateTime(2026, 6, 21), EventEndDate = new DateTime(2026, 6, 21) },
+                new Yagya { Id = yagyaNewYear, Slug = "new-year-intention", SortOrder = 2, IsActive = true, EventStartDate = new DateTime(2025, 12, 31), EventEndDate = new DateTime(2025, 12, 31) });
 
             var pageAbout = Guid.Parse("44444444-4444-4444-4444-444444444401");
             var pageContacts = Guid.Parse("44444444-4444-4444-4444-444444444402");

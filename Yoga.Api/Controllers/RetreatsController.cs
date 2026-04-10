@@ -18,11 +18,22 @@ namespace Yoga.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<RetreatDto>>> GetRetreats([FromQuery] string lang = "uk")
+        public async Task<ActionResult<List<RetreatDto>>> GetRetreats([FromQuery] string lang = "uk", [FromQuery] string? period = null)
         {
-            var items = await _context.Retreats
-                .Where(r => r.IsActive)
-                .OrderBy(r => r.SortOrder)
+            var query = _context.Retreats.Where(r => r.IsActive);
+
+            var now = DateTime.UtcNow.Date;
+            if (string.Equals(period, "upcoming", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(r => r.EventStartDate == null || r.EventStartDate >= now);
+            else if (string.Equals(period, "past", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(r => r.EventStartDate != null && r.EventStartDate < now);
+
+            if (string.Equals(period, "past", StringComparison.OrdinalIgnoreCase))
+                query = query.OrderByDescending(r => r.EventStartDate);
+            else
+                query = query.OrderBy(r => r.EventStartDate ?? DateTime.MaxValue).ThenBy(r => r.SortOrder);
+
+            var items = await query
                 .Include(r => r.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
                 .ToListAsync();
 
@@ -85,7 +96,8 @@ namespace Yoga.Api.Controllers
 
             return new RetreatDto(r.Id, r.Slug, F("Title"), F("Subtitle"), F("Eyebrow"), F("Description"),
                 benefits, F("ImageUrl"), F("Duration"), F("Location"), F("Format"),
-                F("PriceLabel"), forWhom, F("CtaHeading"), F("CtaText"), subcategories);
+                F("PriceLabel"), forWhom, F("CtaHeading"), F("CtaText"), subcategories,
+                r.EventStartDate, r.EventEndDate);
         }
     }
 }

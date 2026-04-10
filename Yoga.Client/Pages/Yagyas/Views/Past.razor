@@ -1,0 +1,81 @@
+@using Yoga.Shared.DTOs
+
+<div class="yag-past">
+    <section class="yag-past__hero">
+        <div class="container yag-past__hero-inner">
+            <p class="section-eyebrow yag-past__hero-eyebrow">@Loc["page.yagyas.eyebrow"]</p>
+            <h1>@Loc["yagyas.past.h1"]</h1>
+            <div class="yag-past__hero-line"></div>
+            <p class="yag-past__hero-intro">@Loc["yagyas.past.intro"]</p>
+        </div>
+    </section>
+
+    <section class="yag-past__catalog">
+        <div class="container">
+            <div class="yag-past__period-nav">
+                <a class="yag-past__period-tab" href="/yagyas">@Loc["nav.upcoming"]</a>
+                <span class="yag-past__period-tab yag-past__period-tab--active">@Loc["nav.past"]</span>
+            </div>
+
+            @if (Items is null)
+            {
+                <div class="yag-past__skeleton">
+                    @for (var i = 0; i < 2; i++) { <div class="yag-past__skeleton-card"></div> }
+                </div>
+            }
+            else if (Items.Count == 0)
+            {
+                <p class="yag-past__empty">@Loc["yagyas.past.empty"]</p>
+            }
+            else
+            {
+                <div class="yag-past__list">
+                    @foreach (var item in Items)
+                    {
+                        <div class="yag-past__card">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <div class="yag-past__card-image">
+                                    <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
+                                </div>
+                            }
+                            <div class="yag-past__card-body">
+                                @if (item.EventStartDate.HasValue)
+                                {
+                                    <span class="yag-past__card-date">@FormatDate(item.EventStartDate.Value)</span>
+                                }
+                                @if (!string.IsNullOrEmpty(item.Eyebrow))
+                                {
+                                    <span class="yag-past__card-eyebrow">@item.Eyebrow</span>
+                                }
+                                <h3>@item.Title</h3>
+                                <p class="yag-past__card-sub">@item.Subtitle</p>
+                                <div class="yag-past__card-meta">
+                                    @if (!string.IsNullOrEmpty(item.Duration)) { <span>@item.Duration</span> }
+                                    @if (!string.IsNullOrEmpty(item.Format)) { <span>@item.Format</span> }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter] public List<YagyaDto>? Items { get; set; }
+    [Inject] private LocalizationService Loc { get; set; } = default!;
+    [Inject] private ApiService Api { get; set; } = default!;
+
+    private string FormatDate(DateTime d)
+    {
+        var ci = Loc.CurrentLang switch
+        {
+            "uk" => new System.Globalization.CultureInfo("uk-UA"),
+            "en" => System.Globalization.CultureInfo.InvariantCulture,
+            _ => new System.Globalization.CultureInfo("ru-RU")
+        };
+        return d.ToString("d MMMM yyyy", ci);
+    }
+}

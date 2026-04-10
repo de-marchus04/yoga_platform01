@@ -1,0 +1,82 @@
+@using Yoga.Shared.DTOs
+
+<div class="ret-upcoming">
+    <section class="ret-upcoming__hero">
+        <div class="container ret-upcoming__hero-inner">
+            <p class="section-eyebrow">@Loc["page.retreats.eyebrow"]</p>
+            <h1>@Loc["page.retreats.h1"]</h1>
+            <div class="section-divider"></div>
+            <p class="ret-upcoming__hero-intro">@Loc["page.retreats.intro"]</p>
+        </div>
+    </section>
+
+    <section class="ret-upcoming__catalog">
+        <div class="container">
+            <div class="ret-upcoming__period-nav">
+                <span class="ret-upcoming__period-tab ret-upcoming__period-tab--active">@Loc["nav.upcoming"]</span>
+                <a class="ret-upcoming__period-tab" href="/retreats?period=past">@Loc["nav.past"]</a>
+            </div>
+
+            @if (Items is null)
+            {
+                <div class="ret-upcoming__skeleton">
+                    @for (var i = 0; i < 2; i++) { <div class="ret-upcoming__skeleton-card"></div> }
+                </div>
+            }
+            else if (Items.Count == 0)
+            {
+                <p class="ret-upcoming__empty">@Loc["page.retreats.empty"]</p>
+            }
+            else
+            {
+                <div class="ret-upcoming__grid">
+                    @foreach (var item in Items)
+                    {
+                        <a class="ret-upcoming__card" href="/retreats/@item.Slug">
+                            <div class="ret-upcoming__card-image">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
+                                }
+                                @if (item.EventStartDate.HasValue)
+                                {
+                                    <div class="ret-upcoming__card-date">
+                                        <span class="ret-upcoming__card-day">@item.EventStartDate.Value.Day</span>
+                                        <span class="ret-upcoming__card-month">@FormatMonth(item.EventStartDate.Value)</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="ret-upcoming__card-body">
+                                @if (!string.IsNullOrEmpty(item.Eyebrow))
+                                {
+                                    <span class="ret-upcoming__card-eyebrow">@item.Eyebrow</span>
+                                }
+                                <h3>@item.Title</h3>
+                                <p class="ret-upcoming__card-sub">@item.Subtitle</p>
+                                <div class="ret-upcoming__card-meta">
+                                    @if (!string.IsNullOrEmpty(item.Location)) { <span>@item.Location</span> }
+                                    @if (!string.IsNullOrEmpty(item.Duration)) { <span>@item.Duration</span> }
+                                    @if (!string.IsNullOrEmpty(item.Format)) { <span>@item.Format</span> }
+                                </div>
+                                <span class="ret-upcoming__card-cta">@Loc["page.retreats.card.cta"]</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter] public List<RetreatDto>? Items { get; set; }
+    [Inject] private LocalizationService Loc { get; set; } = default!;
+    [Inject] private ApiService Api { get; set; } = default!;
+
+    private string FormatMonth(DateTime d) => Loc.CurrentLang switch
+    {
+        "uk" => d.ToString("MMM", new System.Globalization.CultureInfo("uk-UA")).ToUpper(),
+        "en" => d.ToString("MMM", System.Globalization.CultureInfo.InvariantCulture).ToUpper(),
+        _ => d.ToString("MMM", new System.Globalization.CultureInfo("ru-RU")).ToUpper()
+    };
+}

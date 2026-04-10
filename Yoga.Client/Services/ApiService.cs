@@ -110,9 +110,11 @@ namespace Yoga.Client.Services
         private record EmailValidationResult(bool Valid, string? Reason = null);
 
         // --- Retreats ---
-        public async Task<List<RetreatDto>> GetRetreatsAsync(string lang = "uk")
+        public async Task<List<RetreatDto>> GetRetreatsAsync(string lang = "uk", string? period = null)
         {
-            var result = await GetSafeAsync<List<RetreatDto>>($"api/retreats?lang={lang}");
+            var url = $"api/retreats?lang={lang}";
+            if (!string.IsNullOrEmpty(period)) url += $"&period={period}";
+            var result = await GetSafeAsync<List<RetreatDto>>(url);
             return result ?? new();
         }
 
@@ -122,9 +124,11 @@ namespace Yoga.Client.Services
         }
 
         // --- Yagyas ---
-        public async Task<List<YagyaDto>> GetYagyasAsync(string lang = "uk")
+        public async Task<List<YagyaDto>> GetYagyasAsync(string lang = "uk", string? period = null)
         {
-            var result = await GetSafeAsync<List<YagyaDto>>($"api/yagyas?lang={lang}");
+            var url = $"api/yagyas?lang={lang}";
+            if (!string.IsNullOrEmpty(period)) url += $"&period={period}";
+            var result = await GetSafeAsync<List<YagyaDto>>(url);
             return result ?? new();
         }
 

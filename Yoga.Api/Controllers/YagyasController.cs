@@ -18,11 +18,22 @@ namespace Yoga.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<YagyaDto>>> GetYagyas([FromQuery] string lang = "uk")
+        public async Task<ActionResult<List<YagyaDto>>> GetYagyas([FromQuery] string lang = "uk", [FromQuery] string? period = null)
         {
-            var items = await _context.Yagyas
-                .Where(y => y.IsActive)
-                .OrderBy(y => y.SortOrder)
+            var query = _context.Yagyas.Where(y => y.IsActive);
+
+            var now = DateTime.UtcNow.Date;
+            if (string.Equals(period, "upcoming", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(y => y.EventStartDate == null || y.EventStartDate >= now);
+            else if (string.Equals(period, "past", StringComparison.OrdinalIgnoreCase))
+                query = query.Where(y => y.EventStartDate != null && y.EventStartDate < now);
+
+            if (string.Equals(period, "past", StringComparison.OrdinalIgnoreCase))
+                query = query.OrderByDescending(y => y.EventStartDate);
+            else
+                query = query.OrderBy(y => y.EventStartDate ?? DateTime.MaxValue).ThenBy(y => y.SortOrder);
+
+            var items = await query
                 .Include(y => y.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
                 .ToListAsync();
 
@@ -85,7 +96,8 @@ namespace Yoga.Api.Controllers
 
             return new YagyaDto(y.Id, y.Slug, F("Title"), F("Subtitle"), F("Eyebrow"), F("Description"),
                 benefits, F("ImageUrl"), F("Duration"), F("Format"),
-                F("PriceLabel"), forWhom, F("CtaHeading"), F("CtaText"), subcategories);
+                F("PriceLabel"), forWhom, F("CtaHeading"), F("CtaText"), subcategories,
+                y.EventStartDate, y.EventEndDate);
         }
     }
 }

@@ -1,84 +1,63 @@
 @page "/yagyas"
 @inject LocalizationService Loc
 @inject ApiService Api
+@inject NavigationManager Nav
 @implements IDisposable
 
 <PageTitle>@Loc["page.yagyas.title"]</PageTitle>
 
-<div class="arc-ritual">
-    @* ── Hero: ceremonial dark stage ── *@
-    <section class="arc-ritual__hero">
-        <div class="container arc-ritual__hero-inner">
-            <p class="section-eyebrow arc-ritual__hero-eyebrow">@Loc["page.yagyas.eyebrow"]</p>
-            <h1>@Loc["page.yagyas.h1"]</h1>
-            <div class="arc-ritual__hero-line"></div>
-            <p class="arc-ritual__hero-intro">@Loc["page.yagyas.intro"]</p>
-        </div>
-    </section>
-
-    @* ── Catalog: ritual panels ── *@
-    <section class="arc-ritual__catalog">
-        <div class="container">
-            @if (items is null)
-            {
-                <div class="arc-ritual__skeleton">
-                    @for (var i = 0; i < 2; i++)
-                    {
-                        <div class="arc-ritual__skeleton-card"></div>
-                    }
-                </div>
-            }
-            else if (items.Count == 0)
-            {
-                <p class="arc-ritual__empty">@Loc["page.yagyas.empty"]</p>
-            }
-            else
-            {
-                <div class="arc-ritual__panels">
-                    @foreach (var item in items)
-                    {
-                        <a class="arc-ritual__panel" href="/yagyas/@item.Slug">
-                            @if (!string.IsNullOrEmpty(item.ImageUrl))
-                            {
-                                <div class="arc-ritual__panel-image">
-                                    <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
-                                </div>
-                            }
-                            <div class="arc-ritual__panel-body">
-                                @if (!string.IsNullOrEmpty(item.Eyebrow))
-                                {
-                                    <span class="arc-ritual__panel-eyebrow">@item.Eyebrow</span>
-                                }
-                                <h3>@item.Title</h3>
-                                <p class="arc-ritual__panel-sub">@item.Subtitle</p>
-                                <div class="arc-ritual__panel-divider"></div>
-                                <div class="arc-ritual__panel-meta">
-                                    @if (!string.IsNullOrEmpty(item.Duration))
-                                    {
-                                        <span>@Loc["meta.duration"]: @item.Duration</span>
-                                    }
-                                    @if (!string.IsNullOrEmpty(item.Format))
-                                    {
-                                        <span>@Loc["meta.format"]: @item.Format</span>
-                                    }
-                                </div>
-                                <span class="arc-ritual__panel-cta">@Loc["page.yagyas.card.cta"]</span>
-                            </div>
-                        </a>
-                    }
-                </div>
-            }
-        </div>
-    </section>
-</div>
+@if (currentPeriod == "past")
+{
+    <Yoga.Client.Pages.Yagyas.Views.Past Items="items" />
+}
+else
+{
+    <Yoga.Client.Pages.Yagyas.Views.Upcoming Items="items" />
+}
 
 @code {
     private List<Yoga.Shared.DTOs.YagyaDto>? items;
+    private string currentPeriod = "upcoming";
 
     protected override async Task OnInitializedAsync()
     {
         Loc.OnLanguageChanged += Reload;
+        Nav.LocationChanged += OnLocationChanged;
+        ParsePeriod();
         await LoadAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var prev = currentPeriod;
+        ParsePeriod();
+        if (prev != currentPeriod) await LoadAsync();
+    }
+
+    private void ParsePeriod()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        currentPeriod = string.Equals(query["period"], "past", StringComparison.OrdinalIgnoreCase) ? "past" : "upcoming";
+    }
+
+    private async Task LoadAsync()
+    {
+        items = null;
+        StateHasChanged();
+        items = await Api.GetYagyasAsync(Loc.CurrentLang, currentPeriod);
+        StateHasChanged();
+    }
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        var prev = currentPeriod;
+        ParsePeriod();
+        if (prev != currentPeriod)
+        {
+            await LoadAsync();
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async void Reload()
@@ -87,10 +66,9 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task LoadAsync()
+    public void Dispose()
     {
-        items = await Api.GetYagyasAsync(Loc.CurrentLang);
+        Loc.OnLanguageChanged -= Reload;
+        Nav.LocationChanged -= OnLocationChanged;
     }
-
-    public void Dispose() => Loc.OnLanguageChanged -= Reload;
 }

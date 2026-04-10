@@ -1,0 +1,73 @@
+@using Yoga.Shared.DTOs
+
+<div class="ret-past">
+    <section class="ret-past__hero">
+        <div class="container ret-past__hero-inner">
+            <p class="section-eyebrow">@Loc["page.retreats.eyebrow"]</p>
+            <h1>@Loc["retreats.past.h1"]</h1>
+            <div class="section-divider"></div>
+            <p class="ret-past__hero-intro">@Loc["retreats.past.intro"]</p>
+        </div>
+    </section>
+
+    <section class="ret-past__catalog">
+        <div class="container">
+            <div class="ret-past__period-nav">
+                <a class="ret-past__period-tab" href="/retreats?period=upcoming">@Loc["nav.upcoming"]</a>
+                <span class="ret-past__period-tab ret-past__period-tab--active">@Loc["nav.past"]</span>
+            </div>
+
+            @if (Items is null)
+            {
+                <div class="ret-past__skeleton">
+                    @for (var i = 0; i < 2; i++) { <div class="ret-past__skeleton-card"></div> }
+                </div>
+            }
+            else if (Items.Count == 0)
+            {
+                <p class="ret-past__empty">@Loc["retreats.past.empty"]</p>
+            }
+            else
+            {
+                <div class="ret-past__stack">
+                    @foreach (var item in Items)
+                    {
+                        <a class="ret-past__card" href="/retreats/@item.Slug">
+                            <div class="ret-past__card-image">
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
+                                }
+                            </div>
+                            <div class="ret-past__card-body">
+                                @if (item.EventStartDate.HasValue)
+                                {
+                                    <span class="ret-past__card-date">@FormatDate(item.EventStartDate.Value)</span>
+                                }
+                                <h3>@item.Title</h3>
+                                <p class="ret-past__card-sub">@item.Subtitle</p>
+                                <div class="ret-past__card-meta">
+                                    @if (!string.IsNullOrEmpty(item.Location)) { <span>@item.Location</span> }
+                                    @if (!string.IsNullOrEmpty(item.Duration)) { <span>@item.Duration</span> }
+                                </div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter] public List<RetreatDto>? Items { get; set; }
+    [Inject] private LocalizationService Loc { get; set; } = default!;
+    [Inject] private ApiService Api { get; set; } = default!;
+
+    private string FormatDate(DateTime d) => Loc.CurrentLang switch
+    {
+        "uk" => d.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("uk-UA")),
+        "en" => d.ToString("d MMMM yyyy", System.Globalization.CultureInfo.InvariantCulture),
+        _ => d.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("ru-RU"))
+    };
+}

@@ -97,7 +97,9 @@ namespace Yoga.Shared.DTOs
         ForWhomItem[] ForWhom,
         string CtaHeading,
         string CtaText,
-        List<RetreatSubcategoryDto> Subcategories
+        List<RetreatSubcategoryDto> Subcategories,
+        DateTime? EventStartDate,
+        DateTime? EventEndDate
     );
 
     public record YagyaSubcategoryDto(
@@ -124,6 +126,8 @@ namespace Yoga.Shared.DTOs
         ForWhomItem[] ForWhom,
         string CtaHeading,
         string CtaText,
-        List<YagyaSubcategoryDto> Subcategories
+        List<YagyaSubcategoryDto> Subcategories,
+        DateTime? EventStartDate,
+        DateTime? EventEndDate
     );
 }
