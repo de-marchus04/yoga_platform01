@@ -3,57 +3,144 @@
 @inject ApiService Api
 @implements IDisposable
 
+<PageTitle>@(item?.Title != null ? $"{item.Title} | shakti.ashram" : Loc["page.retreats.title"])</PageTitle>
+
 @if (item is null)
 {
-    <PageTitle>@Loc["page.retreats.title"]</PageTitle>
-    <section class="hero-section"><div class="container"><div class="skeleton-block"></div></div></section>
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <div class="skeleton" style="height: 1.5rem; width: 20%; margin-bottom: 2rem;"></div>
+            <div class="skeleton" style="height: 4rem; width: 60%; margin-bottom: 2rem;"></div>
+            <div class="skeleton" style="height: 1.5rem; width: 80%;"></div>
+        </div>
+    </section>
 }
 else
 {
-    <PageTitle>@item.Title | shakti.ashram</PageTitle>
-
-    <section class="hero-section">
-        <div class="container">
-            <span class="eyebrow">@item.Eyebrow</span>
+    <section class="page-hero">
+        <div class="page-hero-bg" style="background-image: url('@(string.IsNullOrEmpty(item.ImageUrl) ? "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=1600&q=80" : Api.ResolveMediaUrl(item.ImageUrl))');"></div>
+        <div class="page-hero-overlay"></div>
+        <div class="container page-hero-content">
+            @if (!string.IsNullOrEmpty(item.Eyebrow))
+            {
+                <p class="section-eyebrow">@item.Eyebrow</p>
+            }
             <h1>@item.Title</h1>
-            <p class="hero-subtitle">@item.Subtitle</p>
+            <div class="section-divider" style="margin:2rem 0;"></div>
+            @if (!string.IsNullOrEmpty(item.Subtitle))
+            {
+                <p>@item.Subtitle</p>
+            }
         </div>
     </section>
 
-    <section class="detail-section">
+    @if (!string.IsNullOrEmpty(item.Duration) || !string.IsNullOrEmpty(item.Location) || !string.IsNullOrEmpty(item.Format) || !string.IsNullOrEmpty(item.PriceLabel))
+    {
+        <section class="format-strip">
+            <div class="format-strip-grid">
+                @if (!string.IsNullOrEmpty(item.Duration))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">@P("Длительность", "Тривалість", "Duration")</span>
+                        <span class="format-strip-value">@item.Duration</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(item.Location))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">@P("Место", "Місце", "Location")</span>
+                        <span class="format-strip-value">@item.Location</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(item.Format))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">@P("Формат", "Формат", "Format")</span>
+                        <span class="format-strip-value">@item.Format</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(item.PriceLabel))
+                {
+                    <div class="format-strip-cell">
+                        <span class="format-strip-label">@P("Стоимость", "Вартість", "Price")</span>
+                        <span class="format-strip-value">@item.PriceLabel</span>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="overview-section">
         <div class="container">
-            @if (!string.IsNullOrEmpty(item.ImageUrl))
-            {
-                <div class="detail-hero-image">
-                    <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
-                </div>
-            }
-
-            <div class="detail-overview">
-                <span class="eyebrow">@Loc["section.overview.eyebrow"]</span>
+            <div class="section-header reveal">
+                <p class="section-eyebrow">@Loc["section.overview.eyebrow"]</p>
                 <h2>@Loc["section.overview.h2"]</h2>
-                <p>@item.Description</p>
+                <div class="section-divider"></div>
+            </div>
+            <div class="overview-grid">
+                <div class="overview-desc reveal">
+                    @if (!string.IsNullOrEmpty(item.Description))
+                    {
+                        @foreach (var para in item.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            <p>@para</p>
+                        }
+                    }
+                </div>
+                @if (item.Benefits.Length > 0)
+                {
+                    <div class="overview-benefits reveal reveal-d1">
+                        <h4>@Loc["section.benefits.h4"]</h4>
+                        @foreach (var benefit in item.Benefits)
+                        {
+                            <div class="benefit-item"><span class="benefit-check"></span><span>@benefit</span></div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
 
-                <div class="detail-meta">
-                    @if (!string.IsNullOrEmpty(item.Duration)) { <div class="meta-item"><strong>Duration:</strong> @item.Duration</div> }
-                    @if (!string.IsNullOrEmpty(item.Location)) { <div class="meta-item"><strong>Location:</strong> @item.Location</div> }
-                    @if (!string.IsNullOrEmpty(item.Format)) { <div class="meta-item"><strong>Format:</strong> @item.Format</div> }
-                    @if (!string.IsNullOrEmpty(item.PriceLabel)) { <div class="meta-item"><strong>Price:</strong> @item.PriceLabel</div> }
+    @if (item.ForWhom.Length > 0)
+    {
+        <section class="for-whom-section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <p class="section-eyebrow">@Loc["section.forwhom.eyebrow"]</p>
+                    <h2>@Loc["section.forwhom.h2"]</h2>
+                    <div class="section-divider"></div>
+                </div>
+                <div class="for-whom-grid">
+                    @{ int fwIdx = 0; }
+                    @foreach (var fw in item.ForWhom)
+                    {
+                        var delayClass = fwIdx switch { 1 => "reveal-d1", 2 => "reveal-d2", _ => "" };
+                        <div class="for-whom-card reveal @delayClass">
+                            <h3>@fw.Title</h3>
+                            <p>@fw.Text</p>
+                        </div>
+                        fwIdx++;
+                    }
                 </div>
             </div>
+        </section>
+    }
 
-            @if (item.Benefits.Length > 0)
+    <section class="page-cta">
+        <div class="container" style="text-align:center;">
+            @if (!string.IsNullOrEmpty(item.CtaHeading))
             {
-                <div class="detail-benefits">
-                    <h4>@Loc["section.benefits.h4"]</h4>
-                    <ul>
-                        @foreach (var b in item.Benefits)
-                        {
-                            <li>@b</li>
-                        }
-                    </ul>
-                </div>
+                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
+                <h2>@item.CtaHeading</h2>
+                <p>@item.CtaText</p>
             }
+            else
+            {
+                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
+                <h2>@Loc["section.cta.h2"]</h2>
+                <p>@Loc["section.cta.text"]</p>
+            }
+            <button class="btn btn-primary" @onclick="OpenModal">@Loc["section.cta.btn"]</button>
         </div>
     </section>
 }
@@ -78,6 +165,22 @@ else
     {
         item = await Api.GetRetreatAsync(Slug, Loc.CurrentLang);
     }
+
+    private void OpenModal()
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            ["ContextTitle"] = item?.Title ?? "Retreat"
+        };
+        ModalService.Show<Yoga.Client.Components.LeadModal>(parameters);
+    }
+
+    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
+    {
+        "uk" => uk,
+        "en" => en,
+        _ => ru
+    };
 
     public void Dispose() => Loc.OnLanguageChanged -= Reload;
 }

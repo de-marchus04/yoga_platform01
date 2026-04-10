@@ -1,9 +1,6 @@
 .lead-modal-backdrop {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     background: rgba(10, 10, 10, 0.7);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -11,9 +8,7 @@
     align-items: center;
     justify-content: center;
     padding: 1rem;
-    overflow-y: auto;
     overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
     box-sizing: border-box;
     z-index: 1000;
 }
@@ -96,7 +91,9 @@
     align-items: center;
     justify-content: center;
     transition: all 0.25s ease;
-    z-index: 2;
+    z-index: 10;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 .close-btn:hover {
     color: rgba(255,255,255,0.9);

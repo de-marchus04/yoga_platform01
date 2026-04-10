@@ -32,7 +32,7 @@
                 <div class="yag-past__list">
                     @foreach (var item in Items)
                     {
-                        <div class="yag-past__card">
+                        <a class="yag-past__card" href="/yagyas/@item.Slug">
                             @if (!string.IsNullOrEmpty(item.ImageUrl))
                             {
                                 <div class="yag-past__card-image">
@@ -55,7 +55,7 @@
                                     @if (!string.IsNullOrEmpty(item.Format)) { <span>@item.Format</span> }
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     }
                 </div>
             }

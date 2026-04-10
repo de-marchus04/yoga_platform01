@@ -8008,6 +8008,13 @@ details[open] > .program-module-summary .program-module-toggle {
   grid-template-columns: 260px 1fr;
   border: 1px solid var(--divider);
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.ret-past__card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 .ret-past__card-image {
   aspect-ratio: 16 / 10;
@@ -8324,6 +8331,13 @@ details[open] > .program-module-summary .program-module-toggle {
   grid-template-columns: 260px 1fr;
   border: 1px solid var(--divider);
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.yag-past__card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 .yag-past__card-image {
   aspect-ratio: 16 / 10;
