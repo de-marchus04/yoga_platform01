@@ -5,53 +5,72 @@
 
 <PageTitle>@Loc["page.yagyas.title"]</PageTitle>
 
-<section class="hero-section">
-    <div class="container">
-        <span class="eyebrow">@Loc["page.yagyas.eyebrow"]</span>
-        <h1>@Loc["page.yagyas.h1"]</h1>
-        <p class="section-intro">@Loc["page.yagyas.intro"]</p>
-    </div>
-</section>
+<div class="arc-ritual">
+    @* ── Hero: ceremonial dark stage ── *@
+    <section class="arc-ritual__hero">
+        <div class="container arc-ritual__hero-inner">
+            <p class="section-eyebrow arc-ritual__hero-eyebrow">@Loc["page.yagyas.eyebrow"]</p>
+            <h1>@Loc["page.yagyas.h1"]</h1>
+            <div class="arc-ritual__hero-line"></div>
+            <p class="arc-ritual__hero-intro">@Loc["page.yagyas.intro"]</p>
+        </div>
+    </section>
 
-<section class="catalog-section">
-    <div class="container">
-        @if (items is null)
-        {
-            <div class="skeleton-grid">
-                @for (var i = 0; i < 2; i++)
-                {
-                    <div class="skeleton-card"></div>
-                }
-            </div>
-        }
-        else if (items.Count == 0)
-        {
-            <p class="empty-state">@Loc["page.yagyas.empty"]</p>
-        }
-        else
-        {
-            <div class="card-grid">
-                @foreach (var item in items)
-                {
-                    <a class="catalog-card" href="/yagyas/@item.Slug">
-                        @if (!string.IsNullOrEmpty(item.ImageUrl))
-                        {
-                            <div class="catalog-card-image">
-                                <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
+    @* ── Catalog: ritual panels ── *@
+    <section class="arc-ritual__catalog">
+        <div class="container">
+            @if (items is null)
+            {
+                <div class="arc-ritual__skeleton">
+                    @for (var i = 0; i < 2; i++)
+                    {
+                        <div class="arc-ritual__skeleton-card"></div>
+                    }
+                </div>
+            }
+            else if (items.Count == 0)
+            {
+                <p class="arc-ritual__empty">@Loc["page.yagyas.empty"]</p>
+            }
+            else
+            {
+                <div class="arc-ritual__panels">
+                    @foreach (var item in items)
+                    {
+                        <a class="arc-ritual__panel" href="/yagyas/@item.Slug">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <div class="arc-ritual__panel-image">
+                                    <img src="@Api.ResolveMediaUrl(item.ImageUrl)" alt="@item.Title" loading="lazy" />
+                                </div>
+                            }
+                            <div class="arc-ritual__panel-body">
+                                @if (!string.IsNullOrEmpty(item.Eyebrow))
+                                {
+                                    <span class="arc-ritual__panel-eyebrow">@item.Eyebrow</span>
+                                }
+                                <h3>@item.Title</h3>
+                                <p class="arc-ritual__panel-sub">@item.Subtitle</p>
+                                <div class="arc-ritual__panel-divider"></div>
+                                <div class="arc-ritual__panel-meta">
+                                    @if (!string.IsNullOrEmpty(item.Duration))
+                                    {
+                                        <span>@Loc["meta.duration"]: @item.Duration</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(item.Format))
+                                    {
+                                        <span>@Loc["meta.format"]: @item.Format</span>
+                                    }
+                                </div>
+                                <span class="arc-ritual__panel-cta">@Loc["page.yagyas.card.cta"]</span>
                             </div>
-                        }
-                        <div class="catalog-card-body">
-                            <span class="catalog-card-eyebrow">@item.Eyebrow</span>
-                            <h3>@item.Title</h3>
-                            <p>@item.Subtitle</p>
-                            <span class="catalog-card-cta">@Loc["page.yagyas.card.cta"]</span>
-                        </div>
-                    </a>
-                }
-            </div>
-        }
-    </div>
-</section>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
 
 @code {
     private List<Yoga.Shared.DTOs.YagyaDto>? items;

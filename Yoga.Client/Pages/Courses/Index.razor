@@ -5,54 +5,80 @@
 
 <PageTitle>@Loc["page.courses.title"]</PageTitle>
 
-<section class="page-hero">
-    <div class="page-hero-bg" style="background-image: url('@F("HeroImageUrl", "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=1600&q=80")');" ></div>
-    <div class="page-hero-overlay"></div>
-    <div class="container page-hero-content">
-        <p class="section-eyebrow">@F("Eyebrow", Loc["page.courses.eyebrow"])</p>
-        <h1>@F("H1", Loc["page.courses.h1"])</h1>
-        <div class="section-divider" style="margin:2rem 0;"></div>
-        <p>@F("Intro", Loc["page.courses.intro"])</p>
-    </div>
-</section>
-
-<section class="course-cards-section">
-    <div class="container">
-        <div class="section-header reveal">
-            <p class="section-eyebrow">@F("Eyebrow", Loc["page.courses.eyebrow"])</p>
-            <h2>@F("H2", Loc["page.courses.h2"])</h2>
-            <div class="section-divider"></div>
+<div class="arc-library">
+    @* ── Hero: editorial cover ── *@
+    <section class="arc-library__hero">
+        <div class="container arc-library__hero-grid">
+            <div class="arc-library__hero-text">
+                <p class="section-eyebrow">@F("Eyebrow", Loc["page.courses.eyebrow"])</p>
+                <h1>@F("H1", Loc["page.courses.h1"])</h1>
+                <div class="section-divider"></div>
+                <p class="arc-library__curator-note">@F("Intro", Loc["page.courses.intro"])</p>
+            </div>
+            <nav class="arc-library__index" aria-label="Course directions">
+                <span class="arc-library__index-label">@Loc["page.courses.h2"]</span>
+                <ul>
+                    <li><a href="/courses/pranavidya">@Loc["nav.courses.pranayama"]</a></li>
+                    <li><a href="/courses/meditation">@Loc["nav.courses.meditation"]</a></li>
+                    <li><a href="/courses/yoga">@Loc["nav.courses.yoga"]</a></li>
+                </ul>
+            </nav>
         </div>
-        @if (loading)
-        {
-            <div class="public-loading-state">Загружаем программы</div>
-        }
-        else if (!courses.Any())
-        {
-            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
-                <p style="margin-bottom:1rem;">Каталог курсов очищен и ожидает новое наполнение.</p>
-                <p>Сюда нужно добавить направления обучения с названием, обещанием результата, форматом, уровнем подготовки, длительностью, карточкой-обложкой и понятным CTA для входа в детальную страницу.</p>
-            </div>
-        }
-        else
-        {
-            <div class="course-cards-grid">
-                @foreach (var (c, i) in courses.Select((x, idx) => (x, idx)))
-                {
-                    var course = c;
-                    var revealClass = i == 1 ? "reveal-d1" : i == 2 ? "reveal-d2" : "";
-                    <ProductCard Url="@($"/courses/{CanonicalCourseSlug(course.Slug)}")"
-                                 ImageUrl="@course.ImageUrl"
-                                 Title="@DisplayCourseTitle(course)"
-                                 Eyebrow="@course.Eyebrow"
-                                 Description="@course.Subtitle"
-                                 CtaText="@F("CardCta", Loc["page.courses.card.cta"])"
-                                 RevealClass="@revealClass" />
-                }
-            </div>
-        }
-    </div>
-</section>
+    </section>
+
+    @* ── Catalog: library shelf ── *@
+    <section class="arc-library__catalog">
+        <div class="container">
+            @if (loading)
+            {
+                <div class="public-loading-state">@Loc["common.loading"]</div>
+            }
+            else if (!courses.Any())
+            {
+                <p class="arc-library__empty">@Loc["page.courses.sub"]</p>
+            }
+            else
+            {
+                <div class="arc-library__shelf">
+                    @foreach (var (c, i) in courses.Select((x, idx) => (x, idx)))
+                    {
+                        var course = c;
+                        var num = (i + 1).ToString("D2");
+                        <a class="arc-library__card @(i % 2 == 0 ? "arc-library__card--wide" : "")" href="/courses/@CanonicalCourseSlug(course.Slug)">
+                            <div class="arc-library__card-photo">
+                                <img src="@(!string.IsNullOrEmpty(course.ImageUrl) ? Api.ResolveMediaUrl(course.ImageUrl) : "https://images.unsplash.com/photo-1506126279646-a697353d3166?auto=format&fit=crop&w=800&q=80")" alt="@DisplayCourseTitle(course)" loading="lazy" />
+                            </div>
+                            <div class="arc-library__card-body">
+                                <span class="arc-library__card-num">@num</span>
+                                @if (!string.IsNullOrEmpty(course.Eyebrow))
+                                {
+                                    <span class="arc-library__card-eyebrow">@course.Eyebrow</span>
+                                }
+                                <h3>@DisplayCourseTitle(course)</h3>
+                                <p class="arc-library__card-desc">@course.Subtitle</p>
+                                <div class="arc-library__card-meta">
+                                    @if (!string.IsNullOrEmpty(course.Level))
+                                    {
+                                        <span>@Loc["meta.level"]: @course.Level</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(course.Duration))
+                                    {
+                                        <span>@Loc["meta.duration"]: @course.Duration</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(course.Format))
+                                    {
+                                        <span>@Loc["meta.format"]: @course.Format</span>
+                                    }
+                                </div>
+                                <span class="arc-library__card-cta">@F("CardCta", Loc["page.courses.card.cta"])</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
 
 @code {
     private List<CourseDto> courses = new();

@@ -5,61 +5,101 @@
 
 <PageTitle>@Loc["page.consultations.title"]</PageTitle>
 
-<section class="page-hero">
-    <div class="page-hero-bg" style="background-image: url('@F("HeroImageUrl", "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1600&q=80")');" ></div>
-    <div class="page-hero-overlay"></div>
-    <div class="container page-hero-content">
-        <p class="section-eyebrow">@F("Eyebrow", Loc["page.consultations.eyebrow"])</p>
-        <h1>@F("H1", Loc["page.consultations.h1"])</h1>
-        <div class="section-divider" style="margin:2rem 0;"></div>
-        <p>@F("Intro", Loc["page.consultations.intro"])</p>
-    </div>
-</section>
-
-<section class="course-cards-section">
-    <div class="container">
-        <div class="section-header reveal">
+<div class="arc-dossier">
+    @* ── Hero: private, narrow, trust-building ── *@
+    <section class="arc-dossier__hero">
+        <div class="container arc-dossier__hero-inner">
             <p class="section-eyebrow">@F("Eyebrow", Loc["page.consultations.eyebrow"])</p>
-            <h2>@F("H2", Loc["page.consultations.h2"])</h2>
+            <h1>@F("H1", Loc["page.consultations.h1"])</h1>
             <div class="section-divider"></div>
+            <p class="arc-dossier__hero-intro">@F("Intro", Loc["page.consultations.intro"])</p>
         </div>
-        @if (loading)
-        {
-            <div class="public-loading-state">Загружаем консультации</div>
-        }
-        else if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
-                <p style="margin-bottom:1rem;">@errorMessage</p>
-                <p>Сейчас вместо каталога нужно подключить публичный API и затем добавить консультации с кратким описанием, экспертной специализацией, изображением и CTA.</p>
+    </section>
+
+    @* ── How it works: 3 steps ── *@
+    <section class="arc-dossier__steps">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">@Loc["consultations.how.eyebrow"]</p>
+                <h2>@Loc["consultations.how.h2"]</h2>
+                <div class="section-divider"></div>
             </div>
-        }
-        else if (!consultations.Any())
-        {
-            <div style="text-align:center;padding:4rem 0;color:var(--text-muted);max-width:760px;margin:0 auto;">
-                <p style="margin-bottom:1rem;">Раздел подготовлен под новое наполнение.</p>
-                <p>Сюда нужно добавить 3-6 консультаций: название направления, для кого подходит консультация, ожидаемый результат, короткую цитату-обещание и отдельное изображение для карточки.</p>
+            <div class="arc-dossier__steps-grid">
+                <div class="arc-dossier__step">
+                    <span class="arc-dossier__step-num">01</span>
+                    <h3>@Loc["consultations.how.step1.title"]</h3>
+                    <p>@Loc["consultations.how.step1.text"]</p>
+                </div>
+                <div class="arc-dossier__step">
+                    <span class="arc-dossier__step-num">02</span>
+                    <h3>@Loc["consultations.how.step2.title"]</h3>
+                    <p>@Loc["consultations.how.step2.text"]</p>
+                </div>
+                <div class="arc-dossier__step">
+                    <span class="arc-dossier__step-num">03</span>
+                    <h3>@Loc["consultations.how.step3.title"]</h3>
+                    <p>@Loc["consultations.how.step3.text"]</p>
+                </div>
             </div>
-        }
-        else
-        {
-            <div class="course-cards-grid">
-                @foreach (var (c, i) in consultations.Select((x, idx) => (x, idx)))
-                {
-                    var cons = c;
-                    var revealClass = i == 1 ? "reveal-d1" : i == 2 ? "reveal-d2" : "";
-                    <ProductCard Url="@($"/consultations/{CanonicalConsultationSlug(cons.Slug)}")"
-                                 ImageUrl="@cons.ImageUrl"
-                                 Title="@DisplayConsultationTitle(cons)"
-                                 Eyebrow="@cons.Eyebrow"
-                                 Description="@cons.Quote"
-                                 CtaText="@F("CardCta", Loc["page.consultations.card.cta"])"
-                                 RevealClass="@revealClass" />
-                }
-            </div>
-        }
-    </div>
-</section>
+        </div>
+    </section>
+
+    @* ── Catalog: stacked dossier panels ── *@
+    <section class="arc-dossier__catalog">
+        <div class="container">
+            @if (loading)
+            {
+                <div class="public-loading-state">@Loc["common.loading"]</div>
+            }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <p class="arc-dossier__empty">@errorMessage</p>
+            }
+            else if (!consultations.Any())
+            {
+                <p class="arc-dossier__empty">@Loc["page.consultations.intro"]</p>
+            }
+            else
+            {
+                <div class="arc-dossier__stack">
+                    @foreach (var cons in consultations)
+                    {
+                        <a class="arc-dossier__panel" href="/consultations/@cons.Slug">
+                            @if (!string.IsNullOrEmpty(cons.ImageUrl))
+                            {
+                                <div class="arc-dossier__panel-image">
+                                    <img src="@Api.ResolveMediaUrl(cons.ImageUrl)" alt="@cons.Title" loading="lazy" />
+                                </div>
+                            }
+                            <div class="arc-dossier__panel-body">
+                                @if (!string.IsNullOrEmpty(cons.Eyebrow))
+                                {
+                                    <span class="arc-dossier__panel-eyebrow">@cons.Eyebrow</span>
+                                }
+                                <h3>@cons.Title</h3>
+                                @if (!string.IsNullOrEmpty(cons.Quote))
+                                {
+                                    <blockquote class="arc-dossier__panel-quote">@cons.Quote</blockquote>
+                                }
+                                <div class="arc-dossier__panel-facets">
+                                    @if (!string.IsNullOrEmpty(cons.Duration))
+                                    {
+                                        <span>@Loc["meta.duration"]: @cons.Duration</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(cons.Format))
+                                    {
+                                        <span>@Loc["meta.format"]: @cons.Format</span>
+                                    }
+                                </div>
+                                <span class="arc-dossier__panel-cta">@F("CardCta", Loc["page.consultations.card.cta"])</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+</div>
 
 @code {
     private List<ConsultationDto> consultations = new();
@@ -85,10 +125,6 @@
         return field.Contains("Image", StringComparison.OrdinalIgnoreCase) ? Api.ResolveMediaUrl(val) : val;
     }
 
-    private static string CanonicalConsultationSlug(string slug) => slug;
-
-    private string DisplayConsultationTitle(ConsultationDto consultation) => consultation.Title;
-
     private async Task LoadAsync()
     {
         loading = true;
@@ -101,7 +137,7 @@
         catch
         {
             consultations = new();
-            errorMessage = "Каталог консультаций не загрузился, потому что публичный frontend сейчас не может получить данные из backend API.";
+            errorMessage = null;
         }
         loading = false;
     }

@@ -7074,3 +7074,681 @@ details[open] > .program-module-summary .program-module-toggle {
   .rd2-lightbox__next { right: 0.5rem; }
   .rd2-lightbox__counter { font-size: 0.7rem; bottom: 1rem; }
 }
+
+/* =====================================================
+   ARC-LIBRARY — Courses / Archive Library
+   ===================================================== */
+.arc-library__hero {
+  padding: 10rem 0 6rem;
+  background: var(--background);
+}
+.arc-library__hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 4rem;
+  align-items: start;
+}
+.arc-library__hero-text h1 {
+  font-size: 3.6rem;
+  margin-bottom: 1.5rem;
+}
+.arc-library__curator-note {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  line-height: 1.8;
+  max-width: 600px;
+}
+.arc-library__index {
+  border-left: 2px solid var(--accent);
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+.arc-library__index-label {
+  font-family: var(--font-sans);
+  font-size: 0.62rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 1.2rem;
+}
+.arc-library__index ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.arc-library__index li {
+  margin-bottom: 0.8rem;
+}
+.arc-library__index a {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--charcoal);
+  transition: color var(--transition-speed);
+}
+.arc-library__index a:hover {
+  color: var(--accent);
+}
+
+/* Catalog shelf */
+.arc-library__catalog {
+  padding: 6rem 0 8rem;
+  background: var(--background);
+}
+.arc-library__empty {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-muted);
+}
+.arc-library__shelf {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid var(--divider);
+}
+.arc-library__card {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--divider);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+}
+.arc-library__card:last-child { border-right: none; }
+.arc-library__card:hover { background: var(--accent-light); }
+
+.arc-library__card-photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--section-bg-warm);
+}
+.arc-library__card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.7);
+  transition: transform 0.8s ease, filter 0.6s ease;
+}
+.arc-library__card:hover .arc-library__card-photo img {
+  transform: scale(1.04);
+  filter: saturate(1);
+}
+.arc-library__card-body {
+  padding: 2rem 1.8rem 2.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-top: 1px solid var(--divider);
+}
+.arc-library__card-num {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--accent);
+  line-height: 1;
+}
+.arc-library__card-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.arc-library__card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 300;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.15;
+}
+.arc-library__card-desc {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1.7;
+  flex: 1;
+}
+.arc-library__card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--divider);
+}
+.arc-library__card-cta {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: auto;
+  padding-top: 0.5rem;
+  transition: color var(--transition-speed);
+}
+.arc-library__card:hover .arc-library__card-cta { color: var(--accent-hover); }
+
+@media (max-width: 900px) {
+  .arc-library__hero-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .arc-library__index { border-left: none; border-top: 2px solid var(--accent); padding-left: 0; padding-top: 1.2rem; }
+  .arc-library__shelf { grid-template-columns: 1fr; }
+  .arc-library__card { border-right: none; border-bottom: 1px solid var(--divider); }
+  .arc-library__card:last-child { border-bottom: none; }
+}
+@media (max-width: 480px) {
+  .arc-library__hero { padding: 7rem 0 4rem; }
+  .arc-library__hero-text h1 { font-size: 2.5rem; }
+  .arc-library__card-body { padding: 1.5rem 1.2rem 2rem; }
+  .arc-library__card h3 { font-size: 1.35rem; }
+}
+
+/* =====================================================
+   ARC-DOSSIER — Consultations / Confidential Dossiers
+   ===================================================== */
+.arc-dossier__hero {
+  padding: 10rem 0 5rem;
+  background: var(--section-bg-warm);
+}
+.arc-dossier__hero-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+}
+.arc-dossier__hero-inner h1 {
+  font-size: 3.2rem;
+  margin-bottom: 1.5rem;
+}
+.arc-dossier__hero-intro {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+/* Steps */
+.arc-dossier__steps {
+  padding: 6rem 0;
+  background: var(--background);
+}
+.arc-dossier__steps .section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+.arc-dossier__steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+}
+.arc-dossier__step {
+  text-align: center;
+  padding: 2rem 1.5rem;
+}
+.arc-dossier__step-num {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 1rem;
+}
+.arc-dossier__step h3 {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 400;
+  margin-bottom: 0.8rem;
+}
+.arc-dossier__step p {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* Dossier catalog */
+.arc-dossier__catalog {
+  padding: 4rem 0 8rem;
+  background: var(--background);
+}
+.arc-dossier__empty {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-muted);
+}
+.arc-dossier__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  max-width: 920px;
+  margin: 0 auto;
+}
+.arc-dossier__panel {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 2.5rem;
+  text-decoration: none;
+  color: inherit;
+  background: var(--card-bg);
+  border: 1px solid var(--divider);
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.arc-dossier__panel:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+.arc-dossier__panel-image {
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: var(--section-bg-warm);
+}
+.arc-dossier__panel-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.75);
+  transition: transform 0.6s ease;
+}
+.arc-dossier__panel:hover .arc-dossier__panel-image img {
+  transform: scale(1.03);
+}
+.arc-dossier__panel-body {
+  padding: 2.5rem 2.5rem 2.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.arc-dossier__panel-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.arc-dossier__panel h3 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 300;
+  font-style: italic;
+  margin: 0;
+}
+.arc-dossier__panel-quote {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--text-muted);
+  border-left: 2px solid var(--accent);
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  line-height: 1.7;
+}
+.arc-dossier__panel-facets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--divider);
+}
+.arc-dossier__panel-cta {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: auto;
+  transition: color var(--transition-speed);
+}
+.arc-dossier__panel:hover .arc-dossier__panel-cta { color: var(--accent-hover); }
+
+@media (max-width: 700px) {
+  .arc-dossier__steps-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .arc-dossier__panel { grid-template-columns: 1fr; }
+  .arc-dossier__panel-image { aspect-ratio: 16 / 9; }
+  .arc-dossier__panel-body { padding: 1.5rem; }
+}
+@media (max-width: 480px) {
+  .arc-dossier__hero { padding: 7rem 0 3.5rem; }
+  .arc-dossier__hero-inner h1 { font-size: 2.4rem; }
+  .arc-dossier__step-num { font-size: 2rem; }
+  .arc-dossier__panel h3 { font-size: 1.3rem; }
+}
+
+/* =====================================================
+   ARC-EXPEDITION — Retreats / Expedition Archive
+   ===================================================== */
+.arc-expedition__hero {
+  padding: 10rem 0 6rem;
+  background: var(--section-bg-warm);
+}
+.arc-expedition__hero-inner {
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto;
+}
+.arc-expedition__hero-inner h1 {
+  font-size: 3.6rem;
+  margin-bottom: 1.5rem;
+}
+.arc-expedition__hero-intro {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+/* Posters */
+.arc-expedition__catalog {
+  padding: 6rem 0 8rem;
+  background: var(--background);
+}
+.arc-expedition__empty {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-muted);
+}
+.arc-expedition__skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+.arc-expedition__skeleton-card {
+  aspect-ratio: 3 / 4;
+  background: var(--section-bg-warm);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.arc-expedition__posters {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5rem;
+}
+.arc-expedition__poster {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--divider);
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.arc-expedition__poster:hover {
+  border-color: var(--accent);
+  box-shadow: 0 6px 32px rgba(0,0,0,0.08);
+}
+.arc-expedition__poster-image {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--section-bg-warm);
+}
+.arc-expedition__poster-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.7);
+  transition: transform 0.8s ease, filter 0.6s ease;
+}
+.arc-expedition__poster:hover .arc-expedition__poster-image img {
+  transform: scale(1.04);
+  filter: saturate(1);
+}
+.arc-expedition__poster-stamp {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.58rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--accent);
+  padding: 0.35rem 0.9rem;
+}
+.arc-expedition__poster-body {
+  padding: 2rem 1.8rem 2.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.arc-expedition__poster-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.arc-expedition__poster h3 {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 300;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.15;
+}
+.arc-expedition__poster-sub {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1.7;
+}
+.arc-expedition__poster-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--divider);
+  margin-top: auto;
+}
+.arc-expedition__poster-cta {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-top: 0.5rem;
+  transition: color var(--transition-speed);
+}
+.arc-expedition__poster:hover .arc-expedition__poster-cta { color: var(--accent-hover); }
+
+@media (max-width: 700px) {
+  .arc-expedition__posters { grid-template-columns: 1fr; }
+  .arc-expedition__skeleton { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .arc-expedition__hero { padding: 7rem 0 4rem; }
+  .arc-expedition__hero-inner h1 { font-size: 2.5rem; }
+  .arc-expedition__poster-body { padding: 1.5rem 1.2rem 2rem; }
+  .arc-expedition__poster h3 { font-size: 1.4rem; }
+}
+
+/* =====================================================
+   ARC-RITUAL — Yagyas / Ritual Collection
+   ===================================================== */
+.arc-ritual__hero {
+  padding: 10rem 0 6rem;
+  background: var(--section-bg-dark);
+  text-align: center;
+}
+.arc-ritual__hero-inner {
+  max-width: 700px;
+  margin: 0 auto;
+}
+.arc-ritual__hero-eyebrow {
+  color: var(--accent) !important;
+}
+.arc-ritual__hero-inner h1 {
+  font-size: 3.6rem;
+  color: var(--text-on-dark);
+  margin-bottom: 1.5rem;
+}
+.arc-ritual__hero-line {
+  width: 60px;
+  height: 1px;
+  background: var(--accent);
+  margin: 2rem auto;
+}
+.arc-ritual__hero-intro {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 300;
+  color: rgba(224, 220, 212, 0.7);
+  line-height: 1.8;
+}
+
+/* Panels */
+.arc-ritual__catalog {
+  padding: 6rem 0 8rem;
+  background: var(--background);
+}
+.arc-ritual__empty {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-muted);
+}
+.arc-ritual__skeleton {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+.arc-ritual__skeleton-card {
+  aspect-ratio: 1 / 1;
+  background: var(--section-bg-warm);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.arc-ritual__panels {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2.5rem;
+  max-width: 920px;
+  margin: 0 auto;
+}
+.arc-ritual__panel {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--divider);
+  overflow: hidden;
+  text-align: center;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.arc-ritual__panel:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+.arc-ritual__panel-image {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--section-bg-warm);
+}
+.arc-ritual__panel-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.6) brightness(0.95);
+  transition: transform 0.8s ease, filter 0.6s ease;
+}
+.arc-ritual__panel:hover .arc-ritual__panel-image img {
+  transform: scale(1.04);
+  filter: saturate(0.85) brightness(1);
+}
+.arc-ritual__panel-body {
+  padding: 2rem 1.8rem 2.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.arc-ritual__panel-eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.arc-ritual__panel h3 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 300;
+  font-style: italic;
+  margin: 0;
+}
+.arc-ritual__panel-sub {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1.7;
+  max-width: 340px;
+}
+.arc-ritual__panel-divider {
+  width: 40px;
+  height: 1px;
+  background: var(--accent);
+  margin: 0.8rem 0;
+}
+.arc-ritual__panel-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.2rem;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.arc-ritual__panel-cta {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: auto;
+  padding-top: 0.8rem;
+  transition: color var(--transition-speed);
+}
+.arc-ritual__panel:hover .arc-ritual__panel-cta { color: var(--accent-hover); }
+
+@media (max-width: 700px) {
+  .arc-ritual__panels { grid-template-columns: 1fr; max-width: 480px; }
+  .arc-ritual__skeleton { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .arc-ritual__hero { padding: 7rem 0 4rem; }
+  .arc-ritual__hero-inner h1 { font-size: 2.5rem; }
+  .arc-ritual__panel-body { padding: 1.5rem 1.2rem 2rem; }
+  .arc-ritual__panel h3 { font-size: 1.3rem; }
+}
