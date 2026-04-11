@@ -3,6 +3,12 @@
 @inject IJSRuntime JS
 @inject NavigationManager Nav
 
+@if (showLoginModal)
+{
+    <AdminLoginModal OnClose="@OnLoginSuccess" />
+}
+else if (isAuthenticated)
+{
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="admin-sidebar-header">
@@ -33,9 +39,12 @@
         @Body
     </main>
 </div>
+}
 
 @code {
     private string? adminLogin;
+    private bool showLoginModal;
+    private bool isAuthenticated;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -44,7 +53,8 @@
             var token = await JS.InvokeAsync<string?>("localStorage.getItem", "yl-admin-token");
             if (string.IsNullOrWhiteSpace(token))
             {
-                Nav.NavigateTo("/", forceLoad: true);
+                showLoginModal = true;
+                StateHasChanged();
                 return;
             }
 
@@ -52,18 +62,35 @@
             if (user is null)
             {
                 await JS.InvokeVoidAsync("localStorage.removeItem", "yl-admin-token");
-                Nav.NavigateTo("/", forceLoad: true);
+                showLoginModal = true;
+                StateHasChanged();
                 return;
             }
 
             adminLogin = user.Login;
+            isAuthenticated = true;
             StateHasChanged();
         }
+    }
+
+    private async Task OnLoginSuccess()
+    {
+        showLoginModal = false;
+        var user = await Api.AdminGetCurrentUserAsync();
+        if (user is not null)
+        {
+            adminLogin = user.Login;
+            isAuthenticated = true;
+        }
+        StateHasChanged();
     }
 
     private async Task Logout()
     {
         await JS.InvokeVoidAsync("localStorage.removeItem", "yl-admin-token");
-        Nav.NavigateTo("/", forceLoad: true);
+        isAuthenticated = false;
+        adminLogin = null;
+        showLoginModal = true;
+        StateHasChanged();
     }
 }

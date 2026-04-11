@@ -50,7 +50,6 @@
             }
 
             await JS.InvokeVoidAsync("localStorage.setItem", "yl-admin-token", result.Token);
-            await JS.InvokeVoidAsync("open", "/admin", "_self");
             await Close();
         }
         finally
