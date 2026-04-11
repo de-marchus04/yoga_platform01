@@ -49,4 +49,14 @@ END
 WHERE "Field" = 'Eyebrow'
   AND "EntityType" IN ('Retreat', 'Yagya');
 
+UPDATE "Translations"
+SET "Value" = 'https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=1200&q=80'
+WHERE "EntityType" = 'Yagya'
+  AND "Field" = 'ImageUrl'
+  AND "Value" = 'https://images.unsplash.com/photo-1604187350996-2374defa3750?w=800&q=80';
+
+UPDATE "Yagyas"
+SET "ImageUrl" = 'https://images.unsplash.com/photo-1507608616759-54f48f0af0ee?auto=format&fit=crop&w=1200&q=80'
+WHERE "ImageUrl" = 'https://images.unsplash.com/photo-1604187350996-2374defa3750?w=800&q=80';
+
 COMMIT;
