@@ -20,7 +20,7 @@ namespace Yoga.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<List<RetreatDto>>> GetRetreats([FromQuery] string lang = "uk", [FromQuery] string? period = null)
         {
-            var query = _context.Retreats.Where(r => r.IsActive);
+            var query = _context.Retreats.Where(r => r.IsActive && !r.IsDraft);
 
             var now = DateTime.UtcNow.Date;
             if (string.Equals(period, "upcoming", StringComparison.OrdinalIgnoreCase))
@@ -57,11 +57,11 @@ namespace Yoga.Api.Controllers
             if (Guid.TryParse(slugOrId, out var id))
                 item = await _context.Retreats
                     .Include(r => r.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
-                    .FirstOrDefaultAsync(r => r.Id == id && r.IsActive);
+                    .FirstOrDefaultAsync(r => r.Id == id && r.IsActive && !r.IsDraft);
             else
                 item = await _context.Retreats
                     .Include(r => r.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
-                    .FirstOrDefaultAsync(r => r.Slug == slugOrId && r.IsActive);
+                    .FirstOrDefaultAsync(r => r.Slug == slugOrId && r.IsActive && !r.IsDraft);
 
             if (item is null) return NotFound();
 

@@ -1,0 +1,453 @@
+@using Yoga.Shared.DTOs
+@inject ApiService Api
+@inject NavigationManager Navigation
+
+<div class="admin-page-header">
+    <div>
+        <h1>@PageTitle</h1>
+        <p style="margin:0;color:var(--a-text-secondary);max-width:52rem;">@PageDescription</p>
+    </div>
+    <div class="editor-header-actions">
+        <a class="btn-admin btn-admin-outline" href="@ListUrl">Back To List</a>
+        @if (!string.IsNullOrWhiteSpace(editor?.PublicPath))
+        {
+            <a class="btn-admin btn-admin-outline" href="@editor!.PublicPath" target="_blank" rel="noreferrer">Open Public Page</a>
+        }
+        <button class="btn-admin btn-admin-outline" disabled="@(loading || saving || editor is null)" @onclick='() => SaveAsync(asDraft: true)'>
+            @(saving ? "Saving..." : "Save as Draft")
+        </button>
+        <button class="btn-admin btn-admin-primary" disabled="@(loading || saving || editor is null)" @onclick='() => SaveAsync(asDraft: false)'>
+            @(saving ? "Publishing..." : (IsNew ? "Create &amp; Publish" : "Publish"))
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="stat-card" style="margin-bottom:1rem;">
+        <div class="stat-card-label">Status</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">@statusMessage</div>
+    </div>
+}
+
+@if (loading)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Loading</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">Preparing editor...</div>
+    </div>
+}
+else if (editor is null)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Unavailable</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">This editor is not available yet.</div>
+    </div>
+}
+else
+{
+    <div class="editor-status-bar">
+        <span class="badge @(editor.IsActive ? "badge-success" : "badge-muted")">@(editor.IsActive ? "Active" : "Hidden")</span>
+        <span class="badge @(editor.IsDraft ? "badge-warning" : "badge-success")">@(editor.IsDraft ? "Draft" : "Published")</span>
+        @if (editor.SupportsFormatFlags)
+        {
+            <span class="badge @(editor.IsOnline ? "badge-success" : "badge-muted")">@(editor.IsOnline ? "Online" : "Online off")</span>
+            <span class="badge @(editor.IsOffline ? "badge-success" : "badge-muted")">@(editor.IsOffline ? "Offline" : "Offline off")</span>
+        }
+        @if (editor.SupportsEventDates)
+        {
+            <span class="badge badge-muted">@GetDateBadgeText()</span>
+        }
+        @if (hasUnsavedChanges)
+        {
+            <span class="ce-unsaved-badge">Unsaved changes</span>
+        }
+    </div>
+
+    <div class="content-editor">
+        <div class="content-editor-lang-bar">
+            @foreach (var language in editor.Languages)
+            {
+                <button type="button" class="ce-lang-btn @(activeLanguage == language ? "active" : null)" @onclick="(() => activeLanguage = language)">
+                    <span>@language.ToUpperInvariant()</span>
+                    <span class="ce-lang-pct">@GetLanguageCompletion(language)%</span>
+                </button>
+            }
+            @if (hasUnsavedChanges)
+            {
+                <span class="ce-unsaved-badge">Unsaved draft</span>
+            }
+        </div>
+
+        <div class="ce-section">
+            <div class="ce-section-header">
+                <div class="ce-section-title">Publishing</div>
+                <div class="ce-section-chevron">@CurrentLanguageLabel</div>
+            </div>
+            <div class="ce-section-body">
+                <div class="admin-settings-grid">
+                    <div class="admin-form-group">
+                        <label for="slug-input">Slug</label>
+                        <input id="slug-input" class="admin-input" value="@editor.Slug" @oninput="OnSlugChanged" />
+                        <div class="admin-form-hint">Public URL: @GetPublicUrlPreview()</div>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="sort-order-input">Sort Order</label>
+                        <input id="sort-order-input" type="number" class="admin-input" value="@editor.SortOrder" @oninput="OnSortOrderChanged" />
+                    </div>
+                    @if (editor.SupportsEventDates)
+                    {
+                        <div class="admin-form-group">
+                            <label for="event-start-input">Event Start</label>
+                            <input id="event-start-input" type="date" class="admin-input" value="@FormatDateInput(editor.EventStartDate)" @onchange="OnEventStartChanged" />
+                        </div>
+                        <div class="admin-form-group">
+                            <label for="event-end-input">Event End</label>
+                            <input id="event-end-input" type="date" class="admin-input" value="@FormatDateInput(editor.EventEndDate)" @onchange="OnEventEndChanged" />
+                        </div>
+                    }
+                </div>
+                <div class="admin-checkbox-row">
+                    <label class="admin-checkbox">
+                        <input type="checkbox" checked="@editor.IsActive" @onchange="OnIsActiveChanged" />
+                        <span>Visible on site</span>
+                    </label>
+                    @if (editor.SupportsFormatFlags)
+                    {
+                        <label class="admin-checkbox">
+                            <input type="checkbox" checked="@editor.IsOnline" @onchange="OnIsOnlineChanged" />
+                            <span>Online format</span>
+                        </label>
+                        <label class="admin-checkbox">
+                            <input type="checkbox" checked="@editor.IsOffline" @onchange="OnIsOfflineChanged" />
+                            <span>Offline format</span>
+                        </label>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @foreach (var group in GetFieldGroups())
+        {
+            var fields = GetFields(group).ToList();
+
+            <div class="ce-section">
+                <div class="ce-section-header">
+                    <div class="ce-section-title">@group</div>
+                    <div class="ce-section-chevron">@fields.Count field(s)</div>
+                </div>
+                <div class="ce-section-body">
+                    <div class="admin-localized-grid">
+                        @foreach (var field in fields)
+                        {
+                            <div class="admin-form-group">
+                                <label for="@GetInputId(field.Key)">@field.Label</label>
+                                @if (field.Type == ContentFieldType.TextArea || field.Type == ContentFieldType.RichText || field.Type == ContentFieldType.ForWhom)
+                                {
+                                    <textarea id="@GetInputId(field.Key)" class="admin-input" @oninput="@(args => OnFieldChanged(field.Key, args))">@GetFieldValue(field.Key)</textarea>
+                                }
+                                else
+                                {
+                                    <input id="@GetInputId(field.Key)" class="admin-input" value="@GetFieldValue(field.Key)" @oninput="@(args => OnFieldChanged(field.Key, args))" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(field.Placeholder) || !string.IsNullOrWhiteSpace(GetFieldHint(field)))
+                                {
+                                    <div class="admin-form-hint">@(field.Placeholder ?? GetFieldHint(field))</div>
+                                }
+                                @if (field.Type == ContentFieldType.Image && !string.IsNullOrWhiteSpace(GetFieldValue(field.Key)))
+                                {
+                                    <div class="editor-field-preview">
+                                        <img src="@GetFieldValue(field.Key)" alt="@field.Label" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string SectionKey { get; set; } = string.Empty;
+    [Parameter] public string SectionLabel { get; set; } = string.Empty;
+    [Parameter] public string? Slug { get; set; }
+
+    private AdminContentEditorDto? editor;
+    private bool loading = true;
+    private bool saving;
+    private bool hasUnsavedChanges;
+    private string activeLanguage = "uk";
+    private string? statusMessage;
+
+    private bool IsNew => string.IsNullOrWhiteSpace(Slug) || string.Equals(Slug, "new", StringComparison.OrdinalIgnoreCase);
+    private string ListUrl => $"/admin/{SectionKey}";
+    private string PageTitle => IsNew ? $"New {SectionLabel}" : $"Edit {SectionLabel}";
+    private string PageDescription => IsNew
+        ? $"Create a new {SectionLabel.ToLowerInvariant()} entry with localized content for uk, ru, and en."
+        : $"Edit publishing settings and localized content for this {SectionLabel.ToLowerInvariant()}.";
+    private string CurrentLanguageLabel => $"Language: {activeLanguage.ToUpperInvariant()}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        statusMessage = null;
+        hasUnsavedChanges = false;
+
+        editor = IsNew
+            ? await Api.AdminGetEditorTemplateAsync(SectionKey)
+            : await Api.AdminGetEditorAsync(SectionKey, Slug ?? string.Empty);
+
+        activeLanguage = editor?.Languages.FirstOrDefault() ?? "uk";
+        loading = false;
+    }
+
+    private IEnumerable<string> GetFieldGroups()
+    {
+        return editor?.Fields
+            .Select(field => string.IsNullOrWhiteSpace(field.Group) ? "Content" : field.Group!)
+            .Distinct()
+            ?? Enumerable.Empty<string>();
+    }
+
+    private IEnumerable<ContentField> GetFields(string group)
+    {
+        return editor?.Fields.Where(field => (field.Group ?? "Content") == group)
+            ?? Enumerable.Empty<ContentField>();
+    }
+
+    private string GetFieldValue(string fieldKey)
+    {
+        if (editor is null)
+        {
+            return string.Empty;
+        }
+
+        EnsureLanguageMap(activeLanguage);
+        return editor.Translations[activeLanguage].GetValueOrDefault(fieldKey, string.Empty);
+    }
+
+    private string GetFieldHint(ContentField field)
+    {
+        return field.Type switch
+        {
+            ContentFieldType.ForWhom => "Format each line as title~text~imageUrl. Image URL is optional.",
+            ContentFieldType.TextArea when field.Key == "Benefits" => "One benefit per line. The public page will render them as a list.",
+            _ => string.Empty
+        };
+    }
+
+    private int GetLanguageCompletion(string language)
+    {
+        if (editor is null || editor.Fields.Count == 0)
+        {
+            return 0;
+        }
+
+        EnsureLanguageMap(language);
+
+        var filled = editor.Fields.Count(field => !string.IsNullOrWhiteSpace(editor.Translations[language].GetValueOrDefault(field.Key)));
+        return (int)Math.Round(filled * 100d / editor.Fields.Count, MidpointRounding.AwayFromZero);
+    }
+
+    private string GetInputId(string fieldKey) => $"{SectionKey}-{activeLanguage}-{fieldKey}".ToLowerInvariant();
+
+    private string GetPublicUrlPreview()
+    {
+        var slug = editor?.Slug?.Trim();
+        return string.IsNullOrWhiteSpace(slug)
+            ? $"/{SectionKey}/..."
+            : $"/{SectionKey}/{slug}";
+    }
+
+    private string GetDateBadgeText()
+    {
+        if (editor?.EventStartDate is null)
+        {
+            return "Date not set";
+        }
+
+        if (editor.EventEndDate is null || editor.EventEndDate.Value.Date == editor.EventStartDate.Value.Date)
+        {
+            return editor.EventStartDate.Value.ToString("dd.MM.yyyy");
+        }
+
+        return $"{editor.EventStartDate.Value:dd.MM.yyyy} - {editor.EventEndDate.Value:dd.MM.yyyy}";
+    }
+
+    private static string FormatDateInput(DateTime? value)
+    {
+        return value?.ToString("yyyy-MM-dd") ?? string.Empty;
+    }
+
+    private void EnsureLanguageMap(string language)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        if (!editor.Translations.ContainsKey(language))
+        {
+            editor.Translations[language] = editor.Fields.ToDictionary(field => field.Key, _ => string.Empty);
+        }
+    }
+
+    private void OnFieldChanged(string fieldKey, ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        EnsureLanguageMap(activeLanguage);
+        editor.Translations[activeLanguage][fieldKey] = args.Value?.ToString() ?? string.Empty;
+        hasUnsavedChanges = true;
+        statusMessage = null;
+    }
+
+    private void OnSlugChanged(ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        editor = editor with { Slug = args.Value?.ToString() ?? string.Empty };
+        hasUnsavedChanges = true;
+        statusMessage = null;
+    }
+
+    private void OnSortOrderChanged(ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        var sortOrder = int.TryParse(args.Value?.ToString(), out var parsed) ? parsed : 0;
+        editor = editor with { SortOrder = sortOrder };
+        hasUnsavedChanges = true;
+        statusMessage = null;
+    }
+
+    private void OnIsActiveChanged(ChangeEventArgs args)
+    {
+        UpdateFlags(isActive: ParseCheckboxValue(args));
+    }
+
+    private void OnIsOnlineChanged(ChangeEventArgs args)
+    {
+        UpdateFlags(isOnline: ParseCheckboxValue(args));
+    }
+
+    private void OnIsOfflineChanged(ChangeEventArgs args)
+    {
+        UpdateFlags(isOffline: ParseCheckboxValue(args));
+    }
+
+    private void UpdateFlags(bool? isActive = null, bool? isDraft = null, bool? isOnline = null, bool? isOffline = null)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        editor = editor with
+        {
+            IsActive = isActive ?? editor.IsActive,
+            IsDraft = isDraft ?? editor.IsDraft,
+            IsOnline = isOnline ?? editor.IsOnline,
+            IsOffline = isOffline ?? editor.IsOffline
+        };
+        hasUnsavedChanges = true;
+        statusMessage = null;
+    }
+
+    private void OnEventStartChanged(ChangeEventArgs args)
+    {
+        UpdateEventDates(eventStartDate: ParseDateInput(args));
+    }
+
+    private void OnEventEndChanged(ChangeEventArgs args)
+    {
+        UpdateEventDates(eventEndDate: ParseDateInput(args));
+    }
+
+    private void UpdateEventDates(DateTime? eventStartDate = null, DateTime? eventEndDate = null)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        editor = editor with
+        {
+            EventStartDate = eventStartDate ?? editor.EventStartDate,
+            EventEndDate = eventEndDate ?? editor.EventEndDate
+        };
+        hasUnsavedChanges = true;
+        statusMessage = null;
+    }
+
+    private static bool ParseCheckboxValue(ChangeEventArgs args)
+    {
+        return args.Value is bool value && value;
+    }
+
+    private static DateTime? ParseDateInput(ChangeEventArgs args)
+    {
+        return DateTime.TryParse(args.Value?.ToString(), out var parsed)
+            ? parsed.Date
+            : null;
+    }
+
+    private async Task SaveAsync(bool asDraft = false)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        saving = true;
+        statusMessage = null;
+
+        var isActive = asDraft ? editor.IsActive : true;
+        var isDraft = asDraft;
+
+        var request = new AdminContentSaveRequestDto(
+            editor.Slug,
+            editor.SortOrder,
+            isActive,
+            isDraft,
+            editor.IsOnline,
+            editor.IsOffline,
+            editor.EventStartDate,
+            editor.EventEndDate,
+            editor.Translations);
+
+        var savedEditor = IsNew
+            ? await Api.AdminCreateEditorContentAsync(SectionKey, request)
+            : await Api.AdminUpdateEditorContentAsync(SectionKey, editor.Id ?? Guid.Empty, request);
+
+        saving = false;
+
+        if (savedEditor is null)
+        {
+            statusMessage = "Save failed. Check the slug, admin session, and required fields.";
+            return;
+        }
+
+        editor = savedEditor;
+        hasUnsavedChanges = false;
+
+        if (IsNew || !string.Equals(Slug, savedEditor.Slug, StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"/admin/{SectionKey}/{savedEditor.Slug}");
+            return;
+        }
+
+        statusMessage = $"{SectionLabel} {(isDraft ? "saved as draft" : "published")}.";
+    }
+}

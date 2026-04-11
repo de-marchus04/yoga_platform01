@@ -1,54 +1,167 @@
 @page "/admin"
 @layout AdminLayout
+@inject ApiService Api
+@using Yoga.Shared.DTOs
 
 <div class="admin-page-header">
-    <h1>Dashboard</h1>
+    <div>
+        <h1>Dashboard</h1>
+        <p style="margin:0;color:var(--a-text-secondary);max-width:48rem;">
+            Editorial control room for content, translations, media, and public pages.
+        </p>
+    </div>
+    @if (dashboard?.CanBootstrapSampleContent == true)
+    {
+        <button class="btn-admin btn-admin-primary" disabled="@busy" @onclick="BootstrapAsync">
+            @(busy ? "Creating..." : "Create Test Content")
+        </button>
+    }
 </div>
 
-<div class="admin-stat-grid">
-    <div class="admin-card admin-stat">
-        <div class="admin-stat-value">@coursesCount</div>
-        <div class="admin-stat-label">Courses</div>
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="stat-card" style="margin-bottom:1.2rem;">
+        <div class="stat-card-label">Status</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">@statusMessage</div>
     </div>
-    <div class="admin-card admin-stat">
-        <div class="admin-stat-value">@consultationsCount</div>
-        <div class="admin-stat-label">Consultations</div>
-    </div>
-    <div class="admin-card admin-stat">
-        <div class="admin-stat-value">@retreatsCount</div>
-        <div class="admin-stat-label">Retreats</div>
-    </div>
-    <div class="admin-card admin-stat">
-        <div class="admin-stat-value">@yagyasCount</div>
-        <div class="admin-stat-label">Yagyas</div>
-    </div>
-</div>
+}
 
-<div class="admin-card" style="margin-top: 1rem;">
-    <h3 style="margin: 0 0 0.5rem; font-size: 1rem; font-weight: 500;">Quick Links</h3>
-    <p style="font-size: 0.85rem; color: #666; margin: 0;">
-        Use the sidebar to manage your content. All changes are saved to the database and reflected on the public site immediately.
-    </p>
-</div>
+@if (loading)
+{
+    <div class="stats-grid">
+        @for (var index = 0; index < 6; index++)
+        {
+            <div class="stat-card">
+                <div class="stat-card-label">Loading</div>
+                <div class="stat-card-value">--</div>
+            </div>
+        }
+    </div>
+}
+else if (dashboard is null)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Dashboard unavailable</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">
+            The admin API is reachable only after authentication is validated.
+        </div>
+    </div>
+}
+else
+{
+    <div class="stats-grid">
+        @foreach (var metric in dashboard.Sections)
+        {
+            <div class="stat-card">
+                <div class="stat-card-label">@metric.Label</div>
+                <div class="stat-card-value">@metric.Total</div>
+                <div style="margin-top:0.65rem;color:var(--a-text-secondary);font-size:0.85rem;">
+                    Active: @metric.Active
+                </div>
+            </div>
+        }
+        <div class="stat-card">
+            <div class="stat-card-label">Site Pages</div>
+            <div class="stat-card-value">@dashboard.SitePagesCount</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-label">Leads</div>
+            <div class="stat-card-value">@dashboard.LeadsCount</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-label">Translations</div>
+            <div class="stat-card-value">@dashboard.TranslationEntriesCount</div>
+            <div style="margin-top:0.65rem;color:var(--a-text-secondary);font-size:0.85rem;">
+                UI: @dashboard.UiTranslationEntriesCount
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-label">Analytics</div>
+            <div class="stat-card-value">@(dashboard.AnalyticsConfigured ? "On" : "Off")</div>
+            <div style="margin-top:0.65rem;color:var(--a-text-secondary);font-size:0.85rem;">
+                @(dashboard.AnalyticsConfigured ? dashboard.AnalyticsProvider : "Provider not configured")
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-table-wrap" style="margin-bottom:1.25rem;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Workspace</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Content Studio</td>
+                    <td><span class="badge badge-success">Ready</span></td>
+                    <td><a class="btn-admin btn-admin-outline btn-admin-sm" href="/admin/courses">Open catalog</a></td>
+                </tr>
+                <tr>
+                    <td>Page Composer</td>
+                    <td><span class="badge badge-warning">Phase 1</span></td>
+                    <td><a class="btn-admin btn-admin-outline btn-admin-sm" href="/admin/pages">Review pages</a></td>
+                </tr>
+                <tr>
+                    <td>Media Library</td>
+                    <td><span class="badge badge-warning">Next</span></td>
+                    <td><a class="btn-admin btn-admin-outline btn-admin-sm" href="/admin/media">Open media</a></td>
+                </tr>
+                <tr>
+                    <td>Translations</td>
+                    <td><span class="badge badge-warning">Next</span></td>
+                    <td><a class="btn-admin btn-admin-outline btn-admin-sm" href="/admin/translations">Open translations</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(dashboard.AnalyticsDashboardUrl))
+    {
+        <div class="stat-card">
+            <div class="stat-card-label">Analytics dashboard</div>
+            <div style="font-size:0.95rem;color:var(--a-text);margin-bottom:0.75rem;">
+                External analytics provider is configured and ready to be embedded in the next slice.
+            </div>
+            <a class="btn-admin btn-admin-outline" href="@dashboard.AnalyticsDashboardUrl" target="_blank" rel="noopener noreferrer">Open analytics</a>
+        </div>
+    }
+}
 
 @code {
-    private int coursesCount;
-    private int consultationsCount;
-    private int retreatsCount;
-    private int yagyasCount;
-
-    [Inject] private ApiService Api { get; set; } = default!;
+    private AdminDashboardDto? dashboard;
+    private bool loading = true;
+    private bool busy;
+    private string? statusMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        var courses = await Api.GetCoursesAsync();
-        var consultations = await Api.GetConsultationsAsync();
-        var retreats = await Api.GetRetreatsAsync();
-        var yagyas = await Api.GetYagyasAsync();
+        await LoadAsync();
+    }
 
-        coursesCount = courses.Count;
-        consultationsCount = consultations.Count;
-        retreatsCount = retreats.Count;
-        yagyasCount = yagyas.Count;
+    private async Task LoadAsync()
+    {
+        loading = true;
+        dashboard = await Api.AdminGetDashboardAsync();
+        loading = false;
+    }
+
+    private async Task BootstrapAsync()
+    {
+        if (dashboard?.CanBootstrapSampleContent != true)
+        {
+            return;
+        }
+
+        busy = true;
+        statusMessage = null;
+
+        var result = await Api.AdminBootstrapSampleContentAsync();
+        statusMessage = result?.Message ?? "Unable to create test content.";
+
+        await LoadAsync();
+        busy = false;
     }
 }

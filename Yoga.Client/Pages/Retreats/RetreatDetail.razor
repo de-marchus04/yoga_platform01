@@ -115,8 +115,6 @@ else
     [Parameter] public string Slug { get; set; } = "";
     private Yoga.Shared.DTOs.RetreatDto? item;
     private bool loading = true;
-    
-    [Inject] public ModalService ModalService { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {

@@ -76,6 +76,7 @@ builder.Services.AddAuthorization();
 builder.Services.Configure<StorageOptions>(builder.Configuration.GetSection(StorageOptions.SectionName));
 builder.Services.Configure<SecurityOptions>(builder.Configuration.GetSection(SecurityOptions.SectionName));
 builder.Services.Configure<AdminPortalOptions>(builder.Configuration.GetSection(AdminPortalOptions.SectionName));
+builder.Services.Configure<AdminCmsOptions>(builder.Configuration.GetSection(AdminCmsOptions.SectionName));
 builder.Services.Configure<ErrorTrackingOptions>(builder.Configuration.GetSection(ErrorTrackingOptions.SectionName));
 builder.Services.AddProblemDetails(options =>
 {

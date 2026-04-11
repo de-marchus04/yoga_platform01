@@ -1,0 +1,265 @@
+@page "/admin/media"
+@layout AdminLayout
+@using Yoga.Shared.DTOs
+@using Yoga.Client.Services
+@inject ApiService Api
+@inject IJSRuntime JS
+
+<div class="admin-page-header">
+    <div>
+        <h1>Media</h1>
+        <p style="margin:0;color:var(--a-text-secondary);max-width:48rem;">
+            Upload and manage images used across courses, pages, and other content.
+        </p>
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+        <InputFile id="media-upload-input" OnChange="OnFileSelected" accept="image/*" style="display:none;" />
+        <button class="btn btn-secondary" @onclick="TriggerFileInput">Upload file</button>
+        <button class="btn btn-secondary" @onclick="() => _showUrlDialog = true">Upload by URL</button>
+    </div>
+</div>
+
+@if (_uploadError is not null)
+{
+    <div class="stat-card" style="border-color:var(--a-danger);margin-bottom:1rem;">@_uploadError</div>
+}
+
+@if (_showUrlDialog)
+{
+    <div class="modal-backdrop" @onclick="() => _showUrlDialog = false">
+        <div class="modal-box" @onclick:stopPropagation>
+            <h2 style="margin:0 0 1rem;">Upload from URL</h2>
+            <div class="editor-field">
+                <label class="editor-field-label">Image URL</label>
+                <input class="editor-input" type="url" @bind="_urlInput" placeholder="https://example.com/image.jpg" />
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                <button class="btn btn-primary" @onclick="UploadFromUrl" disabled="@_uploading">
+                    @(_uploading ? "Uploading…" : "Upload")
+                </button>
+                <button class="btn btn-secondary" @onclick="() => _showUrlDialog = false">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_editTarget is not null)
+{
+    <div class="modal-backdrop" @onclick="() => _editTarget = null">
+        <div class="modal-box" @onclick:stopPropagation>
+            <h2 style="margin:0 0 1rem;">Edit alt text</h2>
+            <img src="@_editTarget.Url" alt="@_editTarget.AltText" style="max-width:100%;max-height:200px;object-fit:contain;margin-bottom:1rem;" />
+            <div class="editor-field">
+                <label class="editor-field-label">Alt text</label>
+                <input class="editor-input" type="text" @bind="_editAlt" placeholder="Describe the image…" />
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                <button class="btn btn-primary" @onclick="SaveAlt" disabled="@_saving">
+                    @(_saving ? "Saving…" : "Save")
+                </button>
+                <button class="btn btn-secondary" @onclick="() => _editTarget = null">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+<div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;align-items:center;">
+    <input class="editor-input" type="search" @bind="_searchQuery" @bind:event="oninput"
+           @onkeyup="OnSearchKey" placeholder="Search by filename or alt…"
+           style="max-width:28rem;" />
+    <button class="btn btn-secondary btn-sm" @onclick="SearchAsync">Search</button>
+</div>
+
+@if (_loading)
+{
+    <div class="stat-card"><div class="stat-card-label">Loading…</div></div>
+}
+else if (_error is not null)
+{
+    <div class="stat-card" style="border-color:var(--a-danger)"><div>@_error</div></div>
+}
+else if (_items.Count == 0)
+{
+    <div class="stat-card">No media files yet. Upload your first image above.</div>
+}
+else
+{
+    <div class="media-grid">
+        @foreach (var item in _items)
+        {
+            <div class="media-card" @key="item.Id">
+                <div class="media-card-thumb" @onclick="() => CopyUrl(item.Url)" title="Click to copy URL">
+                    <img src="@item.Url" alt="@item.AltText" loading="lazy" />
+                </div>
+                <div class="media-card-info">
+                    <div class="media-card-name" title="@item.FileName">@item.FileName</div>
+                    <div class="media-card-meta">@FormatSize(item.Size) · @item.UploadedAt.ToLocalTime().ToString("dd.MM.yy")</div>
+                </div>
+                <div class="media-card-actions">
+                    <button class="btn btn-secondary btn-sm" @onclick="() => StartEdit(item)" title="Edit alt text">Alt</button>
+                    <button class="btn btn-secondary btn-sm" @onclick="() => CopyUrl(item.Url)" title="Copy URL">Copy</button>
+                    <button class="btn btn-danger btn-sm" @onclick="() => ConfirmDelete(item)" title="Delete">×</button>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (_total > _pageSize)
+    {
+        <div style="display:flex;gap:0.5rem;margin-top:1.5rem;align-items:center;">
+            <button class="btn btn-secondary btn-sm" @onclick="PrevPage" disabled="@(_page <= 1)">← Prev</button>
+            <span style="color:var(--a-text-secondary);">Page @_page of @TotalPages</span>
+            <button class="btn btn-secondary btn-sm" @onclick="NextPage" disabled="@(_page >= TotalPages)">Next →</button>
+        </div>
+    }
+}
+
+@if (_copyMsg is not null)
+{
+    <div class="toast-notification">@_copyMsg</div>
+}
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private List<AdminMediaFileDto> _items = new();
+    private int _total;
+    private int _page = 1;
+    private int _pageSize = 40;
+    private string? _searchQuery;
+    private bool _uploading;
+    private string? _uploadError;
+    private bool _showUrlDialog;
+    private string? _urlInput;
+    private AdminMediaFileDto? _editTarget;
+    private string? _editAlt;
+    private bool _saving;
+    private string? _copyMsg;
+    private System.Threading.CancellationTokenSource? _copyMsgCts;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(_total / (double)_pageSize));
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            var result = await Api.AdminGetMediaAsync(_page, _pageSize, _searchQuery);
+            if (result is null) { _error = "Could not load media."; return; }
+            _items = result.Items.ToList();
+            _total = result.TotalCount;
+        }
+        catch { _error = "Could not load media."; }
+        finally { _loading = false; }
+    }
+
+    private async Task TriggerFileInput()
+        => await JS.InvokeVoidAsync("eval", "document.getElementById('media-upload-input').click()");
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _uploadError = null;
+        var file = e.File;
+        if (file == null) return;
+        if (file.Size > 10 * 1024 * 1024) { _uploadError = "File exceeds 10 MB limit."; return; }
+
+        _uploading = true;
+        try
+        {
+            using var stream = file.OpenReadStream(10 * 1024 * 1024);
+            var uploaded = await Api.AdminUploadMediaAsync(stream, file.Name, file.ContentType);
+            if (uploaded is null) { _uploadError = "Upload failed."; return; }
+            _items.Insert(0, uploaded);
+            _total++;
+        }
+        catch { _uploadError = "Upload failed."; }
+        finally { _uploading = false; }
+    }
+
+    private async Task UploadFromUrl()
+    {
+        if (string.IsNullOrWhiteSpace(_urlInput)) return;
+        _uploadError = null;
+        _uploading = true;
+        try
+        {
+            var uploaded = await Api.AdminUploadMediaFromUrlAsync(_urlInput);
+            if (uploaded is null) { _uploadError = "Could not download image from that URL."; return; }
+            _items.Insert(0, uploaded);
+            _total++;
+            _showUrlDialog = false;
+            _urlInput = null;
+        }
+        catch { _uploadError = "Could not download image."; }
+        finally { _uploading = false; }
+    }
+
+    private void StartEdit(AdminMediaFileDto item)
+    {
+        _editTarget = item;
+        _editAlt = item.AltText;
+    }
+
+    private async Task SaveAlt()
+    {
+        if (_editTarget is null) return;
+        _saving = true;
+        try
+        {
+            var updated = await Api.AdminUpdateMediaAltAsync(_editTarget.Id, _editAlt);
+            if (updated is not null)
+            {
+                var idx = _items.FindIndex(x => x.Id == _editTarget.Id);
+                if (idx >= 0) _items[idx] = updated;
+            }
+            _editTarget = null;
+        }
+        finally { _saving = false; }
+    }
+
+    private async Task ConfirmDelete(AdminMediaFileDto item)
+    {
+        var ok = await JS.InvokeAsync<bool>("confirm", $"Delete '{item.FileName}'? This cannot be undone.");
+        if (!ok) return;
+        var deleted = await Api.AdminDeleteMediaAsync(item.Id);
+        if (deleted) { _items.Remove(item); _total--; }
+    }
+
+    private async Task CopyUrl(string url)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", url);
+        ShowCopyMsg("URL copied!");
+    }
+
+    private void ShowCopyMsg(string msg)
+    {
+        _copyMsgCts?.Cancel();
+        _copyMsg = msg;
+        _copyMsgCts = new();
+        var cts = _copyMsgCts;
+        _ = Task.Delay(2000, cts.Token).ContinueWith(_ =>
+        {
+            if (!cts.IsCancellationRequested) { _copyMsg = null; InvokeAsync(StateHasChanged); }
+        });
+    }
+
+    private async Task SearchAsync() { _page = 1; await LoadAsync(); }
+
+    private async Task OnSearchKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await SearchAsync();
+    }
+
+    private async Task PrevPage() { if (_page > 1) { _page--; await LoadAsync(); } }
+    private async Task NextPage() { if (_page < TotalPages) { _page++; await LoadAsync(); } }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024):F1} MB";
+    }
+}

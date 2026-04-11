@@ -43,7 +43,7 @@ else
         </div>
     </section>
 
-    @if (!string.IsNullOrEmpty(item.Duration) || !string.IsNullOrEmpty(item.Location) || !string.IsNullOrEmpty(item.Format) || item.EventStartDate.HasValue)
+    @if (!string.IsNullOrEmpty(item.Duration) || !string.IsNullOrEmpty(item.Format) || item.EventStartDate.HasValue)
     {
         <section class="format-strip">
             <div class="format-strip-grid">
@@ -52,13 +52,6 @@ else
                     <div class="format-strip-cell">
                         <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Тривалість" : "Duration")</span>
                         <span class="format-strip-value">@item.Duration</span>
-                    </div>
-                }
-                @if (!string.IsNullOrEmpty(item.Location))
-                {
-                    <div class="format-strip-cell">
-                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Місце" : "Location")</span>
-                        <span class="format-strip-value">@item.Location</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(item.Format))
@@ -115,8 +108,6 @@ else
     [Parameter] public string Slug { get; set; } = "";
     private Yoga.Shared.DTOs.YagyaDto? item;
     private bool loading = true;
-    
-    [Inject] public ModalService ModalService { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {

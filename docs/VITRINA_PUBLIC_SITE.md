@@ -1,27 +1,71 @@
-# Публичная витрина (без ЛК, админки и блога)
+# Платформа Yoga.Life — архитектура и публичная витрина
 
-Репозиторий настроен как **только публичный сайт**: каталог курсов и консультаций, статические страницы (about, contacts, privacy, terms), форма заявок.
+Монорепозиторий содержит три проекта:
 
-Удалены из кода:
+| Проект | Тип | Описание |
+|---|---|---|
+| `Yoga.Api` | ASP.NET Core 8 Web API | Backend, БД PostgreSQL через EF Core |
+| `Yoga.Client` | Blazor WASM | Публичный фронтенд + встроенный Admin CMS |
+| `Yoga.Shared` | .NET 8 Class Library | DTOs и модели, общие для обоих |
 
-- Личный кабинет (`/account`), JWT на клиенте.
-- Вся админ-панель (`/admin`) и связанные API (логин админа, правка контента через HTTP, медиатека API, клиенты, доступы, эфиры, аудит).
-- Публичный блог и `BlogController` / SignalR `blogHub`.
-- Публичные страницы ретритов и ягьи.
+## Публичная витрина
 
-Контент по-прежнему хранится в БД; менять его нужно **вне этого UI** (напрямую в БД, скрипты, отдельный инструмент) либо вернуть удалённые части из истории git.
+Маршруты `/`, `/courses`, `/courses/{slug}`, `/consultations`, `/consultations/{slug}`, `/retreats`, `/retreats/{slug}`, `/yagyas`, `/yagyas/{slug}`, `/about`, `/contacts`, `/privacy`, `/terms`.
 
-Эндпоинты API, которые остаются для витрины: курсы, консультации, заявки (`POST /api/leads`), статические страницы, UI-переводы, проверка email-домена, sitemap, health.
+Контент загружается из API. Страница рендерится на клиенте (WASM), SEO — серверный pre-render не используется (SPA).
 
-## Развёртывание после squash миграций
+Раздел заявок: `POST /api/leads` — сохраняет заявку в БД, уведомление через Telegram bot.
 
-История EF сведена к одной миграции `InitialVitrina` в каталоге `Yoga.Api/Data/Migrations`. Старую цепочку миграций и таблицы наследия (ретриты, блог, ЛК, админка и т.д.) **нельзя** накатывать инкрементально поверх production: нужна **новая пустая база** (или полный `DROP` старой схемы с осознанием потери данных).
+## Admin CMS
 
-1. Создайте пустую БД PostgreSQL (или выполните `DROP` всех таблиц / пересоздайте базу).
-2. Убедитесь, что в конфигурации API задан `ConnectionStrings:DefaultConnection`.
-3. Примените схему: либо дождитесь автоматического `Database.Migrate()` при старте приложения (см. `Program.cs`), либо вручную из каталога API:  
-   `dotnet ef database update --project Yoga.Api.csproj --startup-project Yoga.Api.csproj`
-4. При необходимости перенесите только нужные строки из старой БД (курсы, консультации, `Translations`, `UiTranslations`, `SitePages`) отдельным SQL/ETL — сиды в коде дают минимальный демо-набор для трёх курсов и трёх консультаций.
+Маршруты `/admin/*` — встроены в `Yoga.Client`, защищены cookie-сессией в API.
 
-Новые миграции добавляйте с указанием папки:  
-`dotnet ef migrations add <Имя> --project Yoga.Api.csproj --startup-project Yoga.Api.csproj --output-dir Data/Migrations`
+Основные разделы:
+
+- **Dashboard** — сводная статистика активных и черновых записей
+- **Courses / Consultations / Retreats / Yagyas** — CRUD с вложенным редактором полей на всех языках (uk / ru / en)
+- **Site Pages** — структурные страницы сайта (home, about, contacts и др.)
+- **Media** — загрузка файлов по файлу или по URL
+- **Leads** — тriage завяок (new / contacted / closed) с заметками
+- **Translations** — покрытие переводов по разделам + поиск/редакт. UI-строк
+
+### Draft / Publish workflow
+
+Каждая единица контента (Course, Consultation, Retreat, Yagya, SitePage) имеет флаги:
+
+- `IsActive` — виден ли раздел на публичной витрине
+- `IsDraft` — находится ли в состоянии черновика
+
+Правила публикации:
+- **Save as Draft** → `IsDraft = true`, `IsActive` не меняется
+- **Publish** → `IsDraft = false`, `IsActive = true`
+- Публичные контроллеры фильтруют: `.Where(x => x.IsActive && !x.IsDraft)`
+- Раздел `/admin/preview/{section}/{slug}` позволяет просматривать черновик перед публикацией
+
+## Мигрирование схемы
+
+Миграции находятся в `Yoga.Api/Migrations/`. Применяются автоматически при старте через `Database.Migrate()`.
+
+Цепочка миграций:
+1. `InitialCreate`
+2. `AddEventDates`
+3. `RemoveLegacySeedsAndHardenBootstrap`
+4. `AddMediaAndLeadTriage`
+5. `AddDraftWorkflow`
+
+Для добавления новой миграции:
+```
+dotnet ef migrations add <Имя> --project Yoga.Api --startup-project Yoga.Api
+```
+
+## Переменные окружения (ключевые)
+
+| Переменная | Назначение |
+|---|---|
+| `ConnectionStrings__DefaultConnection` | PostgreSQL connection string |
+| `Security__AllowedOrigins__0` | CORS origin для публичного фронтенда |
+| `AdminPortal__JwtSecret` | JWT-секрет для admin сессий (мин. 32 символа) |
+| `AdminPortal__EnableSeedAdminEndpoint` | `true` только при первом запуске для создания admin-аккаунта |
+| `AdminCms__EnableSampleContentBootstrap` | `true` только для dev — создаёт тестовый контент |
+| `Telegram__BotToken` / `Telegram__ChatId` | Оповещения о новых заявках |
+

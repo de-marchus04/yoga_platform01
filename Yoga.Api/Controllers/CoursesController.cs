@@ -24,7 +24,7 @@ namespace Yoga.Api.Controllers
         public async Task<ActionResult<List<CourseDto>>> GetCourses([FromQuery] string lang = "uk")
         {
             var courses = await _context.Courses
-                .Where(c => c.IsActive)
+                .Where(c => c.IsActive && !c.IsDraft)
                 .OrderBy(c => c.SortOrder)
                 .Include(c => c.Modules.OrderBy(m => m.SortOrder))
                     .ThenInclude(m => m.Lessons.OrderBy(l => l.SortOrder))
@@ -63,7 +63,7 @@ namespace Yoga.Api.Controllers
             var course = await _context.Courses
                 .Include(c => c.Modules.OrderBy(m => m.SortOrder))
                     .ThenInclude(m => m.Lessons.OrderBy(l => l.SortOrder))
-                .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
+                .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive && !c.IsDraft);
 
             if (course == null) return NotFound();
 

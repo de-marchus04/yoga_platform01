@@ -1,0 +1,140 @@
+@using Yoga.Shared.DTOs
+@inject ApiService Api
+
+<div class="admin-page-header">
+    <div>
+        <h1>@Title</h1>
+        @if (!string.IsNullOrWhiteSpace(Description))
+        {
+            <p style="margin:0;color:var(--a-text-secondary);max-width:48rem;">@Description</p>
+        }
+    </div>
+    <div class="admin-catalog-actions">
+        @if (!string.IsNullOrWhiteSpace(CreateUrl))
+        {
+            <a class="btn-admin btn-admin-primary" href="@CreateUrl">New Item</a>
+        }
+        @if (CanBootstrap)
+        {
+            <button class="btn-admin btn-admin-outline" disabled="@busy" @onclick="BootstrapAsync">
+                @(busy ? "Creating..." : "Create Test Content")
+            </button>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="stat-card" style="margin-bottom:1.2rem;">
+        <div class="stat-card-label">Status</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">@statusMessage</div>
+    </div>
+}
+
+@if (loading)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Loading</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">Fetching catalog...</div>
+    </div>
+}
+else if (section is null)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Unavailable</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">The catalog endpoint is not available for this section yet.</div>
+    </div>
+}
+else if (section.Items.Count == 0)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Empty state</div>
+        <div style="font-size:0.95rem;color:var(--a-text);margin-bottom:0.9rem;">@EmptyMessage</div>
+        @if (CanBootstrap)
+        {
+            <button class="btn-admin btn-admin-primary" disabled="@busy" @onclick="BootstrapAsync">Create Test Content</button>
+        }
+    </div>
+}
+else
+{
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Slug</th>
+                    <th>Status</th>
+                    <th>Meta</th>
+                    @if (!string.IsNullOrWhiteSpace(EditBaseUrl))
+                    {
+                        <th></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in section.Items)
+                {
+                    <tr>
+                        <td>@item.Title</td>
+                        <td>@item.Slug</td>
+                        <td>
+                            <span class="badge @(item.IsActive ? "badge-success" : "badge-muted")">
+                                @(item.IsActive ? "Active" : "Hidden")
+                            </span>
+                        </td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Meta) ? "—" : item.Meta)</td>
+                        @if (!string.IsNullOrWhiteSpace(EditBaseUrl))
+                        {
+                            <td class="admin-table-actions">
+                                <a class="btn-admin btn-admin-outline btn-admin-sm" href="@($"{EditBaseUrl}/{item.Slug}")">Edit</a>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter] public string SectionKey { get; set; } = string.Empty;
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Description { get; set; } = string.Empty;
+    [Parameter] public string EmptyMessage { get; set; } = "Nothing has been created yet.";
+    [Parameter] public bool AllowBootstrap { get; set; } = true;
+    [Parameter] public string? CreateUrl { get; set; }
+    [Parameter] public string? EditBaseUrl { get; set; }
+
+    private AdminCatalogSectionDto? section;
+    private bool loading = true;
+    private bool busy;
+    private string? statusMessage;
+    private bool CanBootstrap => AllowBootstrap && section?.CanBootstrapSampleContent == true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        section = await Api.AdminGetCatalogAsync(SectionKey);
+        loading = false;
+    }
+
+    private async Task BootstrapAsync()
+    {
+        if (!CanBootstrap)
+        {
+            return;
+        }
+
+        busy = true;
+        var result = await Api.AdminBootstrapSampleContentAsync();
+        statusMessage = result?.Message ?? "Unable to create test content.";
+        await LoadAsync();
+        busy = false;
+    }
+}

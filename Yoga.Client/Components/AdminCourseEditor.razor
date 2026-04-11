@@ -1,0 +1,693 @@
+@using Yoga.Shared.DTOs
+@inject ApiService Api
+@inject NavigationManager Navigation
+
+<div class="admin-page-header">
+    <div>
+        <h1>@PageTitle</h1>
+        <p style="margin:0;color:var(--a-text-secondary);max-width:52rem;">@PageDescription</p>
+    </div>
+    <div class="editor-header-actions">
+        <a class="btn-admin btn-admin-outline" href="/admin/courses">Back To List</a>
+        @if (!string.IsNullOrWhiteSpace(editor?.Content.PublicPath))
+        {
+            <a class="btn-admin btn-admin-outline" href="@editor!.Content.PublicPath" target="_blank" rel="noreferrer">Open Public Page</a>
+        }
+        <button class="btn-admin btn-admin-outline" disabled="@(loading || saving || editor is null)" @onclick='() => SaveAsync(asDraft: true)'>
+            @(saving ? "Saving..." : "Save as Draft")
+        </button>
+        <button class="btn-admin btn-admin-primary" disabled="@(loading || saving || editor is null)" @onclick='() => SaveAsync(asDraft: false)'>
+            @(saving ? "Publishing..." : (IsNew ? "Create &amp; Publish" : "Publish"))
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="stat-card" style="margin-bottom:1rem;">
+        <div class="stat-card-label">Status</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">@statusMessage</div>
+    </div>
+}
+
+@if (loading)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Loading</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">Preparing course editor...</div>
+    </div>
+}
+else if (editor is null)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Unavailable</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">This course editor is not available yet.</div>
+    </div>
+}
+else
+{
+    <div class="editor-status-bar">
+        <span class="badge @(editor.Content.IsActive ? "badge-success" : "badge-muted")">@(editor.Content.IsActive ? "Active" : "Hidden")</span>
+        <span class="badge @(editor.Content.IsDraft ? "badge-warning" : "badge-success")">@(editor.Content.IsDraft ? "Draft" : "Published")</span>
+        <span class="badge @(editor.Content.IsOnline ? "badge-success" : "badge-muted")">@(editor.Content.IsOnline ? "Online" : "Online off")</span>
+        <span class="badge @(editor.Content.IsOffline ? "badge-success" : "badge-muted")">@(editor.Content.IsOffline ? "Offline" : "Offline off")</span>
+        <span class="badge badge-muted">@editor.Modules.Count module(s)</span>
+        @if (hasUnsavedChanges)
+        {
+            <span class="ce-unsaved-badge">Unsaved changes</span>
+        }
+    </div>
+
+    <div class="content-editor">
+        <div class="content-editor-lang-bar">
+            @foreach (var language in editor.Content.Languages)
+            {
+                <button type="button" class="ce-lang-btn @(activeLanguage == language ? "active" : null)" @onclick="(() => activeLanguage = language)">
+                    <span>@language.ToUpperInvariant()</span>
+                    <span class="ce-lang-pct">@GetLanguageCompletion(language)%</span>
+                </button>
+            }
+            @if (hasUnsavedChanges)
+            {
+                <span class="ce-unsaved-badge">Unsaved draft</span>
+            }
+        </div>
+
+        <div class="ce-section">
+            <div class="ce-section-header">
+                <div class="ce-section-title">Publishing</div>
+                <div class="ce-section-chevron">Language: @activeLanguage.ToUpperInvariant()</div>
+            </div>
+            <div class="ce-section-body">
+                <div class="admin-settings-grid">
+                    <div class="admin-form-group">
+                        <label for="course-slug-input">Slug</label>
+                        <input id="course-slug-input" class="admin-input" value="@editor.Content.Slug" @oninput="OnSlugChanged" />
+                        <div class="admin-form-hint">Public URL: @GetPublicUrlPreview()</div>
+                    </div>
+                    <div class="admin-form-group">
+                        <label for="course-sort-order-input">Sort Order</label>
+                        <input id="course-sort-order-input" type="number" class="admin-input" value="@editor.Content.SortOrder" @oninput="OnSortOrderChanged" />
+                    </div>
+                </div>
+                <div class="admin-checkbox-row">
+                    <label class="admin-checkbox">
+                        <input type="checkbox" checked="@editor.Content.IsActive" @onchange="OnIsActiveChanged" />
+                        <span>Visible on site</span>
+                    </label>
+                    <label class="admin-checkbox">
+                        <input type="checkbox" checked="@editor.Content.IsOnline" @onchange="OnIsOnlineChanged" />
+                        <span>Online format</span>
+                    </label>
+                    <label class="admin-checkbox">
+                        <input type="checkbox" checked="@editor.Content.IsOffline" @onchange="OnIsOfflineChanged" />
+                        <span>Offline format</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        @foreach (var group in GetFieldGroups())
+        {
+            var fields = GetFields(group).ToList();
+
+            <div class="ce-section">
+                <div class="ce-section-header">
+                    <div class="ce-section-title">@group</div>
+                    <div class="ce-section-chevron">@fields.Count field(s)</div>
+                </div>
+                <div class="ce-section-body">
+                    <div class="admin-localized-grid">
+                        @foreach (var field in fields)
+                        {
+                            <div class="admin-form-group">
+                                <label for="@GetInputId(field.Key)">@field.Label</label>
+                                @if (field.Type == ContentFieldType.TextArea || field.Type == ContentFieldType.RichText || field.Type == ContentFieldType.ForWhom)
+                                {
+                                    <textarea id="@GetInputId(field.Key)" class="admin-input" @oninput="@(args => OnFieldChanged(field.Key, args))">@GetFieldValue(field.Key)</textarea>
+                                }
+                                else
+                                {
+                                    <input id="@GetInputId(field.Key)" class="admin-input" value="@GetFieldValue(field.Key)" @oninput="@(args => OnFieldChanged(field.Key, args))" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(field.Placeholder) || !string.IsNullOrWhiteSpace(GetFieldHint(field)))
+                                {
+                                    <div class="admin-form-hint">@(field.Placeholder ?? GetFieldHint(field))</div>
+                                }
+                                @if (field.Type == ContentFieldType.Image && !string.IsNullOrWhiteSpace(GetFieldValue(field.Key)))
+                                {
+                                    <div class="editor-field-preview">
+                                        <img src="@GetFieldValue(field.Key)" alt="@field.Label" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="ce-section">
+            <div class="ce-section-header">
+                <div class="ce-section-title">Program</div>
+                <div class="ce-section-chevron">@editor.Modules.Count module(s)</div>
+            </div>
+            <div class="ce-section-body">
+                @if (editor.Modules.Count == 0)
+                {
+                    <div class="admin-form-hint" style="margin-bottom:1rem;">Add at least one module to match the public course layout.</div>
+                }
+
+                <div class="course-module-stack">
+                    @for (var moduleIndex = 0; moduleIndex < editor.Modules.Count; moduleIndex++)
+                    {
+                        var module = editor.Modules[moduleIndex];
+
+                        <div class="course-module-card">
+                            <div class="course-module-header">
+                                <div>
+                                    <div class="stat-card-label">Module @(moduleIndex + 1)</div>
+                                    <div class="admin-form-hint">Lessons: @module.Lessons.Count</div>
+                                </div>
+                                <div class="course-module-actions">
+                                    <button type="button" class="btn-admin btn-admin-outline btn-admin-sm" @onclick="(() => AddLesson(moduleIndex))">Add Lesson</button>
+                                    <button type="button" class="btn-admin btn-admin-danger btn-admin-sm" @onclick="(() => RemoveModule(moduleIndex))">Remove Module</button>
+                                </div>
+                            </div>
+
+                            <div class="admin-settings-grid">
+                                <div class="admin-form-group">
+                                    <label for="@GetModuleSortInputId(moduleIndex)">Module Sort Order</label>
+                                    <input id="@GetModuleSortInputId(moduleIndex)" type="number" class="admin-input" value="@module.SortOrder" @oninput="@(args => OnModuleSortOrderChanged(moduleIndex, args))" />
+                                </div>
+                            </div>
+
+                            <div class="admin-localized-grid">
+                                @foreach (var field in ModuleFields)
+                                {
+                                    <div class="admin-form-group">
+                                        <label for="@GetModuleInputId(moduleIndex, field.Key)">@field.Label</label>
+                                        @if (field.Type == ContentFieldType.TextArea)
+                                        {
+                                            <textarea id="@GetModuleInputId(moduleIndex, field.Key)" class="admin-input" @oninput="@(args => OnModuleFieldChanged(moduleIndex, field.Key, args))">@GetModuleFieldValue(moduleIndex, field.Key)</textarea>
+                                        }
+                                        else
+                                        {
+                                            <input id="@GetModuleInputId(moduleIndex, field.Key)" class="admin-input" value="@GetModuleFieldValue(moduleIndex, field.Key)" @oninput="@(args => OnModuleFieldChanged(moduleIndex, field.Key, args))" />
+                                        }
+                                        @if (field.Type == ContentFieldType.Image && !string.IsNullOrWhiteSpace(GetModuleFieldValue(moduleIndex, field.Key)))
+                                        {
+                                            <div class="editor-field-preview">
+                                                <img src="@GetModuleFieldValue(moduleIndex, field.Key)" alt="@field.Label" />
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="course-lesson-stack">
+                                @for (var lessonIndex = 0; lessonIndex < module.Lessons.Count; lessonIndex++)
+                                {
+                                    var lesson = module.Lessons[lessonIndex];
+
+                                    <div class="course-lesson-card">
+                                        <div class="course-lesson-header">
+                                            <div class="stat-card-label">Lesson @(lessonIndex + 1)</div>
+                                            <button type="button" class="btn-admin btn-admin-danger btn-admin-sm" @onclick="(() => RemoveLesson(moduleIndex, lessonIndex))">Remove Lesson</button>
+                                        </div>
+
+                                        <div class="admin-settings-grid">
+                                            <div class="admin-form-group">
+                                                <label for="@GetLessonSortInputId(moduleIndex, lessonIndex)">Lesson Sort Order</label>
+                                                <input id="@GetLessonSortInputId(moduleIndex, lessonIndex)" type="number" class="admin-input" value="@lesson.SortOrder" @oninput="@(args => OnLessonSortOrderChanged(moduleIndex, lessonIndex, args))" />
+                                            </div>
+                                        </div>
+
+                                        <div class="admin-localized-grid">
+                                            @foreach (var field in LessonFields)
+                                            {
+                                                <div class="admin-form-group">
+                                                    <label for="@GetLessonInputId(moduleIndex, lessonIndex, field.Key)">@field.Label</label>
+                                                    @if (field.Type == ContentFieldType.TextArea)
+                                                    {
+                                                        <textarea id="@GetLessonInputId(moduleIndex, lessonIndex, field.Key)" class="admin-input" @oninput="@(args => OnLessonFieldChanged(moduleIndex, lessonIndex, field.Key, args))">@GetLessonFieldValue(moduleIndex, lessonIndex, field.Key)</textarea>
+                                                    }
+                                                    else
+                                                    {
+                                                        <input id="@GetLessonInputId(moduleIndex, lessonIndex, field.Key)" class="admin-input" value="@GetLessonFieldValue(moduleIndex, lessonIndex, field.Key)" @oninput="@(args => OnLessonFieldChanged(moduleIndex, lessonIndex, field.Key, args))" />
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <button type="button" class="btn-admin btn-admin-primary" @onclick="AddModule">Add Module</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private static readonly IReadOnlyList<ContentField> ModuleFields = new[]
+    {
+        new ContentField("Title", "Module Title"),
+        new ContentField("Description", "Module Description", ContentFieldType.TextArea),
+        new ContentField("ImageUrl", "Module Image URL", ContentFieldType.Image)
+    };
+
+    private static readonly IReadOnlyList<ContentField> LessonFields = new[]
+    {
+        new ContentField("Title", "Lesson Title"),
+        new ContentField("Theory", "Theory", ContentFieldType.TextArea),
+        new ContentField("Practice", "Practice", ContentFieldType.TextArea),
+        new ContentField("Assignment", "Assignment", ContentFieldType.TextArea)
+    };
+
+    [Parameter] public string? Slug { get; set; }
+
+    private AdminCourseEditorDto? editor;
+    private bool loading = true;
+    private bool saving;
+    private bool hasUnsavedChanges;
+    private string activeLanguage = "uk";
+    private string? statusMessage;
+
+    private bool IsNew => string.IsNullOrWhiteSpace(Slug) || string.Equals(Slug, "new", StringComparison.OrdinalIgnoreCase);
+    private string PageTitle => IsNew ? "New Course" : "Edit Course";
+    private string PageDescription => IsNew
+        ? "Create a course with localized content, modules, and lessons."
+        : "Edit publishing settings, localized content, and the course program in one place.";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        statusMessage = null;
+        hasUnsavedChanges = false;
+
+        editor = IsNew
+            ? await Api.AdminGetNewCourseEditorAsync()
+            : await Api.AdminGetCourseEditorAsync(Slug ?? string.Empty);
+
+        activeLanguage = editor?.Content.Languages.FirstOrDefault() ?? "uk";
+        loading = false;
+    }
+
+    private IEnumerable<string> GetFieldGroups()
+    {
+        return editor?.Content.Fields
+            .Select(field => string.IsNullOrWhiteSpace(field.Group) ? "Content" : field.Group!)
+            .Distinct()
+            ?? Enumerable.Empty<string>();
+    }
+
+    private IEnumerable<ContentField> GetFields(string group)
+    {
+        return editor?.Content.Fields.Where(field => (field.Group ?? "Content") == group)
+            ?? Enumerable.Empty<ContentField>();
+    }
+
+    private string GetFieldValue(string fieldKey)
+    {
+        if (editor is null)
+        {
+            return string.Empty;
+        }
+
+        EnsureCourseLanguageMaps(activeLanguage);
+        return editor.Content.Translations[activeLanguage].GetValueOrDefault(fieldKey, string.Empty);
+    }
+
+    private string GetModuleFieldValue(int moduleIndex, string fieldKey)
+    {
+        if (editor is null)
+        {
+            return string.Empty;
+        }
+
+        EnsureCourseLanguageMaps(activeLanguage);
+        return editor.Modules[moduleIndex].Translations[activeLanguage].GetValueOrDefault(fieldKey, string.Empty);
+    }
+
+    private string GetLessonFieldValue(int moduleIndex, int lessonIndex, string fieldKey)
+    {
+        if (editor is null)
+        {
+            return string.Empty;
+        }
+
+        EnsureCourseLanguageMaps(activeLanguage);
+        return editor.Modules[moduleIndex].Lessons[lessonIndex].Translations[activeLanguage].GetValueOrDefault(fieldKey, string.Empty);
+    }
+
+    private string GetFieldHint(ContentField field)
+    {
+        return field.Type switch
+        {
+            ContentFieldType.ForWhom => "Format each line as title~text~imageUrl. Image URL is optional.",
+            ContentFieldType.TextArea when field.Key == "Benefits" => "One benefit per line. The public page will render them as a list.",
+            _ => string.Empty
+        };
+    }
+
+    private int GetLanguageCompletion(string language)
+    {
+        if (editor is null)
+        {
+            return 0;
+        }
+
+        EnsureCourseLanguageMaps(language);
+
+        var totalFields = editor.Content.Fields.Count
+            + editor.Modules.Count * ModuleFields.Count
+            + editor.Modules.Sum(module => module.Lessons.Count * LessonFields.Count);
+
+        if (totalFields == 0)
+        {
+            return 0;
+        }
+
+        var filledFields = editor.Content.Fields.Count(field => !string.IsNullOrWhiteSpace(editor.Content.Translations[language].GetValueOrDefault(field.Key)))
+            + editor.Modules.Sum(module => ModuleFields.Count(field => !string.IsNullOrWhiteSpace(module.Translations[language].GetValueOrDefault(field.Key))))
+            + editor.Modules.Sum(module => module.Lessons.Sum(lesson => LessonFields.Count(field => !string.IsNullOrWhiteSpace(lesson.Translations[language].GetValueOrDefault(field.Key)))));
+
+        return (int)Math.Round(filledFields * 100d / totalFields, MidpointRounding.AwayFromZero);
+    }
+
+    private string GetPublicUrlPreview()
+    {
+        var slug = editor?.Content.Slug?.Trim();
+        return string.IsNullOrWhiteSpace(slug)
+            ? "/courses/..."
+            : $"/courses/{slug}";
+    }
+
+    private string GetInputId(string fieldKey) => $"course-{activeLanguage}-{fieldKey}".ToLowerInvariant();
+    private string GetModuleInputId(int moduleIndex, string fieldKey) => $"course-module-{moduleIndex}-{activeLanguage}-{fieldKey}".ToLowerInvariant();
+    private string GetLessonInputId(int moduleIndex, int lessonIndex, string fieldKey) => $"course-lesson-{moduleIndex}-{lessonIndex}-{activeLanguage}-{fieldKey}".ToLowerInvariant();
+    private string GetModuleSortInputId(int moduleIndex) => $"course-module-{moduleIndex}-sort-order";
+    private string GetLessonSortInputId(int moduleIndex, int lessonIndex) => $"course-lesson-{moduleIndex}-{lessonIndex}-sort-order";
+
+    private void EnsureCourseLanguageMaps(string language)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        EnsureTranslationMatrix(editor.Content.Translations, editor.Content.Fields, language);
+
+        foreach (var module in editor.Modules)
+        {
+            EnsureTranslationMatrix(module.Translations, ModuleFields, language);
+            foreach (var lesson in module.Lessons)
+            {
+                EnsureTranslationMatrix(lesson.Translations, LessonFields, language);
+            }
+        }
+    }
+
+    private static void EnsureTranslationMatrix(
+        Dictionary<string, Dictionary<string, string>> translations,
+        IReadOnlyList<ContentField> fields,
+        string language)
+    {
+        if (!translations.ContainsKey(language))
+        {
+            translations[language] = fields.ToDictionary(field => field.Key, _ => string.Empty);
+        }
+
+        foreach (var field in fields)
+        {
+            if (!translations[language].ContainsKey(field.Key))
+            {
+                translations[language][field.Key] = string.Empty;
+            }
+        }
+    }
+
+    private static Dictionary<string, Dictionary<string, string>> CreateTranslationMatrix(IReadOnlyList<ContentField> fields)
+    {
+        return new[] { "uk", "ru", "en" }
+            .ToDictionary(language => language, _ => fields.ToDictionary(field => field.Key, _ => string.Empty));
+    }
+
+    private void OnFieldChanged(string fieldKey, ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        EnsureCourseLanguageMaps(activeLanguage);
+        editor.Content.Translations[activeLanguage][fieldKey] = args.Value?.ToString() ?? string.Empty;
+        MarkDirty();
+    }
+
+    private void OnModuleFieldChanged(int moduleIndex, string fieldKey, ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        EnsureCourseLanguageMaps(activeLanguage);
+        editor.Modules[moduleIndex].Translations[activeLanguage][fieldKey] = args.Value?.ToString() ?? string.Empty;
+        MarkDirty();
+    }
+
+    private void OnLessonFieldChanged(int moduleIndex, int lessonIndex, string fieldKey, ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        EnsureCourseLanguageMaps(activeLanguage);
+        editor.Modules[moduleIndex].Lessons[lessonIndex].Translations[activeLanguage][fieldKey] = args.Value?.ToString() ?? string.Empty;
+        MarkDirty();
+    }
+
+    private void OnSlugChanged(ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        editor = editor with { Content = editor.Content with { Slug = args.Value?.ToString() ?? string.Empty } };
+        MarkDirty();
+    }
+
+    private void OnSortOrderChanged(ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        editor = editor with { Content = editor.Content with { SortOrder = ParseSortOrder(args, editor.Content.SortOrder) } };
+        MarkDirty();
+    }
+
+    private void OnModuleSortOrderChanged(int moduleIndex, ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        var module = editor.Modules[moduleIndex];
+        editor.Modules[moduleIndex] = module with { SortOrder = ParseSortOrder(args, module.SortOrder) };
+        MarkDirty();
+    }
+
+    private void OnLessonSortOrderChanged(int moduleIndex, int lessonIndex, ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        var lesson = editor.Modules[moduleIndex].Lessons[lessonIndex];
+        editor.Modules[moduleIndex].Lessons[lessonIndex] = lesson with { SortOrder = ParseSortOrder(args, lesson.SortOrder) };
+        MarkDirty();
+    }
+
+    private void OnIsActiveChanged(ChangeEventArgs args)
+    {
+        UpdateContentFlags(isActive: ParseCheckboxValue(args));
+    }
+
+    private void OnIsOnlineChanged(ChangeEventArgs args)
+    {
+        UpdateContentFlags(isOnline: ParseCheckboxValue(args));
+    }
+
+    private void OnIsOfflineChanged(ChangeEventArgs args)
+    {
+        UpdateContentFlags(isOffline: ParseCheckboxValue(args));
+    }
+
+    private void UpdateContentFlags(bool? isActive = null, bool? isDraft = null, bool? isOnline = null, bool? isOffline = null)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        editor = editor with
+        {
+            Content = editor.Content with
+            {
+                IsActive = isActive ?? editor.Content.IsActive,
+                IsDraft = isDraft ?? editor.Content.IsDraft,
+                IsOnline = isOnline ?? editor.Content.IsOnline,
+                IsOffline = isOffline ?? editor.Content.IsOffline
+            }
+        };
+        MarkDirty();
+    }
+
+    private void AddModule()
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        editor.Modules.Add(new AdminCourseModuleEditorDto(
+            null,
+            GetNextSortOrder(editor.Modules.Select(module => module.SortOrder)),
+            CreateTranslationMatrix(ModuleFields),
+            new List<AdminCourseLessonEditorDto>()));
+        MarkDirty();
+    }
+
+    private void RemoveModule(int moduleIndex)
+    {
+        if (editor is null || moduleIndex < 0 || moduleIndex >= editor.Modules.Count)
+        {
+            return;
+        }
+
+        editor.Modules.RemoveAt(moduleIndex);
+        MarkDirty();
+    }
+
+    private void AddLesson(int moduleIndex)
+    {
+        if (editor is null || moduleIndex < 0 || moduleIndex >= editor.Modules.Count)
+        {
+            return;
+        }
+
+        var module = editor.Modules[moduleIndex];
+        module.Lessons.Add(new AdminCourseLessonEditorDto(
+            null,
+            GetNextSortOrder(module.Lessons.Select(lesson => lesson.SortOrder)),
+            CreateTranslationMatrix(LessonFields)));
+        MarkDirty();
+    }
+
+    private void RemoveLesson(int moduleIndex, int lessonIndex)
+    {
+        if (editor is null || moduleIndex < 0 || moduleIndex >= editor.Modules.Count)
+        {
+            return;
+        }
+
+        var module = editor.Modules[moduleIndex];
+        if (lessonIndex < 0 || lessonIndex >= module.Lessons.Count)
+        {
+            return;
+        }
+
+        module.Lessons.RemoveAt(lessonIndex);
+        MarkDirty();
+    }
+
+    private async Task SaveAsync(bool asDraft = false)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        saving = true;
+        statusMessage = null;
+
+        var isActive = asDraft ? editor.Content.IsActive : true;
+        var isDraft = asDraft;
+
+        var request = new AdminCourseSaveRequestDto(
+            new AdminContentSaveRequestDto(
+                editor.Content.Slug,
+                editor.Content.SortOrder,
+                isActive,
+                isDraft,
+                editor.Content.IsOnline,
+                editor.Content.IsOffline,
+                null,
+                null,
+                editor.Content.Translations),
+            editor.Modules.Select(module => new AdminCourseModuleSaveRequestDto(
+                module.Id,
+                module.SortOrder,
+                module.Translations,
+                module.Lessons.Select(lesson => new AdminCourseLessonSaveRequestDto(
+                    lesson.Id,
+                    lesson.SortOrder,
+                    lesson.Translations)).ToList())).ToList());
+
+        var savedEditor = IsNew
+            ? await Api.AdminCreateCourseEditorAsync(request)
+            : await Api.AdminUpdateCourseEditorAsync(editor.Content.Id ?? Guid.Empty, request);
+
+        saving = false;
+
+        if (savedEditor is null)
+        {
+            statusMessage = "Save failed. Check the slug, admin session, and nested module data.";
+            return;
+        }
+
+        editor = savedEditor;
+        hasUnsavedChanges = false;
+
+        if (IsNew || !string.Equals(Slug, savedEditor.Content.Slug, StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"/admin/courses/{savedEditor.Content.Slug}");
+            return;
+        }
+
+        statusMessage = $"Course {(isDraft ? "saved as draft" : "published")}.";
+    }
+
+    private void MarkDirty()
+    {
+        hasUnsavedChanges = true;
+        statusMessage = null;
+    }
+
+    private static bool ParseCheckboxValue(ChangeEventArgs args)
+    {
+        return args.Value is bool value && value;
+    }
+
+    private static int ParseSortOrder(ChangeEventArgs args, int fallback)
+    {
+        return int.TryParse(args.Value?.ToString(), out var parsed) ? parsed : fallback;
+    }
+
+    private static int GetNextSortOrder(IEnumerable<int> sortOrders)
+    {
+        var max = sortOrders.DefaultIfEmpty(0).Max();
+        return max <= 0 ? 10 : max + 10;
+    }
+}

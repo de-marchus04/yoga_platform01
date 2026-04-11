@@ -12,4 +12,10 @@ public class AdminPortalOptions
 
     /// <summary>Shared secret checked on the server; never exposed to the client.</summary>
     public string Password { get; set; } = "";
+
+    /// <summary>Enables the one-time first-admin bootstrap endpoint.</summary>
+    public bool EnableSeedAdminEndpoint { get; set; }
+
+    /// <summary>Header token required to call the first-admin bootstrap endpoint.</summary>
+    public string SeedAdminBootstrapToken { get; set; } = "";
 }

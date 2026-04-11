@@ -54,4 +54,19 @@ Use this checklist before declaring the platform production-ready.
 - Terms of use are published on the public site.
 - Legal contact email or process owner is assigned.
 
+## Admin CMS
+
+- Admin account seeded and `AdminPortal__EnableSeedAdminEndpoint` set back to `false`.
+- Login to `/admin` returns a session cookie (no 401 after login).
+- Dashboard loads without JS errors.
+- New draft course can be created; it does NOT appear in public catalog until published.
+- Published course appears in public catalog (`GET /api/courses`).
+- Draft badge displays correctly; Published badge appears after Publish.
+- Preview page (`/admin/preview/courses/{slug}`) renders field matrix for a draft item.
+- Retreat and Yagya catalogs also respect `IsDraft` filter (no draft items on public routes).
+- Media upload and URL-import work; grid shows new items.
+- Lead submitted from public form appears in `/admin/leads` with status "New".
+- Translations workspace shows language coverage correctly.
+- `AdminCms__EnableSampleContentBootstrap` is `false` in production.
+
 The release is not complete until every item above is either checked or explicitly accepted as deferred risk.

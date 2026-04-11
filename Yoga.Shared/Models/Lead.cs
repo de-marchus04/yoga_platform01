@@ -3,6 +3,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Yoga.Shared.Models
 {
+    public enum LeadStatus
+    {
+        New = 0,
+        InProgress = 1,
+        Converted = 2,
+        Dismissed = 3
+    }
+
     public class Lead
     {
         public Guid Id { get; set; } = Guid.NewGuid();
@@ -30,5 +38,10 @@ namespace Yoga.Shared.Models
         public Guid? YagyaId { get; set; }
 
         public string TargetFormat { get; set; } = string.Empty;
+
+        public LeadStatus Status { get; set; } = LeadStatus.New;
+
+        [StringLength(2000)]
+        public string? OperatorNote { get; set; }
     }
 }

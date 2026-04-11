@@ -2,11 +2,14 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Yoga.Api.Data;
+using Yoga.Api.Options;
 using Yoga.Shared.DTOs;
 using Yoga.Shared.Models;
 
@@ -18,11 +21,13 @@ public class AdminPortalController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly IConfiguration _config;
+    private readonly AdminPortalOptions _options;
 
-    public AdminPortalController(AppDbContext db, IConfiguration config)
+    public AdminPortalController(AppDbContext db, IConfiguration config, IOptions<AdminPortalOptions> options)
     {
         _db = db;
         _config = config;
+        _options = options.Value;
     }
 
     [HttpPost("login")]
@@ -46,13 +51,25 @@ public class AdminPortalController : ControllerBase
 
     [HttpPost("seed-admin")]
     [EnableRateLimiting("validation")]
-    public async Task<IActionResult> SeedAdmin()
+    public async Task<IActionResult> SeedAdmin([FromHeader(Name = "X-Admin-Bootstrap-Token")] string? bootstrapToken)
     {
+        if (!_options.EnableSeedAdminEndpoint)
+            return NotFound();
+
+        if (string.IsNullOrWhiteSpace(_options.SeedAdminBootstrapToken))
+            return Problem(
+                title: "Seed admin endpoint misconfigured",
+                detail: "AdminPortal:SeedAdminBootstrapToken must be configured when AdminPortal:EnableSeedAdminEndpoint is enabled.",
+                statusCode: StatusCodes.Status500InternalServerError);
+
+        if (!SecretsEqual(bootstrapToken, _options.SeedAdminBootstrapToken))
+            return Forbid();
+
         if (await _db.AdminUsers.AnyAsync())
             return Conflict("Admin user already exists.");
 
-        var login = _config["AdminPortal:Login"];
-        var password = _config["AdminPortal:Password"];
+        var login = _options.Login;
+        var password = _options.Password;
 
         if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
             return BadRequest("AdminPortal:Login and AdminPortal:Password must be configured.");
@@ -66,6 +83,31 @@ public class AdminPortalController : ControllerBase
         _db.AdminUsers.Add(user);
         await _db.SaveChangesAsync();
         return Ok("Admin user created.");
+    }
+
+    [HttpGet("me")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<AdminCurrentUserDto>> Me()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userId, out var parsedId))
+            return Unauthorized();
+
+        var user = await _db.AdminUsers.FirstOrDefaultAsync(x => x.Id == parsedId);
+        if (user is null)
+            return Unauthorized();
+
+        return Ok(new AdminCurrentUserDto(user.Id, user.Login));
+    }
+
+    private static bool SecretsEqual(string? provided, string expected)
+    {
+        if (string.IsNullOrWhiteSpace(provided) || string.IsNullOrWhiteSpace(expected))
+            return false;
+
+        var providedBytes = Encoding.UTF8.GetBytes(provided.Trim());
+        var expectedBytes = Encoding.UTF8.GetBytes(expected.Trim());
+        return CryptographicOperations.FixedTimeEquals(providedBytes, expectedBytes);
     }
 
     private string GenerateJwt(AdminUser user)

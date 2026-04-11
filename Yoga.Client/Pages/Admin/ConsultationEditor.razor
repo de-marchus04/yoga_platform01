@@ -1,0 +1,9 @@
+@page "/admin/consultations/new"
+@page "/admin/consultations/{Slug}"
+@layout AdminLayout
+
+<AdminContentEditor SectionKey="consultations" SectionLabel="Consultation" Slug="@Slug" />
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+}

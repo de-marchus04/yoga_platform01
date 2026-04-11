@@ -1,0 +1,9 @@
+@page "/admin/yagyas/new"
+@page "/admin/yagyas/{Slug}"
+@layout AdminLayout
+
+<AdminContentEditor SectionKey="yagyas" SectionLabel="Yagya" Slug="@Slug" />
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+}

@@ -1,0 +1,246 @@
+@using Yoga.Shared.DTOs
+@inject ApiService Api
+@inject NavigationManager Navigation
+
+<div class="admin-page-header">
+    <div>
+        <h1>Page Editor</h1>
+        <p style="margin:0;color:var(--a-text-secondary);max-width:52rem;">Edit localized page content for the selected public route without touching seed scripts or raw DB rows.</p>
+    </div>
+    <div class="editor-header-actions">
+        <a class="btn-admin btn-admin-outline" href="/admin/pages">Back To Pages</a>
+        @if (!string.IsNullOrWhiteSpace(editor?.PublicPath))
+        {
+            <a class="btn-admin btn-admin-outline" href="@editor!.PublicPath" target="_blank" rel="noreferrer">Open Public Page</a>
+        }
+        <button class="btn-admin btn-admin-primary" disabled="@(loading || saving || editor is null)" @onclick="SaveAsync">
+            @(saving ? "Saving..." : "Save")
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="stat-card" style="margin-bottom:1rem;">
+        <div class="stat-card-label">Status</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">@statusMessage</div>
+    </div>
+}
+
+@if (loading)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Loading</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">Preparing page editor...</div>
+    </div>
+}
+else if (editor is null)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Unavailable</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">This page slug is not available in the admin catalog yet.</div>
+    </div>
+}
+else
+{
+    <div class="editor-status-bar">
+        <span class="badge badge-muted">Slug: @editor.Slug</span>
+        <span class="badge badge-muted">@editor.Fields.Count field(s)</span>
+        @if (hasUnsavedChanges)
+        {
+            <span class="ce-unsaved-badge">Unsaved changes</span>
+        }
+    </div>
+
+    <div class="content-editor">
+        <div class="content-editor-lang-bar">
+            @foreach (var language in editor.Languages)
+            {
+                <button type="button" class="ce-lang-btn @(activeLanguage == language ? "active" : null)" @onclick="(() => activeLanguage = language)">
+                    <span>@language.ToUpperInvariant()</span>
+                    <span class="ce-lang-pct">@GetLanguageCompletion(language)%</span>
+                </button>
+            }
+            @if (hasUnsavedChanges)
+            {
+                <span class="ce-unsaved-badge">Unsaved draft</span>
+            }
+        </div>
+
+        @foreach (var group in GetFieldGroups())
+        {
+            var fields = GetFields(group).ToList();
+
+            <div class="ce-section">
+                <div class="ce-section-header">
+                    <div class="ce-section-title">@group</div>
+                    <div class="ce-section-chevron">@fields.Count field(s)</div>
+                </div>
+                <div class="ce-section-body">
+                    <div class="admin-localized-grid">
+                        @foreach (var field in fields)
+                        {
+                            <div class="admin-form-group">
+                                <label for="@GetInputId(field.Key)">@field.Label</label>
+                                @if (field.Type == ContentFieldType.TextArea || field.Type == ContentFieldType.RichText)
+                                {
+                                    <textarea id="@GetInputId(field.Key)" class="admin-input" @oninput="@(args => OnFieldChanged(field.Key, args))">@GetFieldValue(field.Key)</textarea>
+                                }
+                                else
+                                {
+                                    <input id="@GetInputId(field.Key)" class="admin-input" value="@GetFieldValue(field.Key)" @oninput="@(args => OnFieldChanged(field.Key, args))" />
+                                }
+                                @if (!string.IsNullOrWhiteSpace(GetFieldHint(field)))
+                                {
+                                    <div class="admin-form-hint">@GetFieldHint(field)</div>
+                                }
+                                @if (field.Type == ContentFieldType.Image && !string.IsNullOrWhiteSpace(GetFieldValue(field.Key)))
+                                {
+                                    <div class="editor-field-preview">
+                                        <img src="@GetFieldValue(field.Key)" alt="@field.Label" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string Slug { get; set; } = string.Empty;
+
+    private AdminContentEditorDto? editor;
+    private bool loading = true;
+    private bool saving;
+    private bool hasUnsavedChanges;
+    private string activeLanguage = "uk";
+    private string? statusMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        statusMessage = null;
+        hasUnsavedChanges = false;
+        editor = await Api.AdminGetEditorAsync("pages", Slug);
+        activeLanguage = editor?.Languages.FirstOrDefault() ?? "uk";
+        loading = false;
+    }
+
+    private IEnumerable<string> GetFieldGroups()
+    {
+        return editor?.Fields
+            .Select(field => string.IsNullOrWhiteSpace(field.Group) ? "Content" : field.Group!)
+            .Distinct()
+            ?? Enumerable.Empty<string>();
+    }
+
+    private IEnumerable<ContentField> GetFields(string group)
+    {
+        return editor?.Fields.Where(field => (field.Group ?? "Content") == group)
+            ?? Enumerable.Empty<ContentField>();
+    }
+
+    private void EnsureLanguageMap(string language)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        if (!editor.Translations.ContainsKey(language))
+        {
+            editor.Translations[language] = editor.Fields.ToDictionary(field => field.Key, _ => string.Empty);
+        }
+    }
+
+    private string GetFieldValue(string fieldKey)
+    {
+        if (editor is null)
+        {
+            return string.Empty;
+        }
+
+        EnsureLanguageMap(activeLanguage);
+        return editor.Translations[activeLanguage].GetValueOrDefault(fieldKey, string.Empty);
+    }
+
+    private string GetFieldHint(ContentField field)
+    {
+        return field.Type switch
+        {
+            ContentFieldType.RichText => "HTML is allowed here. The public page renders this field as markup.",
+            ContentFieldType.Image => "Use an absolute image URL or a media-library URL when that slice is connected.",
+            _ => string.Empty
+        };
+    }
+
+    private int GetLanguageCompletion(string language)
+    {
+        if (editor is null || editor.Fields.Count == 0)
+        {
+            return 0;
+        }
+
+        EnsureLanguageMap(language);
+        var filled = editor.Fields.Count(field => !string.IsNullOrWhiteSpace(editor.Translations[language].GetValueOrDefault(field.Key)));
+        return (int)Math.Round(filled * 100d / editor.Fields.Count, MidpointRounding.AwayFromZero);
+    }
+
+    private string GetInputId(string fieldKey) => $"page-{Slug}-{activeLanguage}-{fieldKey}".ToLowerInvariant();
+
+    private void OnFieldChanged(string fieldKey, ChangeEventArgs args)
+    {
+        if (editor is null)
+        {
+            return;
+        }
+
+        EnsureLanguageMap(activeLanguage);
+        editor.Translations[activeLanguage][fieldKey] = args.Value?.ToString() ?? string.Empty;
+        hasUnsavedChanges = true;
+        statusMessage = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (editor?.Id is null)
+        {
+            return;
+        }
+
+        saving = true;
+        statusMessage = null;
+
+        var request = new AdminContentSaveRequestDto(
+            editor.Slug,
+            0,
+            true,
+            false,
+            false,
+            false,
+            null,
+            null,
+            editor.Translations);
+
+        var savedEditor = await Api.AdminUpdateEditorContentAsync("pages", editor.Id.Value, request);
+        saving = false;
+
+        if (savedEditor is null)
+        {
+            statusMessage = "Save failed. Check the admin session and page schema.";
+            return;
+        }
+
+        editor = savedEditor;
+        hasUnsavedChanges = false;
+        statusMessage = "Page saved.";
+
+        if (!string.Equals(Slug, savedEditor.Slug, StringComparison.OrdinalIgnoreCase))
+        {
+            Navigation.NavigateTo($"/admin/pages/{savedEditor.Slug}");
+        }
+    }
+}

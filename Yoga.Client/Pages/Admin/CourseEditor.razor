@@ -1,0 +1,9 @@
+@page "/admin/courses/new"
+@page "/admin/courses/{Slug}"
+@layout AdminLayout
+
+<AdminCourseEditor Slug="@Slug" />
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+}

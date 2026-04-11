@@ -1,0 +1,248 @@
+@page "/admin/translations"
+@layout AdminLayout
+@using Yoga.Shared.DTOs
+@using Yoga.Client.Services
+@inject ApiService Api
+@inject NavigationManager Nav
+
+<div class="admin-page-header">
+    <div>
+        <h1>Translations</h1>
+        <p style="margin:0;color:var(--a-text-secondary);max-width:48rem;">
+            Track translation coverage across all content entities, and manage UI strings.
+        </p>
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+        <button class='btn @(_tab == "entities" ? "btn-primary" : "btn-secondary")' @onclick='() => SetTab("entities")'>Content</button>
+        <button class='btn @(_tab == "ui" ? "btn-primary" : "btn-secondary")' @onclick='() => SetTab("ui")'>UI strings</button>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="stat-card"><div class="stat-card-label">Loading…</div></div>
+}
+else if (_error is not null)
+{
+    <div class="stat-card" style="border-color:var(--a-danger)"><div>@_error</div></div>
+}
+else if (_tab == "entities")
+{
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;">
+        @foreach (var type in EntityTypes)
+        {
+            <button class="btn @(_typeFilter == type ? "btn-primary" : "btn-secondary")"
+                    @onclick="() => _typeFilter = type">@TypeLabel(type)</button>
+        }
+    </div>
+
+    @if (FilteredEntities.Count == 0)
+    {
+        <div class="stat-card">No entities found.</div>
+    }
+    else
+    {
+        <div class="catalog-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Title / Slug</th>
+                        @foreach (var lang in _languages)
+                        {
+                            <th>@lang.ToUpper()</th>
+                        }
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in FilteredEntities)
+                    {
+                        <tr @key="row.Id">
+                            <td><span class="catalog-badge">@row.EntityType</span></td>
+                            <td><strong>@row.DefaultTitle</strong><br/><span style="font-size:0.8rem;color:var(--a-text-secondary)">@row.Slug</span></td>
+                            @foreach (var lang in _languages)
+                            {
+                                var cov = row.Coverage.FirstOrDefault(x => x.Language == lang);
+                                var pct = cov is null || cov.TotalFields == 0 ? 0 : (int)(cov.FilledFields * 100.0 / cov.TotalFields);
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:0.4rem;">
+                                        <div class="coverage-bar" title="@cov?.FilledFields / @cov?.TotalFields fields">
+                                            <div class="coverage-bar-fill @CoverageClass(pct)" style="width:@pct%"></div>
+                                        </div>
+                                        <span style="font-size:0.8rem;color:var(--a-text-secondary)">@pct%</span>
+                                    </div>
+                                </td>
+                            }
+                            <td>
+                                <button class="btn btn-secondary btn-sm" @onclick="() => GoToEditor(row)">Edit</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+else
+{
+    <!-- UI Strings tab -->
+    @if (_uiRows is null)
+    {
+        <div class="stat-card"><div class="stat-card-label">Loading UI strings…</div></div>
+    }
+    else
+    {
+        <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;align-items:center;">
+            <input class="editor-input" type="search" @bind="_uiSearch" @bind:event="oninput"
+                   placeholder="Filter by key…" style="max-width:28rem;" />
+            <button class="btn btn-primary btn-sm" @onclick="SaveUiTranslations" disabled="@_saving">
+                @(_saving ? "Saving…" : "Save all")
+            </button>
+            @if (_saveMsg is not null)
+            {
+                <span style="color:var(--a-success);font-size:0.85rem;">@_saveMsg</span>
+            }
+        </div>
+
+        <div class="catalog-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        @foreach (var lang in _languages)
+                        {
+                            <th>@lang.ToUpper()</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in FilteredUiRows)
+                    {
+                        <tr @key="row.Key">
+                            <td style="font-family:monospace;font-size:0.82rem;">@row.Key</td>
+                            @foreach (var lang in _languages)
+                            {
+                                var val = row.Values.TryGetValue(lang, out var v) ? v : "";
+                                <td>
+                                    <input class="editor-input editor-input-sm"
+                                           value="@val"
+                                           @onchange='e => SetUiValue(row.Key, lang, e.Value?.ToString() ?? "")' />
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private string _tab = "entities";
+    private AdminTranslationWorkspaceDto? _workspace;
+    private List<AdminUiTranslationRowDto>? _uiRows;
+    private List<string> _languages = new();
+    private string? _typeFilter = null;
+    private string? _uiSearch;
+    private bool _saving;
+    private string? _saveMsg;
+
+    private static readonly string[] EntityTypes = new[] { "course", "consultation", "retreat", "yagya", "SitePage" };
+
+    private List<AdminTranslationEntityRowDto> FilteredEntities => _workspace?.Entities
+        .Where(x => _typeFilter is null || x.EntityType == _typeFilter)
+        .ToList() ?? new();
+
+    private List<AdminUiTranslationRowDto> FilteredUiRows => _uiRows?
+        .Where(x => string.IsNullOrWhiteSpace(_uiSearch) || x.Key.Contains(_uiSearch, StringComparison.OrdinalIgnoreCase))
+        .ToList() ?? new();
+
+    protected override async Task OnInitializedAsync() => await LoadEntitiesAsync();
+
+    private async Task SetTab(string tab)
+    {
+        _tab = tab;
+        if (tab == "ui" && _uiRows is null)
+            await LoadUiAsync();
+    }
+
+    private async Task LoadEntitiesAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _workspace = await Api.AdminGetTranslationWorkspaceAsync();
+            if (_workspace is null) { _error = "Could not load translation workspace."; return; }
+            _languages = _workspace.Languages.ToList();
+        }
+        catch { _error = "Could not load translation workspace."; }
+        finally { _loading = false; }
+    }
+
+    private async Task LoadUiAsync()
+    {
+        try
+        {
+            var rows = await Api.AdminGetUiTranslationsAsync();
+            _uiRows = rows?.ToList() ?? new();
+        }
+        catch { _uiRows = new(); }
+    }
+
+    private void SetUiValue(string key, string lang, string value)
+    {
+        if (_uiRows is null) return;
+        var row = _uiRows.FirstOrDefault(x => x.Key == key);
+        if (row is not null) row.Values[lang] = value;
+    }
+
+    private async Task SaveUiTranslations()
+    {
+        if (_uiRows is null) return;
+        _saving = true;
+        _saveMsg = null;
+        try
+        {
+            var dict = _uiRows.ToDictionary(r => r.Key, r => r.Values);
+            await Api.AdminSaveUiTranslationsAsync(dict);
+            _saveMsg = "Saved.";
+        }
+        finally { _saving = false; }
+    }
+
+    private void GoToEditor(AdminTranslationEntityRowDto row)
+    {
+        var path = row.EntityType switch
+        {
+            "course" => $"/admin/courses/{row.Slug}",
+            "consultation" => $"/admin/consultations/{row.Slug}",
+            "retreat" => $"/admin/retreats/{row.Slug}",
+            "yagya" => $"/admin/yagyas/{row.Slug}",
+            "SitePage" => $"/admin/pages/{row.Slug}",
+            _ => "/admin"
+        };
+        Nav.NavigateTo(path);
+    }
+
+    private static string TypeLabel(string? type) => type switch
+    {
+        null => "All",
+        "course" => "Courses",
+        "consultation" => "Consultations",
+        "retreat" => "Retreats",
+        "yagya" => "Yagyas",
+        "SitePage" => "Pages",
+        _ => type
+    };
+
+    private static string CoverageClass(int pct) => pct switch
+    {
+        100 => "coverage-full",
+        >= 50 => "coverage-partial",
+        _ => "coverage-low"
+    };
+}

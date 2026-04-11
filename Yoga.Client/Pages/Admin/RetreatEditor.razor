@@ -1,0 +1,9 @@
+@page "/admin/retreats/new"
+@page "/admin/retreats/{Slug}"
+@layout AdminLayout
+
+<AdminContentEditor SectionKey="retreats" SectionLabel="Retreat" Slug="@Slug" />
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+}

@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@inject ApiService Api
 @inject IJSRuntime JS
 @inject NavigationManager Nav
 
@@ -9,16 +10,21 @@
             <span class="admin-badge">Admin</span>
         </div>
         <nav class="admin-nav">
-            <a href="/admin" class="admin-nav-link">Dashboard</a>
-            <a href="/admin/courses" class="admin-nav-link">Courses</a>
-            <a href="/admin/consultations" class="admin-nav-link">Consultations</a>
-            <a href="/admin/retreats" class="admin-nav-link">Retreats</a>
-            <a href="/admin/yagyas" class="admin-nav-link">Yagyas</a>
-            <a href="/admin/pages" class="admin-nav-link">Site Pages</a>
-            <a href="/admin/leads" class="admin-nav-link">Leads</a>
-            <a href="/admin/translations" class="admin-nav-link">Translations</a>
+            <NavLink href="/admin" class="admin-nav-link" Match="NavLinkMatch.All">Dashboard</NavLink>
+            <NavLink href="/admin/courses" class="admin-nav-link">Courses</NavLink>
+            <NavLink href="/admin/consultations" class="admin-nav-link">Consultations</NavLink>
+            <NavLink href="/admin/retreats" class="admin-nav-link">Retreats</NavLink>
+            <NavLink href="/admin/yagyas" class="admin-nav-link">Yagyas</NavLink>
+            <NavLink href="/admin/pages" class="admin-nav-link">Site Pages</NavLink>
+            <NavLink href="/admin/media" class="admin-nav-link">Media</NavLink>
+            <NavLink href="/admin/leads" class="admin-nav-link">Leads</NavLink>
+            <NavLink href="/admin/translations" class="admin-nav-link">Translations</NavLink>
         </nav>
         <div class="admin-sidebar-footer">
+            @if (!string.IsNullOrWhiteSpace(adminLogin))
+            {
+                <div class="admin-nav-link admin-back-link">@adminLogin</div>
+            }
             <button class="admin-logout-btn" @onclick="Logout">Logout</button>
             <a href="/" class="admin-nav-link admin-back-link">← Back to site</a>
         </div>
@@ -29,6 +35,8 @@
 </div>
 
 @code {
+    private string? adminLogin;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -37,7 +45,19 @@
             if (string.IsNullOrWhiteSpace(token))
             {
                 Nav.NavigateTo("/", forceLoad: true);
+                return;
             }
+
+            var user = await Api.AdminGetCurrentUserAsync();
+            if (user is null)
+            {
+                await JS.InvokeVoidAsync("localStorage.removeItem", "yl-admin-token");
+                Nav.NavigateTo("/", forceLoad: true);
+                return;
+            }
+
+            adminLogin = user.Login;
+            StateHasChanged();
         }
     }
 

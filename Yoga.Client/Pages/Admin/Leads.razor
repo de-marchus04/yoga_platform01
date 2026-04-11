@@ -1,0 +1,249 @@
+@page "/admin/leads"
+@layout AdminLayout
+@using Yoga.Shared.DTOs
+@using Yoga.Client.Services
+@inject ApiService Api
+
+<div class="admin-page-header">
+    <div>
+        <h1>Leads</h1>
+        <p style="margin:0;color:var(--a-text-secondary);max-width:48rem;">
+            Triage and track incoming lead requests.
+        </p>
+    </div>
+</div>
+
+@if (_loading)
+{
+    <div class="stat-card"><div class="stat-card-label">Loading…</div></div>
+}
+else if (_error is not null)
+{
+    <div class="stat-card" style="border-color:var(--a-danger)"><div>@_error</div></div>
+}
+else
+{
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;">
+        @foreach (var (label, val) in StatusFilters)
+        {
+            <button class="btn @(_statusFilter == val ? "btn-primary" : "btn-secondary")"
+                    @onclick="() => SetFilter(val)">
+                @label
+            </button>
+        }
+        <span style="margin-left:auto;color:var(--a-text-secondary);font-size:0.85rem;">
+            @_total leads
+        </span>
+    </div>
+
+    @if (_items.Count == 0)
+    {
+        <div class="stat-card">No leads found.</div>
+    }
+    else
+    {
+        <div class="catalog-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Contact</th>
+                        <th>Subject</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var lead in _items)
+                    {
+                        <tr @key="lead.Id" class="@(_expanded == lead.Id ? "lead-row-expanded" : "")">
+                            <td><strong>@lead.Name</strong></td>
+                            <td>
+                                @lead.ContactDetails
+                                @if (!string.IsNullOrWhiteSpace(lead.Messager))
+                                {
+                                    <span class="catalog-badge" style="margin-left:0.35rem;">@lead.Messager</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(lead.SubjectTitle))
+                                {
+                                    <span>@lead.SubjectTitle</span>
+                                }
+                                else if (!string.IsNullOrWhiteSpace(lead.TargetFormat))
+                                {
+                                    <span style="color:var(--a-text-secondary)">@lead.TargetFormat</span>
+                                }
+                            </td>
+                            <td style="white-space:nowrap;">@lead.CreatedAt.ToLocalTime().ToString("dd.MM.yy HH:mm")</td>
+                            <td>
+                                <span class="catalog-badge @StatusBadgeClass(lead.Status)">@StatusLabel(lead.Status)</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-secondary btn-sm" @onclick="() => ToggleExpand(lead.Id)">
+                                    @(_expanded == lead.Id ? "Close" : "Review")
+                                </button>
+                            </td>
+                        </tr>
+                        @if (_expanded == lead.Id)
+                        {
+                            <tr class="lead-detail-row">
+                                <td colspan="6">
+                                    <div class="lead-detail-panel">
+                                        @if (!string.IsNullOrWhiteSpace(lead.Comment))
+                                        {
+                                            <div class="editor-field">
+                                                <label class="editor-field-label">Comment from lead</label>
+                                                <div class="editor-field-preview" style="white-space:pre-wrap;">@lead.Comment</div>
+                                            </div>
+                                        }
+                                        <div class="editor-field">
+                                            <label class="editor-field-label">Status</label>
+                                            <select class="editor-input" value="@_editStatus" @onchange='e => _editStatus = int.Parse(e.Value?.ToString() ?? "0")'>
+                                                @foreach (var (slabel, sval) in StatusOptions)
+                                                {
+                                                    <option value="@sval" selected="@(sval == _editStatus)">@slabel</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="editor-field">
+                                            <label class="editor-field-label">Operator note</label>
+                                            <textarea class="editor-textarea" rows="3" @bind="_editNote" placeholder="Internal note…" />
+                                        </div>
+                                        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+                                            <button class="btn btn-primary btn-sm" @onclick="() => SaveLead(lead.Id)" disabled="@_saving">
+                                                @(_saving ? "Saving…" : "Save")
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" @onclick="() => _expanded = null">Cancel</button>
+                                        </div>
+                                        @if (!string.IsNullOrWhiteSpace(_saveMsg))
+                                        {
+                                            <div style="margin-top:0.5rem;color:var(--a-success);font-size:0.85rem;">@_saveMsg</div>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (_total > _pageSize)
+        {
+            <div style="display:flex;gap:0.5rem;margin-top:1rem;align-items:center;">
+                <button class="btn btn-secondary btn-sm" @onclick="PrevPage" disabled="@(_page <= 1)">← Prev</button>
+                <span style="color:var(--a-text-secondary);">Page @_page of @TotalPages</span>
+                <button class="btn btn-secondary btn-sm" @onclick="NextPage" disabled="@(_page >= TotalPages)">Next →</button>
+            </div>
+        }
+    }
+}
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private List<AdminLeadDto> _items = new();
+    private int _total;
+    private int _page = 1;
+    private int _pageSize = 30;
+    private int? _statusFilter = null;
+    private Guid? _expanded;
+    private int _editStatus;
+    private string? _editNote;
+    private bool _saving;
+    private string? _saveMsg;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(_total / (double)_pageSize));
+
+    private static readonly (string Label, int? Val)[] StatusFilters = new[]
+    {
+        ("All", (int?)null),
+        ("New", (int?)0),
+        ("In Progress", (int?)1),
+        ("Converted", (int?)2),
+        ("Dismissed", (int?)3)
+    };
+
+    private static readonly (string Label, int Val)[] StatusOptions = new[]
+    {
+        ("New", 0),
+        ("In Progress", 1),
+        ("Converted", 2),
+        ("Dismissed", 3)
+    };
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            var result = await Api.AdminGetLeadsAsync(_page, _pageSize, _statusFilter);
+            if (result is null) { _error = "Could not load leads."; return; }
+            _items = result.Items.ToList();
+            _total = result.TotalCount;
+        }
+        catch { _error = "Could not load leads."; }
+        finally { _loading = false; }
+    }
+
+    private async Task SetFilter(int? status)
+    {
+        _statusFilter = status;
+        _page = 1;
+        await LoadAsync();
+    }
+
+    private void ToggleExpand(Guid id)
+    {
+        _saveMsg = null;
+        if (_expanded == id) { _expanded = null; return; }
+        var lead = _items.FirstOrDefault(x => x.Id == id);
+        if (lead is null) return;
+        _expanded = id;
+        _editStatus = lead.Status;
+        _editNote = lead.OperatorNote;
+    }
+
+    private async Task SaveLead(Guid id)
+    {
+        _saving = true;
+        _saveMsg = null;
+        try
+        {
+            var updated = await Api.AdminUpdateLeadAsync(id, new AdminLeadUpdateRequest(_editStatus, _editNote));
+            if (updated is not null)
+            {
+                var idx = _items.FindIndex(x => x.Id == id);
+                if (idx >= 0) _items[idx] = updated with { SubjectTitle = _items[idx].SubjectTitle };
+                _saveMsg = "Saved.";
+            }
+        }
+        finally { _saving = false; }
+    }
+
+    private async Task PrevPage() { if (_page > 1) { _page--; await LoadAsync(); } }
+    private async Task NextPage() { if (_page < TotalPages) { _page++; await LoadAsync(); } }
+
+    private static string StatusLabel(int status) => status switch
+    {
+        0 => "New",
+        1 => "In Progress",
+        2 => "Converted",
+        3 => "Dismissed",
+        _ => "Unknown"
+    };
+
+    private static string StatusBadgeClass(int status) => status switch
+    {
+        0 => "badge-new",
+        1 => "badge-inprogress",
+        2 => "badge-active",
+        3 => "badge-inactive",
+        _ => ""
+    };
+}

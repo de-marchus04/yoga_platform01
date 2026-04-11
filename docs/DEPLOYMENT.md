@@ -177,3 +177,24 @@ After deployment, verify:
 1. Lead creation from the public site (`POST /api/leads`).
 2. Course and consultation pages load with API data.
 3. Public Vercel routes resolve without `404` for `/`, `/courses`, `/consultations`, `/about`, `/contacts`, `/privacy`, `/terms`.
+
+## Admin CMS Smoke Test
+
+After a clean deployment, run this sequence to verify end-to-end admin functionality:
+
+1. **Seed admin account** (first deploy only): set `AdminPortal__EnableSeedAdminEndpoint=true` in the server env, call `POST /api/admin/portal/seed-admin`, then set the env var back to `false` and restart.
+2. **Login**: `POST /api/admin/portal/login` → 200 with session cookie.
+3. **Dashboard**: `GET /api/admin/cms/dashboard` → 200.
+4. **Create draft course**: open `/admin/courses/new`, fill slug + at least one translation field, click "Save as Draft" → verify catalog shows "Draft" badge, verify `GET /api/courses` does NOT return the slug.
+5. **Publish course**: click "Publish" → verify "Published" badge, verify `GET /api/courses` now includes the slug.
+6. **Preview**: navigate to `/admin/preview/courses/{slug}` before publishing a draft — verify read-only field matrix renders and "Publish" button works.
+7. **Media upload**: `/admin/media` → upload a file or URL → verify grid shows the new asset.
+8. **Leads triage**: submit a lead via `POST /api/leads`, open `/admin/leads`, change status to "Contacted", save.
+9. **Health**: `GET /health/live` and `GET /health/ready` both return healthy.
+
+### Admin env vars
+
+| Variable | When to use |
+|---|---|
+| `AdminPortal__EnableSeedAdminEndpoint` | `true` only for first-deploy admin account seed; set `false` immediately after |
+| `AdminCms__EnableSampleContentBootstrap` | `true` only in dev/staging to create demo content via UI |

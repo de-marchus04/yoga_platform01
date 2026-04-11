@@ -24,7 +24,7 @@ namespace Yoga.Api.Controllers
         public async Task<ActionResult<List<ConsultationDto>>> GetConsultations([FromQuery] string lang = "uk")
         {
             var items = await _context.Consultations
-                .Where(c => c.IsActive)
+                .Where(c => c.IsActive && !c.IsDraft)
                 .OrderBy(c => c.SortOrder)
                 .ToListAsync();
 
@@ -60,7 +60,7 @@ namespace Yoga.Api.Controllers
             slug = ResolveConsultationSlug(slug);
 
             var item = await _context.Consultations
-                .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive);
+                .FirstOrDefaultAsync(c => c.Slug == slug && c.IsActive && !c.IsDraft);
 
             if (item == null) return NotFound();
 

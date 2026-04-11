@@ -1,0 +1,133 @@
+@page "/admin/preview/{Section}/{Slug}"
+@layout AdminLayout
+@using Yoga.Shared.DTOs
+@inject ApiService Api
+@inject NavigationManager Navigation
+
+<div class="admin-page-header">
+    <div>
+        <h1>Preview: @(editor?.Label ?? Slug)</h1>
+        <p style="margin:0;color:var(--a-text-secondary);max-width:52rem;">Read-only preview — content is not yet published.</p>
+    </div>
+    <div class="editor-header-actions">
+        <button class="btn-admin btn-admin-outline" @onclick="GoToEditor">Back to Editor</button>
+        <button class="btn-admin btn-admin-primary" disabled="@(loading || publishing || editor is null)" @onclick="PublishAsync">
+            @(publishing ? "Publishing..." : "Publish")
+        </button>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(statusMessage))
+{
+    <div class="stat-card" style="margin-bottom:1rem;">
+        <div class="stat-card-label">Status</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">@statusMessage</div>
+    </div>
+}
+
+@if (loading)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Loading</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">Loading preview...</div>
+    </div>
+}
+else if (editor is null)
+{
+    <div class="stat-card">
+        <div class="stat-card-label">Not Found</div>
+        <div style="font-size:0.95rem;color:var(--a-text);">Content not found: @Section / @Slug</div>
+    </div>
+}
+else
+{
+    <div class="editor-status-bar">
+        <span class="badge @(editor.IsActive ? "badge-success" : "badge-muted")">@(editor.IsActive ? "Active" : "Hidden")</span>
+        <span class="badge badge-warning">Draft</span>
+    </div>
+
+    <div class="stat-card" style="margin-bottom:1.5rem;">
+        <div class="stat-card-label">Content Fields</div>
+        <div style="overflow-x:auto;">
+            <table class="admin-table" style="margin-top:0.75rem;">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        @foreach (var lang in editor.Languages)
+                        {
+                            <th>@lang.ToUpperInvariant()</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var field in editor.Fields)
+                    {
+                        <tr>
+                            <td><strong>@field.Label</strong><br /><small style="color:var(--a-text-secondary);">@field.Key</small></td>
+                            @foreach (var lang in editor.Languages)
+                            {
+                                var val = editor.Translations.TryGetValue(lang, out var langDict) && langDict.TryGetValue(field.Key, out var v) ? v : string.Empty;
+                                <td style="max-width:22rem;white-space:pre-wrap;word-break:break-word;">@(string.IsNullOrEmpty(val) ? "—" : val)</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string Section { get; set; } = string.Empty;
+    [Parameter] public string Slug { get; set; } = string.Empty;
+
+    private AdminContentEditorDto? editor;
+    private bool loading = true;
+    private bool publishing;
+    private string? statusMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        editor = await Api.AdminGetPreviewAsync(Section, Slug);
+        loading = false;
+    }
+
+    private void GoToEditor()
+    {
+        Navigation.NavigateTo($"/admin/{Section}/{Slug}");
+    }
+
+    private async Task PublishAsync()
+    {
+        if (editor is null) return;
+
+        publishing = true;
+        statusMessage = null;
+
+        var request = new AdminContentSaveRequestDto(
+            editor.Slug,
+            editor.SortOrder,
+            true,
+            false,
+            editor.IsOnline,
+            editor.IsOffline,
+            editor.EventStartDate,
+            editor.EventEndDate,
+            editor.Translations);
+
+        var saved = editor.Id.HasValue
+            ? await Api.AdminUpdateEditorContentAsync(Section, editor.Id.Value, request)
+            : null;
+
+        publishing = false;
+
+        if (saved is null)
+        {
+            statusMessage = "Publish failed. Check admin session and content data.";
+            return;
+        }
+
+        Navigation.NavigateTo($"/admin/{Section}/{saved.Slug}");
+    }
+}

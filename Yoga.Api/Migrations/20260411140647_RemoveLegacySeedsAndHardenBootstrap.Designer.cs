@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Yoga.Api.Data;
@@ -11,9 +12,11 @@ using Yoga.Api.Data;
 namespace Yoga.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260411140647_RemoveLegacySeedsAndHardenBootstrap")]
+    partial class RemoveLegacySeedsAndHardenBootstrap
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -58,11 +61,6 @@ namespace Yoga.Api.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDraft")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("IsOffline")
                         .HasColumnType("boolean");
 
@@ -93,11 +91,6 @@ namespace Yoga.Api.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDraft")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsOffline")
                         .HasColumnType("boolean");
@@ -192,15 +185,8 @@ namespace Yoga.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("OperatorNote")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
                     b.Property<Guid?>("RetreatId")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
 
                     b.Property<string>("TargetFormat")
                         .IsRequired()
@@ -213,45 +199,6 @@ namespace Yoga.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Leads");
-                });
-
-            modelBuilder.Entity("Yoga.Shared.Models.MediaFile", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AltText")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)");
-
-                    b.Property<long>("Size")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("StoragePath")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StoragePath")
-                        .IsUnique();
-
-                    b.ToTable("MediaFiles");
                 });
 
             modelBuilder.Entity("Yoga.Shared.Models.Retreat", b =>
@@ -268,11 +215,6 @@ namespace Yoga.Api.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDraft")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -323,16 +265,6 @@ namespace Yoga.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<bool>("IsDraft")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(64)
@@ -349,57 +281,41 @@ namespace Yoga.Api.Migrations
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444401"),
-                            IsActive = true,
-                            IsDraft = false,
                             Slug = "about"
                         },
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444402"),
-                            IsActive = true,
-                            IsDraft = false,
                             Slug = "contacts"
                         },
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444403"),
-                            IsActive = true,
-                            IsDraft = false,
                             Slug = "home"
                         },
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444404"),
-                            IsActive = true,
-                            IsDraft = false,
                             Slug = "courses"
                         },
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444405"),
-                            IsActive = true,
-                            IsDraft = false,
                             Slug = "consultations"
                         },
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444406"),
-                            IsActive = true,
-                            IsDraft = false,
                             Slug = "retreats"
                         },
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444407"),
-                            IsActive = true,
-                            IsDraft = false,
                             Slug = "yagyas"
                         },
                         new
                         {
                             Id = new Guid("44444444-4444-4444-4444-444444444408"),
-                            IsActive = true,
-                            IsDraft = false,
                             Slug = "blog"
                         });
                 });
@@ -889,11 +805,6 @@ namespace Yoga.Api.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDraft")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
 
                     b.Property<string>("Slug")
                         .IsRequired()

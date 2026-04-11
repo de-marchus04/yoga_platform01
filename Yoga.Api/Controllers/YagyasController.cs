@@ -20,7 +20,7 @@ namespace Yoga.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<List<YagyaDto>>> GetYagyas([FromQuery] string lang = "uk", [FromQuery] string? period = null)
         {
-            var query = _context.Yagyas.Where(y => y.IsActive);
+            var query = _context.Yagyas.Where(y => y.IsActive && !y.IsDraft);
 
             var now = DateTime.UtcNow.Date;
             if (string.Equals(period, "upcoming", StringComparison.OrdinalIgnoreCase))
@@ -57,11 +57,11 @@ namespace Yoga.Api.Controllers
             if (Guid.TryParse(slugOrId, out var id))
                 item = await _context.Yagyas
                     .Include(y => y.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
-                    .FirstOrDefaultAsync(y => y.Id == id && y.IsActive);
+                    .FirstOrDefaultAsync(y => y.Id == id && y.IsActive && !y.IsDraft);
             else
                 item = await _context.Yagyas
                     .Include(y => y.Subcategories.Where(s => s.IsActive).OrderBy(s => s.SortOrder))
-                    .FirstOrDefaultAsync(y => y.Slug == slugOrId && y.IsActive);
+                    .FirstOrDefaultAsync(y => y.Slug == slugOrId && y.IsActive && !y.IsDraft);
 
             if (item is null) return NotFound();
 

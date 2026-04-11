@@ -31,28 +31,28 @@ namespace Yoga.Api.Controllers
             AddUrl(sb, "/consultations", "weekly", "0.85");
 
             var courses = await _context.Courses
-                .Where(c => c.IsActive)
+                .Where(c => c.IsActive && !c.IsDraft)
                 .Select(c => c.Slug)
                 .ToListAsync();
             foreach (var slug in courses)
                 AddUrl(sb, $"/courses/{slug}", "weekly", "0.8");
 
             var consultations = await _context.Consultations
-                .Where(c => c.IsActive)
+                .Where(c => c.IsActive && !c.IsDraft)
                 .Select(c => c.Slug)
                 .ToListAsync();
             foreach (var slug in consultations)
                 AddUrl(sb, $"/consultations/{slug}", "weekly", "0.7");
 
             var retreats = await _context.Retreats
-                .Where(r => r.IsActive && r.Slug != "")
+                .Where(r => r.IsActive && !r.IsDraft && r.Slug != "")
                 .Select(r => r.Slug)
                 .ToListAsync();
             foreach (var slug in retreats)
                 AddUrl(sb, $"/retreats/{slug}", "monthly", "0.7");
 
             var yagyas = await _context.Yagyas
-                .Where(y => y.IsActive && y.Slug != "")
+                .Where(y => y.IsActive && !y.IsDraft && y.Slug != "")
                 .Select(y => y.Slug)
                 .ToListAsync();
             foreach (var slug in yagyas)

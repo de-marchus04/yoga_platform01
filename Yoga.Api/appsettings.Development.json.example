@@ -33,6 +33,15 @@
     ],
     "EnableHsts": false
   },
+  "AdminPortal": {
+    "Login": "admin",
+    "Password": "change-me",
+    "EnableSeedAdminEndpoint": false,
+    "SeedAdminBootstrapToken": "set-a-random-bootstrap-token"
+  },
+  "AdminCms": {
+    "EnableSampleContentBootstrap": false
+  },
   "ErrorTracking": {
     "Enabled": false,
     "Provider": "None",

@@ -1,0 +1,8 @@
+@page "/admin/pages/{Slug}"
+@layout AdminLayout
+
+<AdminSitePageEditor Slug="@Slug" />
+
+@code {
+    [Parameter] public string Slug { get; set; } = string.Empty;
+}
