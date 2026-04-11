@@ -1,17 +1,26 @@
-@page "/retreats/{Slug}"
+﻿@page "/retreats/{Slug}"
 @inject LocalizationService Loc
 @inject ApiService Api
+@inject NavigationManager Nav
 @implements IDisposable
 
-<PageTitle>@(item?.Title != null ? $"{item.Title} | shakti.ashram" : Loc["page.retreats.title"])</PageTitle>
+<PageTitle>@(item?.Title != null ? $"{item.Title} | shakti.ashram" : (Loc.CurrentLang == "uk" ? "Ретрит" : "Retreat"))</PageTitle>
 
-@if (item is null)
+@if (loading)
 {
     <section class="page-hero">
         <div class="container page-hero-content">
             <div class="skeleton" style="height: 1.5rem; width: 20%; margin-bottom: 2rem;"></div>
             <div class="skeleton" style="height: 4rem; width: 60%; margin-bottom: 2rem;"></div>
-            <div class="skeleton" style="height: 1.5rem; width: 80%;"></div>
+        </div>
+    </section>
+}
+else if (item is null)
+{
+    <section class="page-hero">
+        <div class="container page-hero-content">
+            <h1>@(Loc.CurrentLang == "uk" ? "Ретрит не знайдено" : "Retreat not found")</h1>
+            <a class="btn btn-outline" href="/retreats" style="margin-top:1.5rem; display:inline-flex;">@(Loc.CurrentLang == "uk" ? "До каталогу" : "Back to catalog")</a>
         </div>
     </section>
 }
@@ -41,28 +50,28 @@ else
                 @if (!string.IsNullOrEmpty(item.Duration))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Длительность", "Тривалість", "Duration")</span>
+                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Тривалість" : "Duration")</span>
                         <span class="format-strip-value">@item.Duration</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(item.Location))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Место", "Місце", "Location")</span>
+                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Місце" : "Location")</span>
                         <span class="format-strip-value">@item.Location</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(item.Format))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Формат", "Формат", "Format")</span>
+                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Формат" : "Format")</span>
                         <span class="format-strip-value">@item.Format</span>
                     </div>
                 }
                 @if (item.EventStartDate.HasValue)
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Дата", "Дата", "Date")</span>
+                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Дата" : "Date")</span>
                         <span class="format-strip-value">@FmtDateRange(item.EventStartDate, item.EventEndDate)</span>
                     </div>
                 }
@@ -72,11 +81,6 @@ else
 
     <section class="overview-section">
         <div class="container">
-            <div class="section-header reveal">
-                <p class="section-eyebrow">@Loc["section.overview.eyebrow"]</p>
-                <h2>@Loc["section.overview.h2"]</h2>
-                <div class="section-divider"></div>
-            </div>
             <div class="overview-grid">
                 <div class="overview-desc reveal">
                     @if (!string.IsNullOrEmpty(item.Description))
@@ -87,60 +91,22 @@ else
                         }
                     }
                 </div>
-                @if (item.Benefits?.Length > 0)
-                {
-                    <div class="overview-benefits reveal reveal-d1">
-                        <h4>@Loc["section.benefits.h4"]</h4>
-                        @foreach (var benefit in item.Benefits!)
-                        {
-                            <div class="benefit-item"><span class="benefit-check"></span><span>@benefit</span></div>
-                        }
-                    </div>
-                }
             </div>
         </div>
     </section>
-
-    @if (item.ForWhom?.Length > 0)
-    {
-        <section class="for-whom-section">
-            <div class="container">
-                <div class="section-header reveal">
-                    <p class="section-eyebrow">@Loc["section.forwhom.eyebrow"]</p>
-                    <h2>@Loc["section.forwhom.h2"]</h2>
-                    <div class="section-divider"></div>
-                </div>
-                <div class="for-whom-grid">
-                    @{ int fwIdx = 0; }
-                    @foreach (var fw in item.ForWhom!)
-                    {
-                        var delayClass = fwIdx switch { 1 => "reveal-d1", 2 => "reveal-d2", _ => "" };
-                        <div class="for-whom-card reveal @delayClass">
-                            <h3>@fw.Title</h3>
-                            <p>@fw.Text</p>
-                        </div>
-                        fwIdx++;
-                    }
-                </div>
-            </div>
-        </section>
-    }
 
     <section class="page-cta">
         <div class="container" style="text-align:center;">
             @if (!string.IsNullOrEmpty(item.CtaHeading))
             {
-                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
                 <h2>@item.CtaHeading</h2>
                 <p>@item.CtaText</p>
             }
             else
             {
-                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
-                <h2>@Loc["section.cta.h2"]</h2>
-                <p>@Loc["section.cta.text"]</p>
+                <h2>@(Loc.CurrentLang == "uk" ? "Долучитися" : "Join")</h2>
             }
-            <button class="btn btn-primary" @onclick="OpenModal">@Loc["section.cta.btn"]</button>
+            <button class="btn btn-primary" @onclick="OpenModal">@(Loc.CurrentLang == "uk" ? "Детальніше" : (Loc.CurrentLang == "ru" ? "Подробнее" : "Read more"))</button>
         </div>
     </section>
 }
@@ -148,57 +114,44 @@ else
 @code {
     [Parameter] public string Slug { get; set; } = "";
     private Yoga.Shared.DTOs.RetreatDto? item;
+    private bool loading = true;
+    
+    [Inject] public ModalService ModalService { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        Loc.OnLanguageChanged += Reload;
-        await LoadAsync();
+        Loc.OnLanguageChanged += Refresh;
+        await LoadData();
     }
 
-    private async void Reload()
+    protected override async Task OnParametersSetAsync()
     {
-        await LoadAsync();
-        await InvokeAsync(StateHasChanged);
+        await LoadData();
     }
 
-    private async Task LoadAsync()
+    private async Task LoadData()
     {
-        item = await Api.GetRetreatAsync(Slug, Loc.CurrentLang);
+        loading = true;
+        try { item = await Api.GetRetreatAsync(Slug, Loc.CurrentLang); }
+        catch { item = null; }
+        loading = false;
     }
 
     private void OpenModal()
     {
-        var parameters = new Dictionary<string, object>
-        {
-            ["ContextTitle"] = item?.Title ?? "Retreat"
-        };
-        ModalService.Show<Yoga.Client.Components.LeadModal>(parameters);
+        var p = new Dictionary<string, object>();
+        p["ContextTitle"] = item?.Title ?? "Ретрит";
+        if (item != null) p["TargetRetreatId"] = item.Id;
+        ModalService.Show<LeadModal>(p);
     }
 
-    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
-    {
-        "uk" => uk,
-        "en" => en,
-        _ => ru
-    };
+    private void Refresh() { InvokeAsync(async () => { await LoadData(); StateHasChanged(); }); }
+    public void Dispose() => Loc.OnLanguageChanged -= Refresh;
 
     private string FmtDateRange(DateTime? start, DateTime? end)
     {
-        if (start is null) return "";
-        var culture = Loc.CurrentLang switch
-        {
-            "uk" => new System.Globalization.CultureInfo("uk-UA"),
-            "en" => System.Globalization.CultureInfo.InvariantCulture,
-            _    => new System.Globalization.CultureInfo("ru-RU")
-        };
-        var s = start.Value.ToString("d MMM", culture);
-        if (end is null || end.Value.Date == start.Value.Date)
-            return s;
-        var e = end.Value.Year == start.Value.Year
-            ? end.Value.ToString("d MMM", culture)
-            : end.Value.ToString("d MMM yyyy", culture);
-        return $"{s} — {e} {start.Value.Year}";
+        if (!start.HasValue) return "";
+        if (!end.HasValue || start.Value.Date == end.Value.Date) return start.Value.ToString("dd.MM.yyyy");
+        return $"{start.Value:dd.MM} - {end.Value:dd.MM.yyyy}";
     }
-
-    public void Dispose() => Loc.OnLanguageChanged -= Reload;
 }

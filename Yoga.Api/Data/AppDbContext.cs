@@ -140,19 +140,13 @@ namespace Yoga.Api.Data
             var courseMeditation = Guid.Parse("22222222-2222-2222-2222-222222222202");
             var courseYoga = Guid.Parse("22222222-2222-2222-2222-222222222203");
 
-            modelBuilder.Entity<Course>().HasData(
-                new Course { Id = coursePranavidya, Slug = "pranavidya", SortOrder = 1, IsActive = true, IsOnline = true, IsOffline = true },
-                new Course { Id = courseMeditation, Slug = "meditation", SortOrder = 2, IsActive = true, IsOnline = true, IsOffline = true },
-                new Course { Id = courseYoga, Slug = "yoga", SortOrder = 3, IsActive = true, IsOnline = true, IsOffline = true });
+            // Seed removed for Course
 
             var consultSpiritual = Guid.Parse("33333333-3333-3333-3333-333333333301");
             var consultYouth = Guid.Parse("33333333-3333-3333-3333-333333333302");
             var consultPersonal = Guid.Parse("33333333-3333-3333-3333-333333333303");
 
-            modelBuilder.Entity<Consultation>().HasData(
-                new Consultation { Id = consultSpiritual, Slug = "spiritual-development", SortOrder = 1, IsActive = true, IsOnline = true, IsOffline = true },
-                new Consultation { Id = consultYouth, Slug = "youth", SortOrder = 2, IsActive = true, IsOnline = true, IsOffline = true },
-                new Consultation { Id = consultPersonal, Slug = "personal", SortOrder = 3, IsActive = true, IsOnline = true, IsOffline = true });
+            // Seed removed for Consultation
 
             var retreatMountain = Guid.Parse("55555555-5555-5555-5555-555555555501");
             var retreatSilence = Guid.Parse("55555555-5555-5555-5555-555555555502");

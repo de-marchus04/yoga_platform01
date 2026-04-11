@@ -91,7 +91,7 @@
                                         <span>@Loc["meta.format"]: @cons.Format</span>
                                     }
                                 </div>
-                                <span class="arc-dossier__panel-cta">@F("CardCta", Loc["page.consultations.card.cta"])</span>
+                                <span class="btn btn-outline" style="margin-top: 1.5rem; text-decoration: none;">@(Loc.CurrentLang == "uk" ? "Детальніше" : (Loc.CurrentLang == "ru" ? "Подробнее" : "Read more"))</span>
                             </div>
                         </a>
                     }

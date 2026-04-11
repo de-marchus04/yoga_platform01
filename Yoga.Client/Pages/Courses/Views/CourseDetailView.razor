@@ -1,4 +1,4 @@
-@using System.Text.RegularExpressions
+﻿@using System.Text.RegularExpressions
 
 @if (Loading)
 {
@@ -6,8 +6,6 @@
         <div class="container page-hero-content">
             <div class="skeleton" style="height: 1.5rem; width: 20%; margin-bottom: 2rem;"></div>
             <div class="skeleton" style="height: 4rem; width: 60%; margin-bottom: 2rem;"></div>
-            <div class="skeleton" style="height: 1.5rem; width: 80%;"></div>
-            <div class="skeleton" style="height: 1.5rem; width: 40%; margin-top: 0.5rem"></div>
         </div>
     </section>
 }
@@ -15,10 +13,8 @@ else if (Course == null)
 {
     <section class="page-hero">
         <div class="container page-hero-content">
-            <h1>@P("Карточка курса очищена", "Картку курсу очищено", "The course page has been cleared")</h1>
-            <div class="section-divider" style="margin:2rem 0;"></div>
-            <p style="max-width:760px; color:var(--text-muted);">@P("Сюда нужно добавить детальную программу курса: кому она подходит, какой результат обещает, как устроены модули, какой формат занятий и почему пользователь должен оставить заявку именно на этот продукт.", "Сюди потрібно додати детальну програму курсу: кому вона підходить, який результат обіцяє, як побудовані модулі, який формат занять і чому користувач має залишити заявку саме на цей продукт.", "Use this page for the full course offer: who it is for, what result it promises, how the modules are structured, what the format is, and why the user should apply for this specific product.")</p>
-            <a href="/courses" class="btn btn-outline" style="margin-top:1.5rem; display:inline-flex;">@P("Вернуться к каталогу курсов", "Повернутися до каталогу курсів", "Back to the course catalog")</a>
+            <h1>@(Loc.CurrentLang == "uk" ? "Курс не знайдено" : "Course not found")</h1>
+            <a href="/courses" class="btn btn-outline" style="margin-top:1.5rem; display:inline-flex;">@(Loc.CurrentLang == "uk" ? "До каталогу" : "Back to catalog")</a>
         </div>
     </section>
 }
@@ -32,16 +28,6 @@ else
             {
                 <p class="section-eyebrow">@Course.Eyebrow</p>
             }
-            <div class="format-badges">
-                @if (Course.IsOnline)
-                {
-                    <span class="format-badge format-badge-online">@P("Онлайн", "Онлайн", "Online")</span>
-                }
-                @if (Course.IsOffline)
-                {
-                    <span class="format-badge format-badge-offline">@P("Офлайн", "Офлайн", "Offline")</span>
-                }
-            </div>
             <h1>@DisplayTitle</h1>
             <div class="section-divider" style="margin:2rem 0;"></div>
             @if (!string.IsNullOrEmpty(Course.Subtitle))
@@ -58,28 +44,28 @@ else
                 @if (!string.IsNullOrEmpty(Course.Schedule))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Занятий", "Занять", "Sessions")</span>
+                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Занять" : "Sessions")</span>
                         <span class="format-strip-value">@Course.Schedule</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(Course.Duration))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Длительность", "Тривалість", "Duration")</span>
+                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Тривалість" : "Duration")</span>
                         <span class="format-strip-value">@Course.Duration</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(Course.Format))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Формат", "Формат", "Format")</span>
+                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Формат" : "Format")</span>
                         <span class="format-strip-value">@Course.Format</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(Course.Level))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Уровень", "Рівень", "Level")</span>
+                        <span class="format-strip-label">@(Loc.CurrentLang == "uk" ? "Рівень" : "Level")</span>
                         <span class="format-strip-value">@Course.Level</span>
                     </div>
                 }
@@ -89,102 +75,28 @@ else
 
     <section class="overview-section">
         <div class="container">
-            <div class="section-header reveal">
-                <p class="section-eyebrow">@Loc["section.overview.eyebrow"]</p>
-                <h2>@Loc["section.overview.h2"]</h2>
-                <div class="section-divider"></div>
+            <div class="overview-grid">
+                <div class="overview-left">
+                    @if (!string.IsNullOrEmpty(Course?.Description))
+                    {
+                        <div class="overview-desc reveal">
+                            @foreach (var para in Course.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <p>@para</p>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
-            @{
-                var descSections = ParseDescriptionSections();
-            }
-            @if (descSections.Aspects.Count > 0)
-            {
-                @if (!string.IsNullOrEmpty(descSections.Intro))
-                {
-                    <div class="overview-intro reveal">
-                        @((MarkupString)descSections.Intro)
-                    </div>
-                }
-                @if (HasPresImage1)
-                {
-                    <div class="overview-photo-full reveal">
-                        <img src="@Img(Course.PresentationImage1Url)" alt="" loading="lazy" />
-                    </div>
-                }
-                <div class="overview-aspects-grid">
-                    @{ int ai = 0; }
-                    @foreach (var aspect in descSections.Aspects)
-                    {
-                        var dc = ai switch { 1 => "reveal-d1", 2 => "reveal-d2", _ => "" };
-                        <div class="overview-aspect-card reveal @dc">
-                            <h3>@aspect.Title</h3>
-                            <div class="overview-aspect-body">@((MarkupString)aspect.Html)</div>
-                        </div>
-                        ai++;
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="overview-grid @(HasPresImage1 ? "overview-grid-with-photo" : "")">
-                    <div class="overview-left">
-                        @if (!string.IsNullOrEmpty(Course?.Description))
-                        {
-                            <div class="overview-desc reveal">
-                                @if (Course!.Description.Contains('<'))
-                                {
-                                    @((MarkupString)Course.Description)
-                                }
-                                else
-                                {
-                                    @foreach (var para in Course.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                                    {
-                                        <p>@para</p>
-                                    }
-                                }
-                            </div>
-                        }
-                    </div>
-                    @if (HasPresImage1)
-                    {
-                        <div class="overview-photo reveal reveal-d1">
-                            <img src="@Img(Course?.PresentationImage1Url)" alt="" loading="lazy" />
-                        </div>
-                    }
-                </div>
-            }
         </div>
     </section>
-
-    @if (RegularBenefits.Length > 0)
-    {
-        <section class="benefits-section">
-            <div class="container">
-                <div class="section-header reveal">
-                    <p class="section-eyebrow">@Loc["section.benefits.h4"]</p>
-                    <h2>@P("Что вы получите", "Що ви отримаєте", "What you'll get")</h2>
-                    <div class="section-divider"></div>
-                </div>
-                <div class="benefits-grid">
-                    @foreach (var benefit in RegularBenefits)
-                    {
-                        <div class="benefit-card reveal">
-                            <span class="benefit-check"></span>
-                            <span>@benefit</span>
-                        </div>
-                    }
-                </div>
-            </div>
-        </section>
-    }
 
     @if (Course!.Modules.Count > 0)
     {
         <section class="program-section">
             <div class="container">
                 <div class="section-header reveal">
-                    <p class="section-eyebrow">@Loc["section.program.eyebrow"]</p>
-                    <h2>@Loc["section.program.h2"]</h2>
+                    <h2>@(Loc.CurrentLang == "uk" ? "Програма курсу" : "Course Program")</h2>
                     <div class="section-divider"></div>
                 </div>
                 <div class="program-list">
@@ -192,171 +104,41 @@ else
                     @foreach (var mod in Course.Modules.OrderBy(m => m.SortOrder))
                     {
                         moduleNum++;
-                        @if (mod.Lessons.Count > 0)
-                        {
-                            <details class="program-module program-module-expandable @(string.IsNullOrEmpty(mod.ImageUrl) ? "" : "has-image") reveal">
-                                <summary class="program-module-summary">
-                                    <span class="program-module-num">@moduleNum.ToString("D2")</span>
-                                    <div>
-                                        <h3>@mod.Title</h3>
-                                        @if (!string.IsNullOrEmpty(mod.Description))
-                                        {
-                                            <div class="module-desc">
-                                                @((MarkupString)RenderModuleDescription(mod.Description))
-                                            </div>
-                                        }
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(mod.ImageUrl))
-                                    {
-                                        <div class="module-image">
-                                            <img src="@Img(mod.ImageUrl)" alt="@mod.Title" loading="lazy" />
-                                        </div>
-                                    }
-                                    <span class="program-module-toggle">▾</span>
-                                </summary>
-                                <div class="program-lessons">
-                                    @foreach (var lesson in mod.Lessons.OrderBy(l => l.SortOrder))
-                                    {
-                                        <div class="lesson-item">
-                                            <h4 class="lesson-title">@lesson.Title</h4>
-                                            @if (!string.IsNullOrEmpty(lesson.Theory))
-                                            {
-                                                <div class="lesson-theory">
-                                                    @foreach (var line in lesson.Theory.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                                                    {
-                                                        <p>@line</p>
-                                                    }
-                                                </div>
-                                            }
-                                            @if (!string.IsNullOrEmpty(lesson.Practice))
-                                            {
-                                                <div class="lesson-practice">
-                                                    <span class="lesson-label">🧘 @P("Практика:", "Практика:", "Practice:")</span>
-                                                    @foreach (var line in lesson.Practice.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                                                    {
-                                                        <p>@line</p>
-                                                    }
-                                                </div>
-                                            }
-                                            @if (!string.IsNullOrEmpty(lesson.Assignment))
-                                            {
-                                                <div class="lesson-assignment">
-                                                    <span class="lesson-label">📌 @P("Задание:", "Завдання:", "Assignment:")</span>
-                                                    @foreach (var line in lesson.Assignment.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                                                    {
-                                                        <p>@line</p>
-                                                    }
-                                                </div>
-                                            }
-                                        </div>
-                                    }
-                                </div>
-                            </details>
-                        }
-                        else
-                        {
-                            <div class="program-module @(string.IsNullOrEmpty(mod.ImageUrl) ? "" : "has-image") reveal">
+                        <details class="program-module program-module-expandable reveal">
+                            <summary class="program-module-summary">
                                 <span class="program-module-num">@moduleNum.ToString("D2")</span>
                                 <div>
                                     <h3>@mod.Title</h3>
-                                    @if (!string.IsNullOrEmpty(mod.Description))
-                                    {
-                                        <div class="module-desc">
-                                            @((MarkupString)RenderModuleDescription(mod.Description))
-                                        </div>
-                                    }
                                 </div>
-                                @if (!string.IsNullOrEmpty(mod.ImageUrl))
+                                <span class="program-module-toggle">▾</span>
+                            </summary>
+                            <div class="program-lessons">
+                                @if (!string.IsNullOrEmpty(mod.Description))
                                 {
-                                    <div class="module-image">
-                                        <img src="@Img(mod.ImageUrl)" alt="@mod.Title" loading="lazy" />
+                                    <div class="module-desc">
+                                        <p>@mod.Description</p>
+                                    </div>
+                                }
+                                @foreach (var lesson in mod.Lessons.OrderBy(l => l.SortOrder))
+                                {
+                                    <div class="lesson-item">
+                                        <h4 class="lesson-title">@lesson.Title</h4>
                                     </div>
                                 }
                             </div>
-                        }
+                        </details>
                     }
                 </div>
             </div>
         </section>
     }
 
-    @if (HasPresImage2 || GoalBenefit != null)
-    {
-        <section class="course-showcase">
-            <div class="container">
-                <div class="showcase-layout">
-                    @if (HasPresImage2)
-                    {
-                        <div class="showcase-photo reveal">
-                            <img src="@Img(Course.PresentationImage2Url)" alt="" loading="lazy" />
-                        </div>
-                    }
-                    @if (GoalBenefit != null)
-                    {
-                        <div class="showcase-goal reveal reveal-d1">
-                            <span class="showcase-goal-icon">🎯</span>
-                            <h3>@P("Цель курса", "Мета курсу", "Course Goal")</h3>
-                            <p>@GoalBenefit</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </section>
-    }
-
-    @if (Course.ForWhom.Length > 0)
-    {
-        <section class="for-whom-section">
-            <div class="container">
-                <div class="section-header reveal">
-                    <p class="section-eyebrow">@Loc["section.forwhom.eyebrow"]</p>
-                    <h2>@Loc["section.forwhom.h2"]</h2>
-                    <div class="section-divider"></div>
-                </div>
-                <div class="for-whom-list">
-                    @{ int fwIdx = 0; }
-                    @foreach (var fw in Course.ForWhom)
-                    {
-                        var delayClass = fwIdx switch { 1 => "reveal-d1", 2 => "reveal-d2", _ => "" };
-                        var hasImg = !string.IsNullOrEmpty(fw.ImageUrl);
-                        <div class="for-whom-item @(hasImg ? "has-photo" : "") reveal @delayClass">
-                            @if (hasImg)
-                            {
-                                <div class="for-whom-photo">
-                                    <img src="@Img(fw.ImageUrl)" alt="" loading="lazy" />
-                                </div>
-                            }
-                            <div class="for-whom-content">
-                                <h3>@fw.Title</h3>
-                                @{ var fwLines = SplitForWhomText(fw.Text); }
-                                @if (fwLines.Count > 1)
-                                {
-                                    <ul>
-                                        @foreach (var line in fwLines)
-                                        {
-                                            <li>@line</li>
-                                        }
-                                    </ul>
-                                }
-                                else if (fwLines.Count == 1)
-                                {
-                                    <p>@fwLines[0]</p>
-                                }
-                            </div>
-                        </div>
-                        fwIdx++;
-                    }
-                </div>
-            </div>
-        </section>
-    }
-
-    @if (HasInstructor)
+    @if (!string.IsNullOrEmpty(Course.InstructorName))
     {
         <section class="instructor-section">
             <div class="container">
                 <div class="section-header reveal">
-                    <p class="section-eyebrow">@P("Инструктор", "Інструктор", "Instructor")</p>
+                    <p class="section-eyebrow">@(Loc.CurrentLang == "uk" ? "Викладач" : "Instructor")</p>
                     <h2>@Course.InstructorName</h2>
                     <div class="section-divider"></div>
                 </div>
@@ -385,17 +167,14 @@ else
         <div class="container" style="text-align:center;">
             @if (!string.IsNullOrEmpty(Course?.CtaHeading))
             {
-                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
                 <h2>@Course?.CtaHeading</h2>
                 <p>@Course?.CtaText</p>
             }
             else
             {
-                <span class="page-eyebrow">@Loc["section.cta.eyebrow"]</span>
-                <h2>@Loc["section.cta.h2"]</h2>
-                <p>@Loc["section.cta.text"]</p>
+                <h2>@(Loc.CurrentLang == "uk" ? "Почати навчання" : "Start learning")</h2>
             }
-            <button class="btn btn-primary" @onclick="OnCtaClick">@Loc["section.cta.btn"]</button>
+            <button class="btn btn-primary" @onclick="OnCtaClick">@(Loc.CurrentLang == "uk" ? "Детальніше" : (Loc.CurrentLang == "ru" ? "Подробнее" : "Read more"))</button>
         </div>
     </section>
 }
@@ -405,213 +184,9 @@ else
     [Parameter] public bool Loading { get; set; }
     [Parameter] public string? DisplayTitle { get; set; }
     [Parameter] public EventCallback OnCtaClick { get; set; }
+    
+    [Inject] public LocalizationService Loc { get; set; } = default!;
+    [Inject] public ApiService Api { get; set; } = default!;
 
-    [Inject] private LocalizationService Loc { get; set; } = default!;
-    [Inject] private ApiService Api { get; set; } = default!;
-
-    private bool HasPresImage1 => !string.IsNullOrEmpty(Course?.PresentationImage1Url);
-    private bool HasPresImage2 => !string.IsNullOrEmpty(Course?.PresentationImage2Url);
-    private bool HasInstructor => !string.IsNullOrEmpty(Course?.InstructorName) || !string.IsNullOrEmpty(Course?.InstructorImageUrl);
-
-    private string Img(string? url)
-    {
-        if (string.IsNullOrEmpty(url) || url.StartsWith("http")) return url ?? "";
-        return Api.ApiBaseUrl + url;
-    }
-
-    private string? GoalBenefit
-    {
-        get
-        {
-            var item = Course?.Benefits.FirstOrDefault(b =>
-                b.Contains("Цель курса") || b.Contains("Course Goal") || b.Contains("Мета курсу"));
-            if (item == null) return null;
-            var text = Regex.Replace(item.Trim(), @"^[^A-Za-zА-Яа-яЁёЄєІіЇїҐґ]+", "");
-            foreach (var prefix in new[] { "Цель курса", "Course Goal", "Мета курсу" })
-            {
-                if (text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    text = text[prefix.Length..].Trim();
-                    break;
-                }
-            }
-            return string.IsNullOrWhiteSpace(text) ? null : text;
-        }
-    }
-
-    private string[] RegularBenefits => Course?.Benefits
-        .Where(b => !b.Contains("Цель курса") && !b.Contains("Course Goal") && !b.Contains("Мета курсу"))
-        .ToArray() ?? Array.Empty<string>();
-
-    private (string? Intro, List<(string Title, string Html)> Aspects) ParseDescriptionSections()
-    {
-        if (Course is null || string.IsNullOrEmpty(Course.Description))
-            return (null, new());
-
-        var desc = Course.Description;
-
-        if (!desc.Contains('<'))
-            return ParsePlainTextSections(desc);
-
-        var html = desc;
-
-        var matches = Regex.Matches(html, @"<h[2-4][^>]*>(.*?)</h[2-4]>",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        if (matches.Count >= 2)
-            return SplitByMatches(html, matches);
-
-        matches = Regex.Matches(html,
-            @"<(?:strong|b)>([^<]{3,80}?):?\s*</(?:strong|b)>\s*:?",
-            RegexOptions.IgnoreCase);
-        if (matches.Count >= 2)
-            return SplitByMatches(html, matches);
-
-        matches = Regex.Matches(html,
-            @"<p[^>]*>\s*([A-ZА-ЯЁ][A-Za-zА-Яа-яЁё\s]{2,50}?)\s*:",
-            RegexOptions.None);
-        if (matches.Count >= 3)
-            return SplitByMatches(html, matches);
-
-        var plainText = Regex.Replace(html, @"<[^>]+>", "\n");
-        var plainResult = ParsePlainTextSections(plainText);
-        if (plainResult.Aspects.Count >= 2) return plainResult;
-
-        return (null, new());
-    }
-
-    private static (string? Intro, List<(string Title, string Html)> Aspects) ParsePlainTextSections(string text)
-    {
-        var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        var pattern = new Regex(@"^([A-ZА-ЯЁ][A-Za-zА-Яа-яЁё\s]{2,50}?):\s+(.+)");
-
-        var intro = new List<string>();
-        var aspects = new List<(string Title, string Html)>();
-        bool inAspects = false;
-
-        foreach (var rawLine in lines)
-        {
-            var trimmed = rawLine.Trim();
-            if (string.IsNullOrWhiteSpace(trimmed)) continue;
-
-            var match = pattern.Match(trimmed);
-            if (match.Success)
-            {
-                inAspects = true;
-                aspects.Add((match.Groups[1].Value.Trim(), $"<p>{match.Groups[2].Value.Trim()}</p>"));
-            }
-            else if (!inAspects)
-            {
-                intro.Add(trimmed);
-            }
-            else if (aspects.Count > 0)
-            {
-                aspects[^1] = (aspects[^1].Title, aspects[^1].Html + $" <p>{trimmed}</p>");
-            }
-        }
-
-        if (aspects.Count < 2) return (null, new());
-
-        var introHtml = intro.Count > 0
-            ? string.Join("", intro.Select(l => $"<p>{System.Net.WebUtility.HtmlEncode(l)}</p>"))
-            : null;
-        return (introHtml, aspects);
-    }
-
-    private (string? Intro, List<(string Title, string Html)> Aspects) SplitByMatches(
-        string html, MatchCollection matches)
-    {
-        var aspects = new List<(string Title, string Html)>();
-        string? intro = null;
-
-        for (int i = 0; i < matches.Count; i++)
-        {
-            var m = matches[i];
-            if (i == 0 && m.Index > 0)
-            {
-                intro = CleanEmpty(html[..m.Index]);
-                if (string.IsNullOrWhiteSpace(Regex.Replace(intro ?? "", @"<[^>]+>", "")))
-                    intro = null;
-            }
-
-            var title = Regex.Replace(m.Groups[1].Value, @"<[^>]+>", "").Trim().TrimEnd(':');
-            int bodyStart = m.Index + m.Length;
-            int bodyEnd = i + 1 < matches.Count ? matches[i + 1].Index : html.Length;
-            var body = CleanEmpty(html[bodyStart..bodyEnd]);
-
-            if (!string.IsNullOrWhiteSpace(title) &&
-                !string.IsNullOrWhiteSpace(Regex.Replace(body, @"<[^>]+>", "")))
-                aspects.Add((title, body));
-        }
-
-        return (intro, aspects);
-    }
-
-    private static string CleanEmpty(string html)
-        => Regex.Replace(html.Trim(), @"<p>\s*(<br\s*/?>)?\s*</p>", "").Trim();
-
-    private static string RenderModuleDescription(string text)
-    {
-        var lines = text.Split('\n');
-        var sb = new System.Text.StringBuilder();
-        bool inList = false;
-
-        foreach (var raw in lines)
-        {
-            var line = raw.Trim();
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                if (inList) { sb.Append("</ul>"); inList = false; }
-                continue;
-            }
-
-            if (Regex.IsMatch(line, @"^(Урок|Неделя|Модуль|Lesson|Week|Module)\s+\d", RegexOptions.IgnoreCase))
-            {
-                if (inList) { sb.Append("</ul>"); inList = false; }
-                sb.Append($"<h4 class=\"mod-lesson-title\">{Enc(line)}</h4>");
-                continue;
-            }
-
-            if (Regex.IsMatch(line, @"^(Практика|Задание|Темы|Фокус|Цель|Пранаяма|Асаны|Медитация|Practice|Assignment|Topics):", RegexOptions.IgnoreCase))
-            {
-                if (inList) { sb.Append("</ul>"); inList = false; }
-                var colonIdx = line.IndexOf(':');
-                var label = line[..colonIdx];
-                var rest = line[(colonIdx + 1)..].Trim();
-                sb.Append($"<p class=\"mod-section-label\"><strong>{Enc(label)}:</strong>");
-                if (!string.IsNullOrEmpty(rest)) sb.Append($" {Enc(rest)}");
-                sb.Append("</p>");
-                continue;
-            }
-
-            if (!inList) { sb.Append("<ul class=\"mod-bullets\">"); inList = true; }
-            sb.Append($"<li>{Enc(line)}</li>");
-        }
-
-        if (inList) sb.Append("</ul>");
-        return sb.ToString();
-
-        static string Enc(string s) => System.Net.WebUtility.HtmlEncode(s);
-    }
-
-    private static List<string> SplitForWhomText(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return new();
-        var lines = text.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(l => l.Trim())
-            .Where(l => l.Length > 0)
-            .ToList();
-        if (lines.Count > 1) return lines;
-        var parts = Regex.Split(text.Trim(), @"(?<=\s)(?=[A-ZА-ЯЁ][a-zа-яё])")
-            .Select(p => p.Trim())
-            .Where(p => p.Length > 0)
-            .ToList();
-        return parts;
-    }
-
-    private string P(string ru, string uk, string en) => Loc.CurrentLang switch
-    {
-        "uk" => uk,
-        "en" => en,
-        _ => ru
-    };
+    private string Img(string? u) => Api.ResolveMediaUrl(u);
 }
