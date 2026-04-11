@@ -2,7 +2,7 @@
 {
     <section class="page-hero">
         <div class="container page-hero-content">
-            <div class="public-loading-state public-loading-state-on-dark">Загружаем консультацию</div>
+            <div class="public-loading-state public-loading-state-on-dark">@P("Загружаем консультацию", "Завантажуємо консультацію", "Loading consultation")</div>
         </div>
     </section>
 }
@@ -31,11 +31,11 @@ else
             <div class="format-badges">
                 @if (Item.IsOnline)
                 {
-                    <span class="format-badge format-badge-online">Онлайн</span>
+                    <span class="format-badge format-badge-online">@P("Онлайн", "Онлайн", "Online")</span>
                 }
                 @if (Item.IsOffline)
                 {
-                    <span class="format-badge format-badge-offline">Офлайн</span>
+                    <span class="format-badge format-badge-offline">@P("Офлайн", "Офлайн", "Offline")</span>
                 }
             </div>
 
@@ -55,21 +55,21 @@ else
                 @if (!string.IsNullOrEmpty(Item.Duration))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">Длительность</span>
+                        <span class="format-strip-label">@P("Длительность", "Тривалість", "Duration")</span>
                         <span class="format-strip-value">@Item.Duration</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(Item.Format))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">Формат</span>
+                        <span class="format-strip-label">@P("Формат", "Формат", "Format")</span>
                         <span class="format-strip-value">@Item.Format</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(Item.LanguageOffered))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">Язык</span>
+                        <span class="format-strip-label">@P("Язык", "Мова", "Language")</span>
                         <span class="format-strip-value">@Item.LanguageOffered</span>
                     </div>
                 }

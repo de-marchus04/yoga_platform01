@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Yoga.Shared.DTOs
 {
     public record CourseLessonDto(
@@ -98,8 +100,8 @@ namespace Yoga.Shared.DTOs
         string CtaHeading,
         string CtaText,
         List<RetreatSubcategoryDto> Subcategories,
-        DateTime? EventStartDate,
-        DateTime? EventEndDate
+        [property: JsonPropertyName("eventStartDate")] DateTime? EventStartDate,
+        [property: JsonPropertyName("eventEndDate")] DateTime? EventEndDate
     );
 
     public record YagyaSubcategoryDto(
@@ -127,7 +129,7 @@ namespace Yoga.Shared.DTOs
         string CtaHeading,
         string CtaText,
         List<YagyaSubcategoryDto> Subcategories,
-        DateTime? EventStartDate,
-        DateTime? EventEndDate
+        [property: JsonPropertyName("eventStartDate")] DateTime? EventStartDate,
+        [property: JsonPropertyName("eventEndDate")] DateTime? EventEndDate
     );
 }

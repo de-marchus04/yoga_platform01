@@ -1,4 +1,5 @@
 @* Reusable phone input with per-country format validation *@
+@inject LocalizationService Loc
 
 <div class="phone-input-group">
     <select class="phone-input-code" @bind="SelectedCountryName" @bind:after="OnCountryChanged">
@@ -21,7 +22,7 @@
 }
 else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
 {
-    <div class="phone-validation-hint ok">✓ Формат верный</div>
+    <div class="phone-validation-hint ok">@Loc["validation.phone_ok"]</div>
 }
 
 @code {
@@ -119,18 +120,18 @@ else if (!string.IsNullOrEmpty(Number) && IsPhoneValid)
         if (digits.Length == 0)
         {
             ErrorMessage = !string.IsNullOrEmpty(_rawInput)
-                ? "Введите цифры номера телефона."
+                ? Loc["validation.phone_digits"]
                 : "";
             IsPhoneValid = false;
         }
         else if (digits.Length < country.MinDigits)
         {
-            ErrorMessage = $"Мин. {country.MinDigits} цифр для {country.Name} ({country.Code}).";
+            ErrorMessage = string.Format(Loc["validation.phone_min"], country.MinDigits, country.Name, country.Code);
             IsPhoneValid = false;
         }
         else if (digits.Length > country.MaxDigits)
         {
-            ErrorMessage = $"Макс. {country.MaxDigits} цифр для {country.Name} ({country.Code}).";
+            ErrorMessage = string.Format(Loc["validation.phone_max"], country.MaxDigits, country.Name, country.Code);
             IsPhoneValid = false;
         }
         else

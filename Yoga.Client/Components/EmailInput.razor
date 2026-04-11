@@ -1,5 +1,6 @@
 @* Email input with format validation (Latin chars, @, domain) + server-side DNS check *@
 @inject ApiService Api
+@inject LocalizationService Loc
 @using System.Text.RegularExpressions
 
 <div class="email-input-wrapper">
@@ -13,7 +14,7 @@
            inputmode="email" />
     @if (isChecking)
     {
-        <div class="phone-validation-hint checking">Проверяем домен...</div>
+        <div class="phone-validation-hint checking">@Loc["validation.email_checking"]</div>
     }
     else if (HasError)
     {
@@ -21,7 +22,7 @@
     }
     else if (!string.IsNullOrEmpty(Value) && isVerified)
     {
-        <div class="phone-validation-hint ok">✓ Email корректен</div>
+        <div class="phone-validation-hint ok">@Loc["validation.email_ok"]</div>
     }
 </div>
 
@@ -65,29 +66,29 @@
         // Must be ASCII only (no Cyrillic, no Unicode)
         if (email.Any(c => c > 127))
         {
-            SetError("Email должен быть написан латиницей.");
+            SetError(Loc["validation.email_latin"]);
             return;
         }
         // Exactly one @
         if (!email.Contains('@') || email.Count(c => c == '@') > 1)
         {
-            SetError("Некорректный формат email.");
+            SetError(Loc["validation.email_format"]);
             return;
         }
         var parts = email.Split('@');
         if (parts[0].Length == 0)
         {
-            SetError("Заполните имя почтового ящика до @.");
+            SetError(Loc["validation.email_local"]);
             return;
         }
         if (!parts[1].Contains('.') || parts[1].StartsWith('.') || parts[1].EndsWith('.'))
         {
-            SetError("Некорректный домен после @.");
+            SetError(Loc["validation.email_domain"]);
             return;
         }
         if (!EmailRegex.IsMatch(email))
         {
-            SetError("Некорректный формат email. Используйте только латиницу.");
+            SetError(Loc["validation.email_format_latin"]);
             return;
         }
         // Format ok — clear error but still pending domain check
@@ -106,7 +107,7 @@
 
         if (!valid)
         {
-            SetError("Домен не существует. Проверьте адрес почты.");
+            SetError(Loc["validation.email_domain_invalid"]);
         }
         else
         {

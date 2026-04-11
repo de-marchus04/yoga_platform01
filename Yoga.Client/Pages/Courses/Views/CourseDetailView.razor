@@ -35,11 +35,11 @@ else
             <div class="format-badges">
                 @if (Course.IsOnline)
                 {
-                    <span class="format-badge format-badge-online">Онлайн</span>
+                    <span class="format-badge format-badge-online">@P("Онлайн", "Онлайн", "Online")</span>
                 }
                 @if (Course.IsOffline)
                 {
-                    <span class="format-badge format-badge-offline">Офлайн</span>
+                    <span class="format-badge format-badge-offline">@P("Офлайн", "Офлайн", "Offline")</span>
                 }
             </div>
             <h1>@DisplayTitle</h1>
@@ -58,28 +58,28 @@ else
                 @if (!string.IsNullOrEmpty(Course.Schedule))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">Занятий</span>
+                        <span class="format-strip-label">@P("Занятий", "Занять", "Sessions")</span>
                         <span class="format-strip-value">@Course.Schedule</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(Course.Duration))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">Длительность</span>
+                        <span class="format-strip-label">@P("Длительность", "Тривалість", "Duration")</span>
                         <span class="format-strip-value">@Course.Duration</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(Course.Format))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">Формат</span>
+                        <span class="format-strip-label">@P("Формат", "Формат", "Format")</span>
                         <span class="format-strip-value">@Course.Format</span>
                     </div>
                 }
                 @if (!string.IsNullOrEmpty(Course.Level))
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">Уровень</span>
+                        <span class="format-strip-label">@P("Уровень", "Рівень", "Level")</span>
                         <span class="format-strip-value">@Course.Level</span>
                     </div>
                 }

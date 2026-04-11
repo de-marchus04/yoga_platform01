@@ -34,7 +34,7 @@
                     }
                     else if (_nameTouched && _nameIsValid)
                     {
-                        <div class="field-validation-hint ok">✓ Имя принято</div>
+                        <div class="field-validation-hint ok">@Loc["validation.name_ok"]</div>
                     }
                 </div>
 
@@ -69,7 +69,7 @@
                     {
                         @* Telegram / Viber — phone number OR @username, show phone picker but allow username fallback *@
                         <div class="contact-mode-toggle">
-                            <button type="button" class="contact-mode-btn @(usernameMode ? "" : "active")" @onclick="() => SetContactMode(false)">📞 Телефон</button>
+                            <button type="button" class="contact-mode-btn @(usernameMode ? "" : "active")" @onclick="() => SetContactMode(false)">@Loc["validation.phone_toggle"]</button>
                             <button type="button" class="contact-mode-btn @(usernameMode ? "active" : "")" @onclick="() => SetContactMode(true)">@@ Username</button>
                         </div>
                         @if (usernameMode)
@@ -140,19 +140,19 @@
         _nameError = msg;
     }
 
-    private static (bool valid, string message) ValidateName(string name)
+    private (bool valid, string message) ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            return (false, "Введите ваше имя.");
+            return (false, Loc["validation.name_required"]);
         var trimmed = name.Trim();
         if (trimmed.Length < 2)
-            return (false, "Имя слишком короткое.");
+            return (false, Loc["validation.name_short"]);
         if (!System.Text.RegularExpressions.Regex.IsMatch(trimmed, @"^[\p{L}\s\-']+$"))
-            return (false, "Имя может содержать только буквы, пробел и дефис.");
+            return (false, Loc["validation.name_invalid"]);
         // at least one vowel
         const string vowels = "аеёиоуыьъэюяйАЕЁИОУЫЬЪЭЮЯЙaeiouyAEIOUY";
         if (!trimmed.Any(c => vowels.Contains(c)))
-            return (false, "Пожалуйста, введите настоящее имя.");
+            return (false, Loc["validation.name_fake"]);
         // no consonant cluster longer than 3
         var vowelSet = new HashSet<char>(vowels);
         int run = 0, maxRun = 0;
@@ -162,7 +162,7 @@
             else { run++; if (run > maxRun) maxRun = run; }
         }
         if (maxRun > 3)
-            return (false, "Пожалуйста, введите настоящее имя.");
+            return (false, Loc["validation.name_fake"]);
         return (true, "");
     }
 
@@ -187,8 +187,8 @@
         {
             var formatSuffix = string.IsNullOrEmpty(TargetFormat) ? "" : $" ({TargetFormat})";
             leadModel.Comment = string.IsNullOrWhiteSpace(leadModel.Comment)
-                ? $"Запись на: {ContextTitle}{formatSuffix}"
-                : $"Запись на: {ContextTitle}{formatSuffix}. {leadModel.Comment}";
+                ? $"{Loc["form.signup_prefix"]}: {ContextTitle}{formatSuffix}"
+                : $"{Loc["form.signup_prefix"]}: {ContextTitle}{formatSuffix}. {leadModel.Comment}";
         }
 
         // Apply robust references

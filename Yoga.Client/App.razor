@@ -1,4 +1,5 @@
 ﻿@inject NavigationManager Nav
+@inject LocalizationService Loc
 <ErrorBoundary>
     <ChildContent>
         <Router AppAssembly="@typeof(App).Assembly">
@@ -7,17 +8,17 @@
                 <FocusOnNavigate RouteData="@routeData" Selector="h1" />
             </Found>
             <NotFound>
-                <PageTitle>404 — Страница не найдена</PageTitle>
+                <PageTitle>404 — @Loc["error.404.title"]</PageTitle>
                 <LayoutView Layout="@typeof(MainLayout)">
                     <section style="padding:10rem 0 6rem;text-align:center;">
                         <div class="container" style="max-width:620px;">
                             <p class="section-eyebrow">404</p>
-                            <h1 style="font-size:2.5rem;margin-bottom:1rem;">Страница не найдена</h1>
+                            <h1 style="font-size:2.5rem;margin-bottom:1rem;">@Loc["error.404.title"]</h1>
                             <div class="section-divider" style="margin:1.5rem auto;"></div>
                             <p style="color:var(--text-muted);margin-bottom:2rem;">
-                                Возможно, страница была удалена или адрес указан неверно.
+                                @Loc["error.404.text"]
                             </p>
-                            <a class="btn btn-outline" href="/" style="display:inline-flex;">← На главную</a>
+                            <a class="btn btn-outline" href="/" style="display:inline-flex;">@Loc["error.404.back"]</a>
                         </div>
                     </section>
                 </LayoutView>
@@ -29,10 +30,10 @@
             <section style="padding:8rem 0;">
                 <div class="container" style="text-align:center; max-width: 780px;">
                     <p class="section-eyebrow">Application Error</p>
-                    <h1>Страница временно недоступна</h1>
+                    <h1>@Loc["error.app.title"]</h1>
                     <div class="section-divider" style="margin:2rem auto;"></div>
-                    <p style="color:var(--text-muted);">Интерфейс столкнулся с необработанной ошибкой. Обновите страницу. Если проблема повторяется, проверьте подключение публичного сайта к API и настройки production CORS.</p>
-                    <button class="btn btn-outline" style="margin-top:1.5rem; display:inline-flex;" @onclick="@(() => Nav.NavigateTo("/", forceLoad: true))">Вернуться на главную</button>
+                    <p style="color:var(--text-muted);">@Loc["error.app.text"]</p>
+                    <button class="btn btn-outline" style="margin-top:1.5rem; display:inline-flex;" @onclick="@(() => Nav.NavigateTo("/", forceLoad: true))">@Loc["error.app.back"]</button>
                 </div>
             </section>
         </LayoutView>
