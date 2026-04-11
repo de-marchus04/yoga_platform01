@@ -75,7 +75,10 @@ public class LocalizationService
                 _translations = new Dictionary<string, string>(staticTranslations);
                 foreach (var entry in dict)
                 {
-                    _translations[entry.Key] = entry.Value;
+                    if (!string.IsNullOrWhiteSpace(entry.Value))
+                    {
+                        _translations[entry.Key] = entry.Value;
+                    }
                 }
 
                 return;
