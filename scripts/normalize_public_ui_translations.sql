@@ -13,6 +13,9 @@ INSERT INTO "UiTranslations" ("Id", "Key", "Language", "Value") VALUES
   (gen_random_uuid(), 'page.home.hero.cta', 'uk', 'Детальніше'),
   (gen_random_uuid(), 'page.home.hero.cta', 'ru', 'Подробнее'),
   (gen_random_uuid(), 'page.home.hero.cta', 'en', 'Learn more'),
+  (gen_random_uuid(), 'page.home.title', 'uk', 'shakti.ashram | Курси та консультації'),
+  (gen_random_uuid(), 'page.home.title', 'ru', 'shakti.ashram | Курсы и консультации'),
+  (gen_random_uuid(), 'page.home.title', 'en', 'shakti.ashram | Courses and consultations'),
   (gen_random_uuid(), 'page.home.cta.btn', 'uk', 'Детальніше'),
   (gen_random_uuid(), 'page.home.cta.btn', 'ru', 'Подробнее'),
   (gen_random_uuid(), 'page.home.cta.btn', 'en', 'Learn more'),
@@ -35,6 +38,11 @@ INSERT INTO "UiTranslations" ("Id", "Key", "Language", "Value") VALUES
   (gen_random_uuid(), 'page.yagyas.title', 'ru', 'Ягьи | shakti.ashram'),
   (gen_random_uuid(), 'page.yagyas.title', 'en', 'Yagyas | shakti.ashram')
 ON CONFLICT ("Key", "Language") DO UPDATE SET "Value" = EXCLUDED."Value";
+
+UPDATE "UiTranslations"
+SET "Value" = replace("Value", 'Yoga.Life', 'shakti.ashram')
+WHERE "Key" LIKE 'page.%.title'
+  AND "Value" LIKE '%Yoga.Life%';
 
 UPDATE "Translations"
 SET "Value" = CASE
