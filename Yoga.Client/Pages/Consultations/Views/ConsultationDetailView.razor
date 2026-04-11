@@ -48,7 +48,7 @@ else
         </div>
     </section>
 
-    @if (!string.IsNullOrEmpty(Item.Duration) || !string.IsNullOrEmpty(Item.Format) || !string.IsNullOrEmpty(Item.LanguageOffered) || !string.IsNullOrEmpty(Item.PriceLabel))
+    @if (!string.IsNullOrEmpty(Item.Duration) || !string.IsNullOrEmpty(Item.Format) || !string.IsNullOrEmpty(Item.LanguageOffered))
     {
         <section class="format-strip">
             <div class="format-strip-grid">
@@ -71,13 +71,6 @@ else
                     <div class="format-strip-cell">
                         <span class="format-strip-label">Язык</span>
                         <span class="format-strip-value">@Item.LanguageOffered</span>
-                    </div>
-                }
-                @if (!string.IsNullOrEmpty(Item.PriceLabel))
-                {
-                    <div class="format-strip-cell">
-                        <span class="format-strip-label">Стоимость</span>
-                        <span class="format-strip-value">@Item.PriceLabel</span>
                     </div>
                 }
             </div>

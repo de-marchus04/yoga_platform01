@@ -34,7 +34,7 @@ else
         </div>
     </section>
 
-    @if (!string.IsNullOrEmpty(item.Duration) || !string.IsNullOrEmpty(item.Format) || !string.IsNullOrEmpty(item.PriceLabel))
+    @if (!string.IsNullOrEmpty(item.Duration) || !string.IsNullOrEmpty(item.Format) || item.EventStartDate.HasValue)
     {
         <section class="format-strip">
             <div class="format-strip-grid">
@@ -52,11 +52,11 @@ else
                         <span class="format-strip-value">@item.Format</span>
                     </div>
                 }
-                @if (!string.IsNullOrEmpty(item.PriceLabel))
+                @if (item.EventStartDate.HasValue)
                 {
                     <div class="format-strip-cell">
-                        <span class="format-strip-label">@P("Стоимость", "Вартість", "Price")</span>
-                        <span class="format-strip-value">@item.PriceLabel</span>
+                        <span class="format-strip-label">@P("Дата", "Дата", "Date")</span>
+                        <span class="format-strip-value">@FmtDateRange(item.EventStartDate, item.EventEndDate)</span>
                     </div>
                 }
             </div>
@@ -174,6 +174,24 @@ else
         "en" => en,
         _ => ru
     };
+
+    private string FmtDateRange(DateTime? start, DateTime? end)
+    {
+        if (start is null) return "";
+        var culture = Loc.CurrentLang switch
+        {
+            "uk" => new System.Globalization.CultureInfo("uk-UA"),
+            "en" => System.Globalization.CultureInfo.InvariantCulture,
+            _    => new System.Globalization.CultureInfo("ru-RU")
+        };
+        var s = start.Value.ToString("d MMM", culture);
+        if (end is null || end.Value.Date == start.Value.Date)
+            return s;
+        var e = end.Value.Year == start.Value.Year
+            ? end.Value.ToString("d MMM", culture)
+            : end.Value.ToString("d MMM yyyy", culture);
+        return $"{s} — {e} {start.Value.Year}";
+    }
 
     public void Dispose() => Loc.OnLanguageChanged -= Reload;
 }
