@@ -1,5 +1,8 @@
 BEGIN;
 
+DELETE FROM "UiTranslations"
+WHERE "Key" LIKE 'page.home.%';
+
 INSERT INTO "UiTranslations" ("Id", "Key", "Language", "Value") VALUES
   (gen_random_uuid(), 'page.retreats.card.cta', 'uk', 'Детальніше →'),
   (gen_random_uuid(), 'page.retreats.card.cta', 'ru', 'Подробнее →'),
@@ -10,18 +13,6 @@ INSERT INTO "UiTranslations" ("Id", "Key", "Language", "Value") VALUES
   (gen_random_uuid(), 'section.cta.btn', 'uk', 'Детальніше'),
   (gen_random_uuid(), 'section.cta.btn', 'ru', 'Подробнее'),
   (gen_random_uuid(), 'section.cta.btn', 'en', 'Learn more'),
-  (gen_random_uuid(), 'page.home.hero.cta', 'uk', 'Детальніше'),
-  (gen_random_uuid(), 'page.home.hero.cta', 'ru', 'Подробнее'),
-  (gen_random_uuid(), 'page.home.hero.cta', 'en', 'Learn more'),
-  (gen_random_uuid(), 'page.home.title', 'uk', 'shakti.ashram | Курси та консультації'),
-  (gen_random_uuid(), 'page.home.title', 'ru', 'shakti.ashram | Курсы и консультации'),
-  (gen_random_uuid(), 'page.home.title', 'en', 'shakti.ashram | Courses and consultations'),
-  (gen_random_uuid(), 'page.home.cta.btn', 'uk', 'Детальніше'),
-  (gen_random_uuid(), 'page.home.cta.btn', 'ru', 'Подробнее'),
-  (gen_random_uuid(), 'page.home.cta.btn', 'en', 'Learn more'),
-  (gen_random_uuid(), 'page.home.directions.02.link', 'uk', 'Детальніше →'),
-  (gen_random_uuid(), 'page.home.directions.02.link', 'ru', 'Подробнее →'),
-  (gen_random_uuid(), 'page.home.directions.02.link', 'en', 'Learn more →'),
   (gen_random_uuid(), 'form.context_prefix', 'uk', 'Щодо'),
   (gen_random_uuid(), 'form.context_prefix', 'ru', 'По поводу'),
   (gen_random_uuid(), 'form.context_prefix', 'en', 'About'),
