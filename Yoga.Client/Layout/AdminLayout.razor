@@ -9,35 +9,74 @@
 }
 else if (isAuthenticated)
 {
-<div class="admin-shell">
+<div class="admin-shell @(sidebarCollapsed ? "sidebar-collapsed" : "")">
     <aside class="admin-sidebar">
-        <div class="admin-sidebar-header">
-            <span class="admin-logo">shakti.ashram</span>
-            <span class="admin-badge">Admin</span>
-        </div>
-        <nav class="admin-nav">
-            <NavLink href="/admin" class="admin-nav-link" Match="NavLinkMatch.All">Dashboard</NavLink>
-            <NavLink href="/admin/courses" class="admin-nav-link">Courses</NavLink>
-            <NavLink href="/admin/consultations" class="admin-nav-link">Consultations</NavLink>
-            <NavLink href="/admin/retreats" class="admin-nav-link">Retreats</NavLink>
-            <NavLink href="/admin/yagyas" class="admin-nav-link">Yagyas</NavLink>
-            <NavLink href="/admin/pages" class="admin-nav-link">Site Pages</NavLink>
-            <NavLink href="/admin/media" class="admin-nav-link">Media</NavLink>
-            <NavLink href="/admin/leads" class="admin-nav-link">Leads</NavLink>
-            <NavLink href="/admin/translations" class="admin-nav-link">Translations</NavLink>
-        </nav>
-        <div class="admin-sidebar-footer">
-            @if (!string.IsNullOrWhiteSpace(adminLogin))
+        <div class="sidebar-header">
+            @if (!sidebarCollapsed)
             {
-                <div class="admin-nav-link admin-back-link">@adminLogin</div>
+                <span class="sidebar-brand">shakti.ashram</span>
             }
-            <button class="admin-logout-btn" @onclick="Logout">Logout</button>
-            <a href="/" class="admin-nav-link admin-back-link">← Back to site</a>
+            else
+            {
+                <span class="sidebar-brand-icon">S</span>
+            }
+            <button class="collapse-btn" @onclick="ToggleSidebar">
+                @if (sidebarCollapsed)
+                {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                }
+            </button>
         </div>
+        <nav class="sidebar-nav">
+            <NavLink href="/admin" class="nav-item" Match="NavLinkMatch.All">
+                <span class="nav-icon">⊞</span><span class="nav-label">Dashboard</span>
+            </NavLink>
+            <NavLink href="/admin/courses" class="nav-item">
+                <span class="nav-icon">◎</span><span class="nav-label">Courses</span>
+            </NavLink>
+            <NavLink href="/admin/consultations" class="nav-item">
+                <span class="nav-icon">◈</span><span class="nav-label">Consultations</span>
+            </NavLink>
+            <NavLink href="/admin/retreats" class="nav-item">
+                <span class="nav-icon">◇</span><span class="nav-label">Retreats</span>
+            </NavLink>
+            <NavLink href="/admin/yagyas" class="nav-item">
+                <span class="nav-icon">✦</span><span class="nav-label">Yagyas</span>
+            </NavLink>
+            <NavLink href="/admin/pages" class="nav-item">
+                <span class="nav-icon">☰</span><span class="nav-label">Site Pages</span>
+            </NavLink>
+            <NavLink href="/admin/media" class="nav-item">
+                <span class="nav-icon">▣</span><span class="nav-label">Media</span>
+            </NavLink>
+            <NavLink href="/admin/leads" class="nav-item">
+                <span class="nav-icon">◐</span><span class="nav-label">Leads</span>
+            </NavLink>
+            <NavLink href="/admin/translations" class="nav-item">
+                <span class="nav-icon">❖</span><span class="nav-label">Translations</span>
+            </NavLink>
+        </nav>
     </aside>
-    <main class="admin-main">
-        @Body
-    </main>
+    <div class="admin-main">
+        <header class="admin-topbar">
+            <span class="topbar-spacer"></span>
+            <div class="topbar-right">
+                @if (!string.IsNullOrWhiteSpace(adminLogin))
+                {
+                    <span class="admin-username">@adminLogin</span>
+                }
+                <button class="btn-logout" @onclick="Logout">Logout</button>
+                <a href="/" class="btn-logout" style="text-decoration:none">← Site</a>
+            </div>
+        </header>
+        <div class="admin-content">
+            @Body
+        </div>
+    </div>
 </div>
 }
 
@@ -45,6 +84,7 @@ else if (isAuthenticated)
     private string? adminLogin;
     private bool showLoginModal;
     private bool isAuthenticated;
+    private bool sidebarCollapsed;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -93,4 +133,6 @@ else if (isAuthenticated)
         showLoginModal = true;
         StateHasChanged();
     }
+
+    private void ToggleSidebar() => sidebarCollapsed = !sidebarCollapsed;
 }
