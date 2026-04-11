@@ -142,12 +142,19 @@ public class AdminPortalController : ControllerBase
 
     private static bool VerifyPassword(string password, string storedHash)
     {
-        var parts = storedHash.Split(':');
-        if (parts.Length != 2) return false;
+        try
+        {
+            var parts = storedHash.Split(':');
+            if (parts.Length != 2) return false;
 
-        var salt = Convert.FromBase64String(parts[0]);
-        var expectedHash = Convert.FromBase64String(parts[1]);
-        var actualHash = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, 100_000, HashAlgorithmName.SHA256, 32);
-        return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+            var salt = Convert.FromBase64String(parts[0]);
+            var expectedHash = Convert.FromBase64String(parts[1]);
+            var actualHash = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, 100_000, HashAlgorithmName.SHA256, 32);
+            return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

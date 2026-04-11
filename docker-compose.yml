@@ -81,6 +81,7 @@ services:
       - Storage__PublicHost=${MINIO_PUBLIC_HOST:-http://localhost:9000/yoga-media}
       - Storage__KeyPrefix=public
       - AdminPortal__JwtSecret=${ADMIN_JWT_SECRET:-change-me-in-production-min-32-chars!!}
+      - AdminCms__EnableSampleContentBootstrap=${ENABLE_SAMPLE_CONTENT:-false}
     restart: always
 
   client:
